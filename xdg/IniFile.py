@@ -2,7 +2,7 @@
 Base Class for DesktopEntry, IconTheme and IconData
 """
 
-import string, codecs, re
+import string, codecs, re, os
 from Exceptions import *
 
 class IniFile:
@@ -228,7 +228,7 @@ class IniFile:
 		self.errors = []
 
 		# get file extension
-		self.fileExtension = re.sub(".*\.", "", self.file)
+		self.fileExtension = os.path.splitext(self.file)[1]
 
 		# overwrite this for own checkings
 		self.checkExtras()
