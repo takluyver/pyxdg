@@ -10,7 +10,7 @@ Version 0.5
 	(icondirs): Add "~/.icons" to the paths where to look for icons. Users
 	may have icon themes installed in their home directory.
 
-2003-10-98 Heinrich Wendel <h_wendel@cojobo.net>
+2003-10-08 Heinrich Wendel <h_wendel@cojobo.net>
   * Completed write-support in IniFile
 
 2003-10-05 Heinrich Wendel <h_wendel@cojobo.net>
