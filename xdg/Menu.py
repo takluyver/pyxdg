@@ -25,6 +25,7 @@ class Menu:
 		self.DefaultLayout = ""
 		self.Deleted = "notset"
 		self.DeskEntries = []
+		self.CacheDeskEntries = []
 		self.Directory = []
 		self.DirectoryDirs = []
 		self.Layout = ""
@@ -90,7 +91,7 @@ class Menu:
 		for entry in self.Entries:
 			if isinstance(entry, MenuEntry):
 				entry.DesktopEntry.setLocale(lc_messages)
-				entry.Name = entry.DesktopEntry.getName()
+				entry.cache()
 			elif isinstance(entry, Menu):
 				level += 1
 				entry.Directory.setLocale(lc_messages)
@@ -193,7 +194,9 @@ class Menu:
 		return self.Deleted
 
 	def addDeskEntry(self, entry):
-		if not entry in self.getDeskEntries():
+		#if not entry in self.DeskEntries:
+		if not entry.Name in self.CacheDeskEntries:
+			self.CacheDeskEntries.append(entry.Name)
 			self.DeskEntries.append(entry)
 	def getDeskEntries(self):
 		return self.DeskEntries
@@ -358,9 +361,13 @@ class Rule:
 
 		# Begin parsing
 		self.parseNode(node)
+		self.compile()
 
 	def __str__(self):
 		return self.Rule
+
+	def compile(self):
+		self.CompiledRule = compile(self.Rule, "<string>", "eval")
 
 	def parseNode(self, node):
 		for child in node.childNodes:
@@ -431,15 +438,21 @@ class Rule:
 
 class MenuEntry:
 	"Wrapper for 'Menu Style' Desktop Entries"
-	def __init__(self, Entry = "", Id = "", Allocated = False):
+	def __init__(self, Entry, Id = "", Allocated = False):
 		self.DesktopEntry = Entry
 		self.DesktopFileID = Id
 		self.Allocated = Allocated
 		# to implement the OnlyShowIn/NotShowIn keys
 		self.Show = True
 		# Caching
-		if self.DesktopEntry:
-			self.Name = self.DesktopEntry.getName()
+		self.Name = ""
+		self.Categories = ""
+		self.cache()
+	
+	def cache(self):
+		self.Name = self.DesktopEntry.getName()
+		if not self.Categories:
+			self.Categories = self.DesktopEntry.getCategories()
 
 	def __cmp__(self, other):
 		if isinstance(other, MenuEntry):
@@ -744,10 +757,10 @@ def __genmenuNotOnlyAllocated(menu, cache):
 	if not menu.getOnlyUnallocated():
 		cache.addEntries(menu.getAppDirs())
 		for entry in cache.getEntries(menu.getAppDirs()):
-			categories = entry.DesktopEntry.getCategories()
+			categories = entry.Categories
 			inc = False
 			for rule in menu.getRules():
-				if eval(rule.Rule):
+				if eval(rule.CompiledRule):
 					if rule.Type == "Include":
 						inc = True
 					else:
@@ -764,10 +777,10 @@ def __genmenuOnlyAllocated(menu, cache):
 		for entry in cache.getEntries(menu.getAppDirs()):
 			if entry.Allocated == True:
 				continue
-			categories = entry.DesktopEntry.getCategories()
+			categories = entry.Categories
 			inc = False
 			for rule in menu.Rules:
-				if eval(rule.Rule):
+				if eval(rule.CompiledRule):
 					if rule.Type == "Include":
 						inc = True
 					else:
@@ -861,6 +874,7 @@ class DesktopEntryCache:
 	"Class to cache Desktop Entries"
 	def __init__(self):
 		self.cacheEntries = {}
+		self.cache = {}
 
 	def addEntries(self, dirs):
 		for dir in dirs:
@@ -888,10 +902,17 @@ class DesktopEntryCache:
 		list = []
 		# don't compare MenuEntries, this is veryyyy slow, cache their DesktopFileIDs
 		ids = []
+		# cache the results again
+		key = "".join(dirs)
+		try:
+			return self.cache[key]
+		except KeyError:
+			pass
 		for dir in dirs:
 			if self.cacheEntries.has_key(dir):
 				for entry in self.cacheEntries[dir]:
 					if not entry.DesktopFileID in ids:
 						ids.append(entry.DesktopFileID)
 						list.append(entry)
+		self.cache[key] = list
 		return list
