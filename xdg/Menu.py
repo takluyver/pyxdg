@@ -823,7 +823,6 @@ def sort(menu):
 			remove.append(submenu)
 
 	for submenu in remove:
-		print submenu
 		menu.removeSubmenu(submenu)
 
 	tmp_s = []
