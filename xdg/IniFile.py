@@ -2,7 +2,7 @@
 Base Class for DesktopEntry, IconTheme and IconData
 """
 
-import codecs, re, os
+import re, os.path
 from Exceptions import *
 
 class IniFile:
@@ -25,16 +25,16 @@ class IniFile:
 		# reset content
 		self.content = dict()
 
-	def parse(self, file, headers):
+	def parse(self, filename, headers):
 		# for performance reasons
 		content = self.content
 
 		# parse file
 		try:
-			lines = codecs.open(file, 'r').readlines()
-			self.file = file
+			lines = file(filename, 'r').readlines()
+			self.file = filename
 		except IOError:
-			raise ParsingError("File not found", file)
+			raise ParsingError("File not found", filename)
 
 		for line in lines:
 			line = line.strip()
@@ -48,7 +48,7 @@ class IniFile:
 			elif line[0] == '[':
 				currentGroup = line.lstrip("[").rstrip("]")
 				if debug and self.hasGroup(currentGroup):
-					raise DuplicateGroupError(currentGroup, file)
+					raise DuplicateGroupError(currentGroup, self.filename)
 				else:
 					content[currentGroup] = {}
 			# key
@@ -58,14 +58,14 @@ class IniFile:
 					key = tmp[0].strip()
 					value = tmp[1].strip()
 				except IndexError:
-					raise ParsingError("Invalid Key=Value pair: %s" % line, file)
+					raise ParsingError("Invalid Key=Value pair: %s" % line, filename)
 				try:
 					if debug and self.hasKey(key, currentGroup):
-						raise DuplicateKeyError(key, currentGroup, file)
+						raise DuplicateKeyError(key, currentGroup, filename)
 					else:
 						content[currentGroup][key] = value
 				except IndexError:
-					raise ParsingError("[%s]-Header missing" % headers[0], file)
+					raise ParsingError("[%s]-Header missing" % headers[0], filename)
 
 		# check header
 		for header in headers:
@@ -73,7 +73,7 @@ class IniFile:
 				self.defaultGroup = header
 				break
 		else:
-			raise ParsingError("[%s]-Header missing" % headers[0], file)
+			raise ParsingError("[%s]-Header missing" % headers[0], filename)
 
 	# start stuff to access the keys
 	def get(self, key, group = "", locale = False, type = "string", list = False):
