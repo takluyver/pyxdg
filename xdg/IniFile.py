@@ -19,48 +19,43 @@ class IniFile:
 	locale = "(\[([a-zA-Z]+)(_[a-zA-Z]+)?(\.[a-zA-Z\-0-9]+)?(@[a-zA-Z]+)?\])?"
 
 	def __init__(self):
-		# reset content
 		self.content = dict()
-		self.cache = dict()
 
 	def parse(self, filename, headers):
 		# for performance reasons
 		content = self.content
 
-		# parse file
-		try:
-			for line in file(filename,'r'):
-				line = line.strip()
-				# empty line
-				if not line:
-					continue
-				# comment
-				elif line[0] == '#':
-					continue
-				# new group
-				elif line[0] == '[':
-					currentGroup = line.lstrip("[").rstrip("]")
-					if debug and self.hasGroup(currentGroup):
-						raise DuplicateGroupError(currentGroup, filename)
-					else:
-						content[currentGroup] = {}
-				# key
-				else:
-					try:
-						tmp = line.split('=',1)
-						key = tmp[0].strip()
-						value = tmp[1].strip()
-					except IndexError:
-						raise ParsingError("Invalid Key=Value pair: %s" % line, filename)
-					try:
-						if debug and self.hasKey(key, currentGroup):
-							raise DuplicateKeyError(key, currentGroup, filename)
-						else:
-							content[currentGroup][key] = value
-					except IndexError:
-						raise ParsingError("[%s]-Header missing" % headers[0], filename)
-		except IOError:
+		if not os.path.isfile(filename):
 			raise ParsingError("File not found", filename)
+
+		# parse file
+		for line in file(filename,'r'):
+			line = line.strip()
+			# empty line
+			if not line:
+				continue
+			# comment
+			elif line[0] == '#':
+				continue
+			# new group
+			elif line[0] == '[':
+				currentGroup = line.lstrip("[").rstrip("]")
+				if debug and self.hasGroup(currentGroup):
+					raise DuplicateGroupError(currentGroup, filename)
+				else:
+					content[currentGroup] = {}
+			# key
+			else:
+				index = line.find("=")
+				key = line[0:index].strip()
+				value = line[index:].strip()
+				try:
+					if debug and self.hasKey(key, currentGroup):
+						raise DuplicateKeyError(key, currentGroup, filename)
+					else:
+						content[currentGroup][key] = value
+				except IndexError:
+					raise ParsingError("[%s]-Header missing" % headers[0], filename)
 
 		self.file = filename
 
@@ -78,24 +73,17 @@ class IniFile:
 		if not group:
 			group = self.defaultGroup
 
-		cache_name = "".join([self.file,key,group,str(locale),type,str(list)])
-
-		try:
-			return self.cache[cache_name]
-		except KeyError:
-			pass
-
 		# return key (with locale)
-		try:
+		if self.content.has_key(group) and self.content[group].has_key(key):
 			if locale:
 				value = self.content[group][self.__addLocale(key, group)]
 			else:
 				value = self.content[group][key]
-		except KeyError, e:
+		else:
 			if debug:
-				if e == group:
+				if not self.content.has_key(group):
 					raise NoGroupError(group, self.file)
-				else:
+				elif not self.content[group].has_key(key):
 					raise NoKeyError(key, group, self.file)
 			else:
 				if list == True:
@@ -127,8 +115,6 @@ class IniFile:
 				result.append(value)
 			else:
 				result = value
-
-		self.cache[cache_name] = result
 
 		return result
 	# end stuff to access the keys
