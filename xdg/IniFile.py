@@ -104,36 +104,29 @@ class IniFile:
 			value = self.content[group][key]
 
 		if list == True:
-			value = self.__getList(value)
-
-		if list == True:
-			result = []
-			for item in value:
-				if type == "string":
-					result.append(item)
-				elif type == "boolean":
-					result.append(self.__getBoolean(item))
-				elif type == "integer":
-					result.append(int(item))
-				elif type == "numeric":
-					result.append(float(item))
-				elif type == "regex":
-					result.append(re.compile(item))
-				elif type == "point":
-					result.append(string.split(",", item))
+			values = self.__getList(value)
 		else:
+			values[0] = value
+
+		for value in values:
 			if type == "string":
-				result.append(item)
+				pass
 			elif type == "boolean":
-				result = self.__getBoolean(value)
+				value = self.__getBoolean(value)
 			elif type == "integer":
-				result = int(value)
+				value = int(value)
 			elif type == "numeric":
-				result = float(value)
+				value = float(value)
 			elif type == "regex":
-				result = re.compile(value)
+				value = re.compile(value)
 			elif type == "point":
-				result = string.split(",", value)
+				value = string.split(",", value)
+
+			if list == True:
+				result = []
+				result.append(value)
+			else:
+				result = value
 
 		return result
 	# end stuff to access the keys
@@ -251,74 +244,68 @@ class IniFile:
 	# check random stuff
 	def checkValue(self, key, value, type = "string", list = False):
 		if list == True:
-			value = self.__getList(value)
-			for item in value:
-				if type == "string":
-					self.checkString(key, item)
-				elif type == "boolean":
-					self.checkBoolean(key, item)
-				elif type == "number":
-					self.checkNumber(key, item)
-				elif type == "integer":
-					self.checkInteger(key, item)
-				elif type == "regex":
-					self.checkRegex(key, item)
-				elif type == "point":
-					self.checkPoint(key, item)
+			values = self.__getList(value)
 		else:
-			if type == "string":
-				self.checkString(key, value)
-			elif type == "boolean":
-				self.checkBoolean(key, value)
-			elif type == "number":
-				self.checkNumber(key, value)
-			elif type == "integer":
-				self.checkInteger(key, value)
-			elif type == "regex":
-				self.checkRegex(key, value)
-			elif type == "point":
-				self.checkPoint(key, value)
+			values[0] = value
 
+		for value in values:
+			if type == "string":
+				code = self.checkString(value)
+			elif type == "boolean":
+				code = self.checkBoolean(value)
+			elif type == "number":
+				code = self.checkNumber(value)
+			elif type == "integer":
+				code = self.checkInteger(value)
+			elif type == "regex":
+				code = self.checkRegex(value)
+			elif type == "point":
+				code = self.checkPoint(value)
+			if code == 1:
+				self.errors.append("Value of key '%s' is not a valid %s" % (key, type))
+				break
+			elif code == 2:
+				self.warnings.append("Value of key '%s' is deprecated" % key)
 
 	def checkExtras(self):
 		pass
 
-	def checkBoolean(self, key, value):
+	def checkBoolean(self, value):
 		# 1 or 0 : deprecated
 		if (value == "1" or value == "0"):
-			self.warnings.append("Value of key '%s' is a deprecated boolean value" % key)
+			return 2
 		# true or false: ok
 		elif not (value == "true" or value == "false"):
-			self.errors.append("Value of key '%s' is not a boolean" % key)
+			return 1
 
-	def checkNumber(self, key, value):
+	def checkNumber(self, value):
 		# float() ValueError
 		try:
 			float(value)
 		except:
-			self.errors.append("Value of key '%s' is not a number" % key)
+			return 1
 
-	def checkInteger(self, key, value):
+	def checkInteger(self, value):
 		# int() ValueError
 		try:
 			int(value)
 		except:
-			self.errors.append("Value of key '%s' is not an integer" % key)
+			return 1
 
-	def checkPoint(self, key, value):
+	def checkPoint(self, value):
 		if not re.match("^[0-9]+,[0-9]+$", value):
-			self.errors.append("Value of key '%s' is not a point value" % key)
+			return 1
 
-	def checkString(self, key, value):
+	def checkString(self, value):
 		# convert to ascii
 		if not value.encode("ascii", 'ignore') == value:
-			self.errors.append("Value of key '%s' must only contain ASCII characters" % key)
+			return 1
 
-	def checkRegex(self, key, value):
+	def checkRegex(self, value):
 		try:
 			re.compile(value)
 		except:
-			self.errors.append("Value of key '%s' is not a valid perl regex" % key)
+			return 1
 
 	# write support
 	def write(self, file):
@@ -409,11 +396,8 @@ class IniFile:
 		if not group:
 			group = self.defaultGroup
 
-		if self.hasGroup(group):
-			if self.content[group].has_key(key):
-				return True
-			else:
-				return False
+		if self.content[group].has_key(key):
+			return True
 		else:
 			return False
 
