@@ -1,6 +1,6 @@
 """
 Complete implementation of the XDG Desktop Entry Specification Version 0.9.4
-http://www.freedesktop.org/standards/desktop-entry-spec/
+http://www.freedesktop.org/standards/desktop-entry-spec
 
 Not supported:
 - Encoding: Legacy Mixed
