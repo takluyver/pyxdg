@@ -157,8 +157,8 @@ class DesktopEntry(IniFile):
 		# check if group header is valid
 		if not (group == self.defaultGroup \
 		or re.match("^\Desktop Action [a-zA-Z]+\$", group) \
-		or (re.match("^\X-", group) and group.encode("ascii", 'ignore') == group)):
-			self.errors.append("Invalid Group name: %s" % group.encode("ascii", "replace"))
+		or (re.match("^\X-", group) and group.decode("utf-8", "ignore").encode("ascii", 'ignore') == group)):
+			self.errors.append("Invalid Group name: %s" % group)
 		else:
 		    #OnlyShowIn and NotShowIn
 		    if self.content[group].has_key("OnlyShowIn") and self.content[group].has_key("NotShowIn"):

@@ -114,8 +114,8 @@ class IconTheme(IniFile):
 				self.name = self.content[group]["Name"]
 			except KeyError:
 				self.errors.append("Key 'Name' in Group '%s' is missing" % group)
-		elif not (re.match("^\[X-", group) and group.encode("ascii", 'ignore') == group):
-			self.errors.append("Invalid Group name: %s" % group.encode("ascii", "replace"))
+		elif not (re.match("^\[X-", group) and group.decode("utf-8", "ignore").encode("ascii", 'ignore') == group):
+			self.errors.append("Invalid Group name: %s" % group)
 
 	def checkKey(self, key, value, group):
 		# standard keys		

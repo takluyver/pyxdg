@@ -31,12 +31,10 @@ class IniFile:
 
 		# parse file
 		try:
-			lines = codecs.open(file, 'r', 'utf-8').readlines()
+			lines = codecs.open(file, 'r').readlines()
 			self.file = file
 		except IOError:
 			raise ParsingError("File not found", file)
-		except UnicodeError:
-			raise ParsingError("File contains non UTF-8 chars", file)
 
 		for line in lines:
 			line = line.strip()
@@ -112,8 +110,8 @@ class IniFile:
 			values = [value]
 
 		for value in values:
-			if type == "string":
-				pass
+			if type == "string" and locale == True:
+				value = value.decode("utf-8", "ignore")
 			elif type == "boolean":
 				value = self.__getBoolean(value)
 			elif type == "integer":
@@ -318,7 +316,7 @@ class IniFile:
 
 	def checkString(self, value):
 		# convert to ascii
-		if not value.encode("ascii", 'ignore') == value:
+		if not value.decode("utf-8", "ignore").encode("ascii", 'ignore') == value:
 			return 1
 
 	def checkRegex(self, value):
@@ -329,7 +327,7 @@ class IniFile:
 
 	# write support
 	def write(self, file):
-		fp = codecs.open(file, 'w', 'utf-8')
+		fp = codecs.open(file, 'w')
 		self.file = file
 		if self.defaultGroup:
 			fp.write("[%s]\n" % self.defaultGroup)
@@ -349,7 +347,10 @@ class IniFile:
 			group = self.defaultGroup
 
 		try:
-			self.content[group][key] = value
+			if isinstance(value, unicode):
+				self.content[group][key] = value.encode("utf-8", "ignore")
+			else:
+				self.content[group][key] = value
 			self.resetCache()
 		except KeyError:
 			raise NoGroupError(group, self.file)
