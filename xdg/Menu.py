@@ -259,7 +259,7 @@ class Menu:
 			index = self.getSubmenus().index(name)
 			return self.getSubmenus()[index]
 		except ValueError:
-			return
+			return ""
 	def removeSubmenu(self, newmenu):
 		self.Submenus.remove(newmenu)
 
