@@ -109,7 +109,9 @@ class IniFile:
 		if list == True:
 			result = []
 			for item in value:
-				if type == "boolean":
+				if type == "string":
+					result.append(item)
+				elif type == "boolean":
 					result.append(self.__getBoolean(item))
 				elif type == "integer":
 					result.append(int(item))
@@ -117,10 +119,12 @@ class IniFile:
 					result.append(float(item))
 				elif type == "regex":
 					result.append(re.compile(item))
-				else:
-					result.append(item)
+				elif type == "point":
+					result.append(string.split(",", item))
 		else:
-			if type == "boolean":
+			if type == "string":
+				result.append(item)
+			elif type == "boolean":
 				result = self.__getBoolean(value)
 			elif type == "integer":
 				result = int(value)
@@ -128,15 +132,17 @@ class IniFile:
 				result = float(value)
 			elif type == "regex":
 				result = re.compile(value)
-			else:
-				result = value
+			elif type == "point":
+				result = string.split(",", value)
 
 		return result
 	# end stuff to access the keys
 
 	# start subget
 	def __getList(self, string):
-		if re.search(',', string):
+		if re.search('(?!\\).|', string):
+			return re.split(r"(?!\\).|")
+		elif re.search('(?!\\).,', string):
 			return re.split(r"(?!\\).,")
 		else:
 			return re.split(r"(?!\\).;")
@@ -243,6 +249,37 @@ class IniFile:
 		pass
 
 	# check random stuff
+	def checkValue(self, key, value, type = "string", list = False):
+		if list == True:
+			value = __getList(value)
+			for item in value:
+				if type == "string":
+					checkString(key, item)
+				elif type == "boolean":
+					checkBoolean(key, item)
+				elif type == "number":
+					checkNumber(key, item)
+				elif type == "integer":
+					checkInteger(key, item)
+				elif type == "regex":
+					checkRegex(key, item)
+				elif type == "point":
+					checkPoint(key, item)
+		else:
+			if type == "string":
+				checkString(key, value)
+			elif type == "boolean":
+				checkBoolean(key, value)
+			elif type == "number":
+				checkNumber(key, value)
+			elif type == "integer":
+				checkInteger(key, value)
+			elif type == "regex":
+				checkRegex(key, value)
+			elif type == "point":
+				checkPoint(key, value)
+
+
 	def checkExtras(self):
 		pass
 
@@ -268,8 +305,8 @@ class IniFile:
 		except:
 			self.errors.append("Value of key '%s' is not an integer" % key)
 
-	def checkPoints(self, key, value):
-		if not re.match("^[0-9]+,[0-9]+|[0-9]+,[0-9]+|[0-9]+,[0-9]+|[0-9]+,[0-9]+$", value):
+	def checkPoint(self, key, value):
+		if not re.match("^[0-9]+,[0-9]+$", value):
 			self.errors.append("Value of key '%s' is not a point value" % key)
 
 	def checkString(self, key, value):

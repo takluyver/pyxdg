@@ -125,36 +125,36 @@ class IconTheme(IniFile):
 			elif re.match("^Comment"+self.locale+"$", key):
 				pass
 			elif key == "Inherits":
-				self.checkString(key, value)
+				self.checkValue(key, value, list = True)
 			elif key == "Directories":
-				self.checkString(key, value)
+				self.checkValue(key, value, list = True)
 			elif key == "Hidden":
-				self.checkBoolean(key, value)
+				self.checkValue(key, value, type = "boolean")
 			elif key == "Example":
-				self.checkString(key, value)
+				self.checkValue(key, value)
 			elif re.match("^X-[a-zA-Z0-9-]+", key):
 				pass
 			else:
 				self.errors.append("Invalid key: %s" % key)
 		elif group in self.getDirectories():
 			if key == "Size":
-				self.checkInteger(key, value)
+				self.checkValue(key, value, type = "integer")
 			elif key == "Context":
-				self.checkString(key, value)
+				self.checkValue(key, value)
 			elif key == "Type":
-				self.checkString(key, value)
+				self.checkValue(key, value)
 				if value not in ["Fixed", "Scalable", "Threshold"]:
 					self.errors.append("Key 'Type' must be one out of 'Fixed','Scalable','Threshold', but is %s" % value)
 			elif key == "MaxSize":
-				self.checkInteger(key, value)
+				self.checkValue(key, value, type = "integer")
 				if self.type != "Scalable":
 					self.errors.append("Key 'MaxSize' give, but Type is %s" % self.type)
 			elif key == "MinSize":
-				self.checkInteger(key, value)
+				self.checkValue(key, value, type = "integer")
 				if self.type != "Scalable":
 					self.errors.append("Key 'MinSize' give, but Type is %s" % self.type)
 			elif key == "Threshold":
-				self.checkInteger(key, value)
+				self.checkValue(key, value, type = "integer")
 				if self.type != "Threshold":
 					self.errors.append("Key 'Threshold' give, but Type is %s" % self.type)
 			elif re.match("^X-[a-zA-Z0-9-]+", key):
@@ -180,7 +180,7 @@ class IconData(IniFile):
 	def getEmbeddedTextRectangle(self):
 		return self.get('EmbeddedTextRectangle', list = True)
 	def getAttachPoints(self):
-		return string.split("|", self.get('AttachPoints'))
+		return self.get('AttachPoints', type = "point", list = True)
 
 	# validation stuff
 	def checkExtras(self):
@@ -199,9 +199,9 @@ class IconData(IniFile):
 		if re.match("^DisplayName"+self.locale+"$", key):
 			pass
 		elif key == "EmbeddedTextRectangle":
-			self.checkInteger(key, value)
+			self.checkValue(key, value, type = "integer", list = True)
 		elif key == "AttachPoints":
-			self.checkPoints(key, value)
+			self.checkValue(key, value, type = "point", list = True)
 		elif re.match("^X-[a-zA-Z0-9-]+", key):
 			pass
 		else:

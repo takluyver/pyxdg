@@ -6,7 +6,7 @@ http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/*checkout*/rox/ROX-Lib2/python/ro
 The freedesktop.org Base Directory specification provides a way for
 applications to locate shared data and configuration:
 
-	http://www.freedesktop.org/standards/menu-spec/
+	http://www.freedesktop.org/standards/basedir-spec/
 
 (based on version 0.6)
 

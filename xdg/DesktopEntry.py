@@ -96,7 +96,7 @@ class DesktopEntry(IniFile):
 		return self.get('ServiceTypes', list = True)
 	def getDocPath(self):
 		return self.get('DocPath')
-	def getwords(self):
+	def getKeywords(self):
 		return self.get('Keywords', list = True, locale = True)
 	def getInitialPreference(self):
 		return self.get('InitialPreference')
@@ -182,7 +182,7 @@ class DesktopEntry(IniFile):
 				self.warnings.append("Files with Type=Directory should have the extension .directory")
 
 		elif key == "Version":
-			self.checkNumber(key, value)
+			self.checkValue(key, value, type = "number")
 
 		elif key == "Encoding":
 			if value == "Legacy-Mixed":
@@ -200,137 +200,138 @@ class DesktopEntry(IniFile):
 			pass # locale string
 
 		elif key == "NoDisplay":
-			self.checkBoolean(key, value)
+			self.checkValue(key, value, type = "boolean")
 
 		elif key == "Hidden":
-			self.checkBoolean(key, value)
+			self.checkValue(key, value, type = "boolean")
 
 		elif key == "Terminal":
-			self.checkBoolean(key, value)
+			self.chech(key, value, type = "boolean")
 			self.checkType(key, "Application")
 
 		elif key == "TryExec":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.checkType(key, "Application")
 
 		elif key == "Exec":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.checkType(key, "Application")
 
 		elif key == "Path":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.checkType(key, "Application")
 
 		elif re.match("^Icon"+self.locale+"$", key):
-			self.checkString(key, value)
+			self.checkValue(key, value)
 
 		elif re.match("^SwallowTitle"+self.locale+"$", key):
 			self.checkType(key, "Application")
 
 		elif key == "SwallowExec":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.checkType(key, "Application")
 
 		elif key == "FilePatterns":
-			self.checkRegex(key, value)
+			self.checkValue(key, value, type = "regex", list = True)
 			self.checkType(key, "Application")
 
 		elif key == "Actions":
-			self.checkString(key, value)
+			self.checkValue(key, value, list = True)
 			self.checkType(key, "Application")
 
 		elif key == "MimeType":
-			self.checkRegex(key, value)
+			self.checkValue(key, value, type = "regex", list = True)
 			self.checkType(key, "Application")
 
 		elif key == "Categories":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.checkType(key, "Application")
 
 		elif key == "OnlyShowIn":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 
 		elif key == "NotShowIn":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 
 		elif key == "StartupNotify":
-			self.checkBoolean(key, value)
+			self.checkValue(key, value, type = "boolean")
 			self.checkType(key, "Application")
 
 		elif key == "StartupWMClass":
 			self.checkType(key, "Application")
 
 		elif key == "SortOrder":
-			self.checkString(key, value)
+			self.checkValue(key, value, list = True)
 			self.checkType(key, "Directory")
 
 		elif key == "URL":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.checkType(key, "URL")
 
 		elif key == "Dev":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.checkType(key, "FSDevice")
 
 		elif key == "FSType":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.checkType(key, "FSDevice")
 
 		elif key == "MountPoint":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.checkType(key, "FSDevice")
 
 		elif re.match("^UnmountIcon"+self.locale+"$", key):
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.checkType(key, "FSDevice")
 
 		elif key == "ReadOnly":
-			self.checkBoolean(key, value)
+			self.checkValue(key, value, type = "boolean")
 			self.checkType(key, "FSDevice")
 
 		# kde extensions
 		elif key == "ServiceTypes":
-			self.checkString(key, value)
+			self.checkValue(key, value, list = True)
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
 		elif key == "DocPath":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
 		elif re.match("^Keywords"+self.locale+"$", key):
+			self.checkValue(key, value, list = True)
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
 		elif key == "InitialPreference":
-			self.checkNumber(key, value)
+			self.checkValue(key, value, type = "number")
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
 		# deprecated keys
 		elif re.match("^MiniIcon"+self.locale+"$", key):
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.warnings.append("Key '%s' is deprecated" % key)
 
 		elif key == "TerminalOptions":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.warnings.append("Key '%s' is deprecated" % key)
 
 		elif key == "DefaultApp":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.warnings.append("Key '%s' is deprecated" % key)
 
 		elif key == "Protocols":
-			self.checkString(key, value)
+			self.checkValue(key, value, list = True)
 			self.warnings.append("Key '%s' is deprecated" % key)
 
-		elif key == "^Extensions":
-			self.checkString(key, value)
+		elif key == "Extensions":
+			self.checkValue(key, value, list = True)
 			self.warnings.append("Key '%s' is deprecated" % key)
 
 		elif key == "BinaryPattern":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.warnings.append("Key '%s' is deprecated" % key)
 
 		elif key == "MapNotify":
-			self.checkString(key, value)
+			self.checkValue(key, value)
 			self.warnings.append("Key '%s' is deprecated" % key)
 
 		# "X-" extensions
