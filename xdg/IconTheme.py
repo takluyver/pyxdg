@@ -279,7 +279,7 @@ def __addTheme(theme):
 def __parseTheme(file):
 	theme = IconTheme()
 	theme.parse(file)
-	themes = [theme] + themes
+	themes.insert(0,theme)
 	for subtheme in theme.getInherits():
 		__addTheme(subtheme)
 
