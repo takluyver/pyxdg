@@ -41,7 +41,7 @@ class IniFile:
 				elif line[0] == '[':
 					currentGroup = line.lstrip("[").rstrip("]")
 					if debug and self.hasGroup(currentGroup):
-						raise DuplicateGroupError(currentGroup, self.filename)
+						raise DuplicateGroupError(currentGroup, filename)
 					else:
 						content[currentGroup] = {}
 				# key
@@ -388,7 +388,7 @@ class IniFile:
 			value = self.content[group][key]
 			del self.content[group][key]
 			return value
-		except KeyError:
+		except KeyError, e:
 			if debug:
 				if e == group:
 					raise NoGroupError(group, self.file)
