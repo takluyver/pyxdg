@@ -13,6 +13,8 @@ from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
 from xdg.Exceptions import *
 
+ELEMENT_NODE = xml.dom.Node.ELEMENT_NODE
+
 class Menu:
 	def __init__(self):
 		# Public stuff
@@ -284,7 +286,7 @@ class Move:
 
 	def parseNode(self, node):
 		for child in node.childNodes:
-			if child.nodeType == xml.dom.Node.ELEMENT_NODE:
+			if child.nodeType == ELEMENT_NODE:
 				if child.tagName == "Old":
 					try:
 						self.parseOld(child.childNodes[0].nodeValue)
@@ -325,7 +327,7 @@ class Layout:
 
 	def parseNode(self, node):
 		for child in node.childNodes:
-			if child.nodeType == xml.dom.Node.ELEMENT_NODE:
+			if child.nodeType == ELEMENT_NODE:
 				if child.tagName == "Menuname":
 					self.parseMenuname(child)
 				elif child.tagName == "Separator":
@@ -398,7 +400,7 @@ def do(entries, type, run):
 
 	def parseNode(self, node):
 		for child in node.childNodes:
-			if child.nodeType == xml.dom.Node.ELEMENT_NODE:
+			if child.nodeType == ELEMENT_NODE:
 				if child.tagName == 'Filename':
 					try:
 						self.parseFilename(child.childNodes[0].nodeValue)
@@ -585,7 +587,7 @@ def parse(file = ""):
 
 def __parse(node, file, parent = ""):
 	for child in node.childNodes:
-		if child.nodeType == xml.dom.Node.ELEMENT_NODE:
+		if child.nodeType == ELEMENT_NODE:
 			if child.tagName == 'Menu':
 				__parseMenu(child, file, parent)
 			elif child.tagName == 'AppDir':
@@ -802,7 +804,7 @@ def __mergeFile(file, child, parent):
 		raise ParsingError('Not a valid .menu file', file)
 
 	# append file
-	if doc.childNodes[0].nodeType == xml.dom.Node.ELEMENT_NODE:
+	if doc.childNodes[0].nodeType == ELEMENT_NODE:
 		__parse(doc.childNodes[0],file,parent)
 	else:
 		__parse(doc.childNodes[1],file,parent)
