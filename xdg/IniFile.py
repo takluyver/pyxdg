@@ -26,6 +26,9 @@ class IniFile:
 		self.content = dict()
 
 	def parse(self, file, headers):
+		# performance reasons
+		content = self.content
+
 		# check file extension
 		self.fileExtension = re.sub(".*\.", "", file)
 
@@ -54,7 +57,7 @@ class IniFile:
 				if self.hasGroup(currentGroup) and debug:
 					raise DuplicateGroupError(currentGroup)
 				else:
-					self.content[currentGroup] = {}
+					content[currentGroup] = {}
 			# key
 			else:
 				try:
@@ -62,22 +65,22 @@ class IniFile:
 					key = string.strip(tmp[0])
 					value = string.strip(tmp[1])
 				except IndexError:
-					raise ParsingError("Invalid Key=Value pair: " + line, self.file)
+					raise ParsingError("Invalid Key=Value pair: " + line, file)
 				try:
 					if self.hasKey(key, currentGroup) and debug:
 						raise DuplicateKeyError(key, currentGroup)
 					else:
-						self.content[currentGroup][key] = value
+						content[currentGroup][key] = value
 				except IndexError:
-					raise ParsingError("["+headers[0]+"]-Header missing", self.file)
+					raise ParsingError("["+headers[0]+"]-Header missing", file)
 
 		# check header
 		for header in headers:
-			if self.content.has_key(header):
+			if content.has_key(header):
 				self.defaultGroup = header
 				break
 		else:
-			raise ParsingError("["+headers[0]+"]-Header missing", self.file)
+			raise ParsingError("["+headers[0]+"]-Header missing", file)
 
 	# start stuff to access the keys
 	def get(self, key, group = "", locale = False, type = "string", list = False):
