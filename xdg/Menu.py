@@ -501,7 +501,7 @@ class MenuEntry:
 		else:
 			return False
 
-	def __str_(self):
+	def __str__(self):
 		return self.DesktopFileID
 
 
