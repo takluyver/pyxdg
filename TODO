@@ -13,6 +13,4 @@ IniFile:
 	- Performance of get(...)
 
 Desktop Entry Spec:
-	- check if regex is valid
-	- check if URL is valid
 	- check Categories and NotShowIn/OnlyShowIn key

@@ -5,7 +5,9 @@ http://www.freedesktop.org/standards/desktop-entry-spec/
 Not supported:
 - Encoding: Legacy Mixed
 - Does not check exec parameters
+- Does not check URL's
 - Does not completly validate deprecated/kde items
+
 - Does not check Category entries
 - Does not check OnlyShowIn entries
 """
