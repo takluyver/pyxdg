@@ -1,3 +1,8 @@
+2004-10-18  Martin Grimme  <martin@pycage.de>
+	* xdg/IconTheme.py (getIconPath): The "hicolor" theme has to be used as
+	the fallback.
+	* xdg/IniFile.py (IniFile.getList): Fixed bug in splitting up strings.
+
 Version 0.7
 
 2004-09-04 Heinrich Wendel <h_wendel@cojobo.net>

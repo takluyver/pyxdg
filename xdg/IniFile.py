@@ -101,7 +101,10 @@ class IniFile:
 				else:
 					raise NoKeyError(key, group, self.file)
 			else:
-				return ""
+				if list == True:
+					return []
+				else:
+					return ""
 				
 		if list == True:
 			values = self.getList(value)
@@ -135,12 +138,14 @@ class IniFile:
 
 	# start subget
 	def getList(self, string):
-		if re.search(r"(?<!\\)\;?", string):
+		if re.search(r"(?<!\\)\;", string):
 			list = re.split(r"(?<!\\);", string)
 		elif re.search(r"(?<!\\)\|", string):
 			list = re.split(r"(?<!\\)\|", string)
 		elif re.search(r"(?<!\\),", string):
 			list = re.split(r"(?<!\\),", string)
+		else:
+			list = [string]
 		if list[-1] == "":
 			list.pop()
 		return list

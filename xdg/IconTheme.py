@@ -239,8 +239,8 @@ def getIconPath(iconname, size = 48, theme = "hicolor", extensions = ["png", "sv
 	except IndexError:
 		__addTheme(theme)
 
-	for theme in themes:
-		icon = LookupIcon(iconname, size, extensions, theme)
+	for thme in themes:
+		icon = LookupIcon(iconname, size, extensions, thme)
 		if icon:
 			return icon
 
@@ -257,6 +257,9 @@ def getIconPath(iconname, size = 48, theme = "hicolor", extensions = ["png", "sv
 			if iconname + "." + extension in values[0]:
 				return os.path.join(dir, iconname + "." + extension)
 
+	# we haven't found anything? "hicolor" is our fallback
+	if theme != "hicolor":
+		return getIconPath(iconname, size, "hicolor")
 
 def getIconData(path):
 	if os.path.isfile(path):
