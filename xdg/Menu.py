@@ -7,7 +7,7 @@ Not Supported (and not planed):
 """
 
 from __future__ import generators
-import re, os, xml.dom.minidom, sys
+import re, os, xml.dom.minidom
 
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
@@ -806,7 +806,6 @@ class DesktopEntryCache:
 			if self.cacheEntries.has_key(dir):
 				for entry in self.cacheEntries[dir]:
 					if not entry.DesktopFileID in ids:
-					#if not entry in list:
 						ids.append(entry.DesktopFileID)
 						list.append(entry)
 		return list
