@@ -48,7 +48,7 @@ class IniFile:
 			else:
 				index = line.find("=")
 				key = line[0:index].strip()
-				value = line[index:].strip()
+				value = line[index+1:].strip()
 				try:
 					if debug and self.hasKey(key, currentGroup):
 						raise DuplicateKeyError(key, currentGroup, filename)
