@@ -276,8 +276,7 @@ class IniFile:
 			elif type == "point":
 				code = self.checkPoint(value)
 			if code == 1:
-				self.errors.append("Value of key '%s' is not a valid %s" % (key, type))
-				break
+				self.errors.append("'%s' is not a valid %s" % (value, type))
 			elif code == 2:
 				self.warnings.append("Value of key '%s' is deprecated" % key)
 

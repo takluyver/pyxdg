@@ -244,18 +244,15 @@ class DesktopEntry(IniFile):
 		elif key == "Categories":
 			self.checkValue(key, value)
 			self.checkType(key, "Application")
-			if self.checkCategorie(value) == 1:
-				self.errors.append("'%s' is not a registered Category" % value);
+			self.checkCategorie(value)
 
 		elif key == "OnlyShowIn":
 			self.checkValue(key, value, list = True)
-			if self.checkOnlyShowIn(value) == 1:
-				self.errors.append("'%s' is not a registered OnlyShowIn value" % value);
+			self.checkOnlyShowIn(value)
 
 		elif key == "NotShowIn":
 			self.checkValue(key, value, list = True)
-			if self.checkOnlyShowIn(value) == 1:
-				self.errors.append("'%s' is not a registered OnlyShowIn value" % value);
+			self.checkOnlyShowIn(value)
 
 		elif key == "StartupNotify":
 			self.checkValue(key, value, type = "boolean")
@@ -354,11 +351,11 @@ class DesktopEntry(IniFile):
 		valid = ["GNOME", "KDE", "ROX", "XFCE", "Old"]
 		for item in values:
 			if item not in valid:
-				return 1
+				self.errors.append("'%s' is not a registered OnlyShowIn value" % item);
 
 	def checkCategorie(self, value):
 		values = self.getList(value)
 		valid = ["Legacy","Core","Development","Building","Debugger","IDE","GUIDesigner","Profiling","RevisionControl","Translation","Office","Calendar","ContactManagement","Database","Dictionary","Chart","Email","Finance","FlowChart","PDA","ProjectManagement","Presentation","Spreadsheet","WordProcessor","Graphics","2DGraphics","VectorGraphics","RasterGraphics","3DGraphics","Scanning","OCR","Photograph","Viewer","Settings","DesktopSettings","HardwareSettings","PackageManager","Network","Dialup","InstantMessaging","IRCClient","FileTransfer","HamRadio","News","P2P","RemoteAccess","Telephony","WebBrowser","WebDevelopment","AudioVideo","Audio","Midi","Mixer","Sequencer","Tuner","Video","TV","AudioVideoEditing","Player","Recorder","DiscBurning","Game","ActionGame","AdventureGame","ArcadeGame","BoardGame","BlocksGame","CardGame","KidsGame","LogicGame","RolePlaying","Simulation","SportsGame","StrategyGame","Education","Art","Art","Contruction","Music","Languages","Science","Astronomy","Biology","Chemistry","Geology","Math","MedicalSoftware","Physics","Teaching","Amusement","Applet","Archiving","Electronics","Emulator","Engineering","FileManager","Shell","Screensaver","TerminalEmulator","TrayIcon","System","Filesystem","Monitor","Security","Utility","Accessibility","Calculator","Clock","TextEditor","KDE","GNOME","GTK","Qt","Motif","Java","ConsoleOnly"]
 		for item in values:
 			if item not in valid:
-				return 1
+				self.errors.append("'%s' is not a registered Category" % item);
