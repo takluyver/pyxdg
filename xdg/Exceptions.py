@@ -31,7 +31,7 @@ class NoKeyError(Error):
 
 class DuplicateKeyError(Error):
 	def __init__(self, key, group):
-		Error.__init__(self, "Duplicate key '%s' in group %s of file %s" % (group, file))
+		Error.__init__(self, "Duplicate key '%s' in group %s of file %s" % (key, group, file))
 		self.key = key
 		self.group = group
 

@@ -141,11 +141,11 @@ class IniFile:
 	# start subget
 	def __getList(self, string):
 		if re.search('(?!\\).|', string):
-			return re.split(r"(?!\\).|")
+			return re.split(r"(?!\\).|", string)
 		elif re.search('(?!\\).,', string):
-			return re.split(r"(?!\\).,")
+			return re.split(r"(?!\\).,", string)
 		else:
-			return re.split(r"(?!\\).;")
+			return re.split(r"(?!\\).;", string)
 
 	def __getBoolean(self, boolean):
 		if boolean == 1:
@@ -251,33 +251,33 @@ class IniFile:
 	# check random stuff
 	def checkValue(self, key, value, type = "string", list = False):
 		if list == True:
-			value = __getList(value)
+			value = self.__getList(value)
 			for item in value:
 				if type == "string":
-					checkString(key, item)
+					self.checkString(key, item)
 				elif type == "boolean":
-					checkBoolean(key, item)
+					self.checkBoolean(key, item)
 				elif type == "number":
-					checkNumber(key, item)
+					self.checkNumber(key, item)
 				elif type == "integer":
-					checkInteger(key, item)
+					self.checkInteger(key, item)
 				elif type == "regex":
-					checkRegex(key, item)
+					self.checkRegex(key, item)
 				elif type == "point":
-					checkPoint(key, item)
+					self.checkPoint(key, item)
 		else:
 			if type == "string":
-				checkString(key, value)
+				self.checkString(key, value)
 			elif type == "boolean":
-				checkBoolean(key, value)
+				self.checkBoolean(key, value)
 			elif type == "number":
-				checkNumber(key, value)
+				self.checkNumber(key, value)
 			elif type == "integer":
-				checkInteger(key, value)
+				self.checkInteger(key, value)
 			elif type == "regex":
-				checkRegex(key, value)
+				self.checkRegex(key, value)
 			elif type == "point":
-				checkPoint(key, value)
+				self.checkPoint(key, value)
 
 
 	def checkExtras(self):
@@ -315,7 +315,7 @@ class IniFile:
 			self.errors.append("Value of key '%s' must only contain ASCII characters" % key)
 
 	def checkRegex(self, key, value):
-		try
+		try:
 			re.compile(value)
 		except:
 			self.errors.append("Value of key '%s' is not a valid perl regex" % key)

@@ -206,7 +206,7 @@ class DesktopEntry(IniFile):
 			self.checkValue(key, value, type = "boolean")
 
 		elif key == "Terminal":
-			self.chech(key, value, type = "boolean")
+			self.checkValue(key, value, type = "boolean")
 			self.checkType(key, "Application")
 
 		elif key == "TryExec":
