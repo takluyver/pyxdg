@@ -221,6 +221,8 @@ cache = dict()
 dache = dict()
 
 def getIconPath(iconname, size = 48, theme = "hicolor", extensions = ["png", "svg", "xpm"]):
+	global themes
+
 	# if we have an absolute path, just return it
 	if os.path.isabs(iconname):
 		return iconname
@@ -232,6 +234,7 @@ def getIconPath(iconname, size = 48, theme = "hicolor", extensions = ["png", "sv
 	# parse theme files
 	try:
 		if themes[0].name != theme:
+			themes = []
 			__addTheme(theme)
 	except IndexError:
 		__addTheme(theme)
@@ -279,7 +282,7 @@ def __addTheme(theme):
 def __parseTheme(file):
 	theme = IconTheme()
 	theme.parse(file)
-	themes.insert(0,theme)
+	themes.append(theme)
 	for subtheme in theme.getInherits():
 		__addTheme(subtheme)
 
