@@ -7,7 +7,7 @@ Not Supported (and not planed):
 """
 
 from __future__ import generators
-import re, os, xml.dom.minidom, sys
+import re, os, xml.dom.minidom
 
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
