@@ -756,7 +756,10 @@ def __mergeFile(file, child, parent):
 		raise ParsingError('Not a valid .menu file', file)
 
 	# append file
-	__parse(doc.childNodes[1],file,parent)
+	if doc.childNodes[0].nodeType == xml.dom.Node.ELEMENT_NODE:
+		__parse(doc.childNodes[0],file,parent)
+	else:
+		__parse(doc.childNodes[1],file,parent)
 
 # Finally generate the menu
 def __genmenuNotOnlyAllocated(menu, cache):
