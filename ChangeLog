@@ -1,6 +1,10 @@
 Version 0.5
 
-2004-03-17  Martin Grimme  <martin@pycage.de>
+2004-03-20 Heinrich Wendel <h_wendel@cojobo.net>
+	* check values of Categories/OnlyShowIn keys
+	* various misc changes
+
+2004-03-17 Martin Grimme  <martin@pycage.de>
 
 	* xdg/Menu.py (__preparse): 
 	* xdg/IconTheme.py (IconTheme.parse): Made compatible with Python 2.3
