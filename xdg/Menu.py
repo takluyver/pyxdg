@@ -367,7 +367,18 @@ class Rule:
 		return self.Rule
 
 	def compile(self):
-		self.CompiledRule = compile(self.Rule, "<string>", "eval")
+		exec("""
+def do(entries, type):
+    for entry in entries:
+		if entry.Allocated:
+		    continue
+		if %s:
+		    if type == "Include":
+				entry.Add = True
+		    else:
+				entry.Add = False
+    return entries
+""" % self.Rule) in self.__dict__
 
 	def parseNode(self, node):
 		for child in node.childNodes:
@@ -399,7 +410,7 @@ class Rule:
 
 	def parseCategory(self, value):
 		self.parseNew()
-		self.Rule += "'" + value + "' in categories"
+		self.Rule += "'" + value + "' in entry.Categories"
 
 	def parseAll(self):
 		self.parseNew()
@@ -442,6 +453,7 @@ class MenuEntry:
 		self.DesktopEntry = Entry
 		self.DesktopFileID = Id
 		self.Allocated = Allocated
+		self.Add = False
 		# to implement the OnlyShowIn/NotShowIn keys
 		self.Show = True
 		# Caching
@@ -756,16 +768,12 @@ def __parseMergeEnd():
 def __genmenuNotOnlyAllocated(menu, cache):
 	if not menu.getOnlyUnallocated():
 		cache.addEntries(menu.getAppDirs())
-		for entry in cache.getEntries(menu.getAppDirs()):
-			categories = entry.Categories
-			inc = False
-			for rule in menu.getRules():
-				if eval(rule.CompiledRule):
-					if rule.Type == "Include":
-						inc = True
-					else:
-						inc = False
-			if inc == True:
+		entries = []
+		for rule in menu.getRules():
+			entries = rule.do(cache.getEntries(menu.getAppDirs()), rule.Type)
+		for entry in entries:
+		    if entry.Add == True:
+				entry.Add = False
 				entry.Allocated = True
 				menu.addDeskEntry(entry)
 	for submenu in menu.getSubmenus():
@@ -774,18 +782,13 @@ def __genmenuNotOnlyAllocated(menu, cache):
 def __genmenuOnlyAllocated(menu, cache):
 	if menu.getOnlyUnallocated():
 		cache.addEntries(menu.getAppDirs())
-		for entry in cache.getEntries(menu.getAppDirs()):
-			if entry.Allocated == True:
-				continue
-			categories = entry.Categories
-			inc = False
-			for rule in menu.Rules:
-				if eval(rule.CompiledRule):
-					if rule.Type == "Include":
-						inc = True
-					else:
-						inc = False
-			if inc == True:
+		entries = []
+		for rule in menu.getRules():
+			entries = rule.do(cache.getEntries(menu.getAppDirs()), rule.Type)
+		for entry in entries:
+		    if entry.Add == True:
+				entry.Add = False
+				entry.Allocated = True
 				menu.addDeskEntry(entry)
 
 	for submenu in menu.getSubmenus():

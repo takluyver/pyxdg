@@ -31,6 +31,7 @@ class IniFile:
 
 		# parse file
 		try:
+	#		lines = file(file, 'r').readlines()
 			lines = codecs.open(file, 'r', 'utf-8').readlines()
 			self.file = file
 		except IOError:
@@ -65,7 +66,11 @@ class IniFile:
 					if debug and self.hasKey(key, currentGroup):
 						raise DuplicateKeyError(key, currentGroup, file)
 					else:
-						content[currentGroup][key] = value
+							content[currentGroup][key] = value
+						#try:
+						#	content[currentGroup][key] = value.decode("utf-8")
+						#except UnicodeError:
+						#	raise ParsingError("File contains non UTF-8 chars", file)
 				except IndexError:
 					raise ParsingError("[%s]-Header missing" % headers[0], file)
 
