@@ -413,11 +413,11 @@ def do(entries, type, run):
 
 	def parseFilename(self, value):
 		self.parseNew()
-		self.Rule += "entry.DesktopFileID == '%s'" % value
+		self.Rule += "entry.DesktopFileID == '%s'" % value.strip()
 
 	def parseCategory(self, value):
 		self.parseNew()
-		self.Rule += "'%s' in entry.Categories" % value
+		self.Rule += "'%s' in entry.Categories" % value.strip()
 
 	def parseAll(self):
 		self.parseNew()
