@@ -787,8 +787,8 @@ def __genmenuOnlyAllocated(menu, cache):
 			entries = rule.do(cache.getEntries(menu.getAppDirs()), rule.Type)
 		for entry in entries:
 		    if entry.Add == True:
-				entry.Add = False
-				entry.Allocated = True
+			#	entry.Add = False
+			#	entry.Allocated = True
 				menu.addDeskEntry(entry)
 
 	for submenu in menu.getSubmenus():
@@ -896,8 +896,8 @@ class DesktopEntryCache:
 					and not deskentry.getNoDisplay():
 						entry = MenuEntry(deskentry, os.path.join(subdir,file).replace("/", "-"))
 						self.cacheEntries[dir].append(entry)
-				except:
-					pass
+				except ParsingError:
+					continue
 			elif os.path.isdir(os.path.join(dir,subdir,file)):
 				self.__addFiles(dir, os.path.join(subdir,file))
 
