@@ -137,9 +137,9 @@ class IniFile:
 	# start subget
 	def __getList(self, string):
 		if re.search(',', string):
-			return string.split(',')
+			return re.split(r"(?!\\).,")
 		else:
-			return string.split(';')
+			return re.split(r"(?!\\).;")
 
 	def __getBoolean(self, boolean):
 		if boolean == 1:
