@@ -29,9 +29,6 @@ class IniFile:
 		# for performance reasons
 		content = self.content
 
-		# check file extension
-		self.fileExtension = re.sub(".*\.", "", file)
-
 		# parse file
 		try:
 			lines = codecs.open(file, 'r', 'utf-8').readlines()
@@ -41,18 +38,16 @@ class IniFile:
 		except UnicodeError:
 			raise ParsingError("File contains non UTF-8 chars", file)
 
-		strip = string.strip
-		split = string.split
 		for line in lines:
 			# empty line
-			if strip(line) == '':
+			if line.strip() == '':
 				pass
 			# comment
 			elif line[0] == '#':
 				pass
 			# new group
 			elif line[0] == '[':
-				currentGroup = strip(line).strip("[").strip("]")
+				currentGroup = line.strip().strip("[").strip("]")
 				if debug and self.hasGroup(currentGroup):
 					raise DuplicateGroupError(currentGroup)
 				else:
@@ -60,18 +55,18 @@ class IniFile:
 			# key
 			else:
 				try:
-					tmp = split(line, '=')
-					key = strip(tmp[0])
-					value = strip(tmp[1])
+					tmp = line.split('=')
+					key = tmp[0].strip()
+					value = tmp[1].strip()
 				except IndexError:
-					raise ParsingError("Invalid Key=Value pair: " + line, file)
+					raise ParsingError("Invalid Key=Value pair: %s" % line, file)
 				try:
 					if debug and self.hasKey(key, currentGroup):
 						raise DuplicateKeyError(key, currentGroup)
 					else:
 						content[currentGroup][key] = value
 				except IndexError:
-					raise ParsingError("["+headers[0]+"]-Header missing", file)
+					raise ParsingError("[%s]-Header missing" % headers[0], file)
 
 		# check header
 		for header in headers:
@@ -79,7 +74,7 @@ class IniFile:
 				self.defaultGroup = header
 				break
 		else:
-			raise ParsingError("["+headers[0]+"]-Header missing", file)
+			raise ParsingError("[%s]-Header missing" % headers[0], file)
 
 	# start stuff to access the keys
 	def get(self, key, group = "", locale = False, type = "string", list = False):
@@ -228,8 +223,12 @@ class IniFile:
 	# start validation stuff
 	def validate(self, report = "All"):
 		"validate ... report = All / Warnings / Errors"
+
 		self.warnings = []
 		self.errors = []
+
+		# get file extension
+		self.fileExtension = re.sub(".*\.", "", file)
 
 		# overwrite this for own checkings
 		self.checkExtras()
