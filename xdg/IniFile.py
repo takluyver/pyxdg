@@ -2,7 +2,7 @@
 Base Class for DesktopEntry, IconTheme and IconData
 """
 
-import string, codecs, re, os
+import codecs, re, os
 from Exceptions import *
 
 class IniFile:
@@ -82,10 +82,12 @@ class IniFile:
 		if not group:
 			group = self.defaultGroup
 
-#		cache_name = self.file+key+group+str(locale)+type+str(list)
+		cache_name = "".join([self.file,key,group,str(locale),type,str(list)])
 
-#		if self.cache.has_key(cache_name):
-#			return self.cache[cache_name]
+		try:
+			return self.cache[cache_name]
+		except KeyError:
+			pass
 
 		# return key (with locale)
 		try:
@@ -94,11 +96,14 @@ class IniFile:
 			else:
 				value = self.content[group][key]
 		except KeyError, e:
-			if e == group:
-				raise NoGroupError(group, self.file)
+			if debug:
+				if e == group:
+					raise NoGroupError(group, self.file)
+				else:
+					raise NoKeyError(key, group, self.file)
 			else:
-				raise NoKeyError(key, group, self.file)
-
+				return ""
+				
 		if list == True:
 			values = self.getList(value)
 			result = []
@@ -117,26 +122,26 @@ class IniFile:
 			elif type == "regex":
 				value = re.compile(value)
 			elif type == "point":
-				value = string.split(",", value)
+				value = value.split(",")
 
 			if list == True:
 				result.append(value)
 			else:
 				result = value
 
-#		self.cache[cache_name] = result
+		self.cache[cache_name] = result
 
 		return result
 	# end stuff to access the keys
 
 	# start subget
 	def getList(self, string):
-		if re.search(r"(?<!\\)\|", string):
+		if re.search(r"(?<!\\)\;", string):
+			list = re.split(r"(?<!\\);", string)
+		elif re.search(r"(?<!\\)\|", string):
 			list = re.split(r"(?<!\\)\|", string)
 		elif re.search(r"(?<!\\),", string):
 			list = re.split(r"(?<!\\),", string)
-		else:
-			list = re.split(r"(?<!\\);", string)
 		if list[-1] == "":
 			list.pop()
 		return list
@@ -147,7 +152,7 @@ class IniFile:
 		elif boolean == 0:
 			return False
 		else:
-			return string.capitalize(boolean)
+			return boolean.capitalize()
 	# end subget
 
 	def resetCache(self):
@@ -159,7 +164,7 @@ class IniFile:
 		"set locale for current desktop entry"
 		# valid lc_messages format?
 		try:
-			p = re.compile('^([a-zA-Z]+)(_[a-zA-Z]+)?(\.[a-zA-Z\-0-9]+)?(@[a-zA-Z]+)?$')
+			p = re.compile('^([a-zA-Z]+)(_([a-zA-Z]+))?(\.([a-zA-Z\-0-9]+))?(@([a-zA-Z]+))?$')
 			m = p.match(lc_messages)
 		except TypeError:
 			m = ""
@@ -173,9 +178,9 @@ class IniFile:
 		# set lc_messages
 		else:
 			self.locale_LANG     = m.group(1)
-			self.locale_COUNTRY  = string.replace(m.group(2) or '', '_', '')
-			self.locale_ENCODING = string.replace(m.group(3) or '', '.', '')
-			self.locale_MODIFIER = string.replace(m.group(4) or '', '@', '')
+			self.locale_COUNTRY  = m.group(3) or ''
+			self.locale_ENCODING = m.group(5) or ''
+			self.locale_MODIFIER = m.group(7) or ''
 			self.resetCache()
 
 	def getLocale(self):
@@ -349,8 +354,11 @@ class IniFile:
 			raise NoGroupError(group, self.file)
 
 	def addGroup(self, group):
-		if debug and self.hasGroup(group):
-			raise DuplicateGroupError(group, self.file)
+		if self.hasGroup(group):
+			if debug:
+				raise DuplicateGroupError(group, self.file)
+			else:
+				pass
 		else:
 			self.content[group] = {}
 
@@ -368,24 +376,23 @@ class IniFile:
 		if not group:
 			group = self.defaultGroup
 
-		# does Group exists?
-		if not self.hasGroup(group):
+		try:
+			if locales:
+				for (name, value) in self.content[group].items():
+					if re.match("^" + key + self.locale + "$", name) and name != key:
+						value = self.content[group][name]
+						del self.content[group][name]
+			value = self.content[group][key]
+			del self.content[group][key]
+			return value
+		except KeyError:
 			if debug:
-				raise NoGroupError(group, self.file)
-
-		# does key exists?
-		if not self.hasKey(key, group):
-			if debug:
-				raise NoKeyError(key, group, self.file)
-
-		if locales:
-			for (name, value) in self.content[group].items():
-				if re.match("^" + key + self.locale + "$", name) and name != key:
-					value = self.content[group][name]
-					del self.content[group][name]
-		value = self.content[group][key]
-		del self.content[group][key]
-		return value
+				if e == group:
+					raise NoGroupError(group, self.file)
+				else:
+					raise NoKeyError(key, group, self.file)
+			else:
+				return ""
 
 	# misc
 	def groups(self):

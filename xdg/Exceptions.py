@@ -24,24 +24,24 @@ class ParsingError(Error):
 		Error.__init__(self, "ParsingError in file '%s', %s" % (file, msg))
 
 class NoKeyError(Error):
-	def __init__(self, key, group):
+	def __init__(self, key, group, file):
 		Error.__init__(self, "No key '%s' in group %s of file %s" % (key, group, file))
 		self.key = key
 		self.group = group
 
 class DuplicateKeyError(Error):
-	def __init__(self, key, group):
+	def __init__(self, key, group, file):
 		Error.__init__(self, "Duplicate key '%s' in group %s of file %s" % (key, group, file))
 		self.key = key
 		self.group = group
 
 class NoGroupError(Error):
-	def __init__(self, group):
+	def __init__(self, group, file):
 		Error.__init__(self, "No group: %s in file %s" % (group, file))
 		self.group = group
 
 class DuplicateGroupError(Error):
-	def __init__(self, group):
+	def __init__(self, group, file):
 		Error.__init__(self, "Duplicate group: %s in file %s" % (group, file))
 		self.group = group
 

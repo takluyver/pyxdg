@@ -7,7 +7,7 @@ Not Supported (and not planed):
 """
 
 from __future__ import generators
-import re, os, xml.dom.minidom
+import os, xml.dom.minidom
 
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
@@ -78,8 +78,8 @@ class Menu:
 	def setWM(self, wm):
 		for entry in self.Entries:
 			if isinstance(entry, MenuEntry):
-				if ( entry.DesktopEntry.hasKey("OnlyShowIn") and not wm in entry.DesktopEntry.getOnlyShowIn()) \
-				or ( entry.DesktopEntry.hasKey("NotShowIn") and wm in entry.DesktopEntry.getNotShowIn()):
+				if wm not in entry.DesktopEntry.getOnlyShowIn() \
+				or wm in entry.DesktopEntry.getNotShowIn():
 					entry.Show = False
 				else:
 					entry.Show = True
@@ -506,7 +506,7 @@ def parse(file = ""):
 		file = os.path.abspath(file)
 
 	# check if it is a .menu file
-	if not re.search('\.menu$', file):
+	if not os.path.splitext(file)[1].find("menu"):
 		raise ParsingError('Not a .menu file', file)
 
 	# create xml parser
@@ -537,7 +537,7 @@ def parse(file = ""):
 def __preparse(doc, file):
 	# extrace path and basename from file
 	path = os.path.dirname(file)
-	(basename, nil) = re.split(".[^.]*$", os.path.basename(file))
+	basename = os.path.splitext(os.path.basename(path))[0]
 
 	# replace default dir stuff
 	for name in [ "DefaultAppDirs", "DefaultDirectoryDirs", "DefaultMergeDirs" ]:
@@ -558,7 +558,7 @@ def __preparse(doc, file):
 				elif name == "DefaultMergeDirs":
 					value = os.path.join(dir, "menus", basename + "-merged")
 
-				entry = doc.createElement(re.sub("Default", "", name).replace("Dirs", "Dir"))
+				entry = doc.createElement(name.replace("Default", "").replace("Dirs", "Dir"))
 				entry.appendChild(doc.createTextNode(value))
 				parent.insertBefore(entry, node)
 			parent.removeChild(node)
@@ -706,7 +706,7 @@ def __parseMergeFile(child):
 def __parseMergeDir(child):
 	files = os.listdir(child.childNodes[0].nodeValue)
 	for file in files:
-		if re.search('\.menu', file):
+		if os.path.splitext(file)[1].find("menu"):
 			__mergeFile(os.path.join(child.childNodes[0].nodeValue, file), child)
 
 def __mergeFile(file, child):
@@ -871,13 +871,14 @@ class DesktopEntryCache:
 	def __addFiles(self, dir, subdir):
 		files = os.listdir(os.path.join(dir,subdir))
 		for file in files:
-			if re.search('\.desktop', file):
+			#if file.rfind(".desktop"):
+			if os.path.splitext(file)[1].find("desktop"):
 				try:
 					deskentry = DesktopEntry()
 					deskentry.parse(os.path.join(dir, subdir, file))
 					if not deskentry.getHidden() \
 					and not deskentry.getNoDisplay():
-						entry = MenuEntry(deskentry, re.sub("/", "-", os.path.join(subdir,file)))
+						entry = MenuEntry(deskentry, os.path.join(subdir,file).replace("/", "-"))
 						self.cacheEntries[dir].append(entry)
 				except:
 					pass
