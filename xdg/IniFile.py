@@ -111,6 +111,8 @@ class IniFile:
 			value = int(value)
 		elif type == "numeric":
 			value = float(value)
+		elif type == "regex":
+			value = re.compile(value)
 
 		return value
 	# end stuff to access the keys
@@ -257,6 +259,12 @@ class IniFile:
 		# convert to ascii
 		if not value.encode("ascii", 'ignore') == value:
 			self.errors.append("Value of key '%s' must only contain ASCII characters" % key)
+
+	def checkRegex(self, key, value):
+		try
+			re.compile(value)
+		except:
+			self.errors.append("Value of key '%s' is not a valid perl regex" % key)
 
 	# write support
 	def write(self, file):

@@ -46,7 +46,7 @@ class DesktopEntry(IniFile):
 	def getHidden(self):
 		return self.get('Hidden', type = "boolean")
 	def getFilePattern(self):
-		return self.get('FilePattern', type = "boolean")
+		return self.get('FilePattern', type = "regex")
 	def getTryExec(self):
 		return self.get('TryExec')
 	def getExec(self):
@@ -62,7 +62,7 @@ class DesktopEntry(IniFile):
 	def getActions(self):
 		return self.get('Actions', list = True)
 	def getMimeType(self):
-		return self.get('MimeType', list = True)
+		return self.get('MimeType', list = True, type = "regex")
 	def getSortOrder(self):	
 		return self.get('SortOrder', list = True)
 	def getDev(self):
@@ -230,7 +230,7 @@ class DesktopEntry(IniFile):
 			self.checkType(key, "Application")
 
 		elif key == "FilePatterns":
-			self.checkString(key, value)
+			self.checkRegex(key, value)
 			self.checkType(key, "Application")
 
 		elif key == "Actions":
@@ -238,7 +238,7 @@ class DesktopEntry(IniFile):
 			self.checkType(key, "Application")
 
 		elif key == "MimeType":
-			self.checkString(key, value)
+			self.checkRegex(key, value)
 			self.checkType(key, "Application")
 
 		elif key == "Categories":
