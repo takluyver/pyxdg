@@ -1,3 +1,11 @@
+2005-03-21 Heinrich Wendel <h_wendel@cojobo.net>
+	* IniFily.py:
+	Small fixes
+	* Menu.py:
+	remove __preparse and don't edit the parsed document, so menu editing is
+	possible
+	store parsed document in Menu.Doc
+
 2005-03-18 Heinrich Wendel <h_wendel@cojobo.net>
 	* Menu.py:
 	fix basename argument, thx to Matt Kynaston <mattkyn@gmail.com>;
