@@ -39,15 +39,16 @@ class IniFile:
 			raise ParsingError("File contains non UTF-8 chars", file)
 
 		for line in lines:
+			line = line.strip()
 			# empty line
-			if line.strip() == '':
-				pass
+			if not line:
+				continue
 			# comment
 			elif line[0] == '#':
-				pass
+				continue
 			# new group
 			elif line[0] == '[':
-				currentGroup = line.strip().strip("[").strip("]")
+				currentGroup = line.lstrip("[").rstrip("]")
 				if debug and self.hasGroup(currentGroup):
 					raise DuplicateGroupError(currentGroup, file)
 				else:
