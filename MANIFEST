@@ -2,6 +2,7 @@ AUTHORS
 ChangeLog
 COPYING
 README
+TODO
 doc/menu.dtd
 setup.py
 test/test-desktop.py

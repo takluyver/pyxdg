@@ -98,7 +98,6 @@ class Menu:
 				entry.setLocale(lc_messages, level)
 				level -= 1
 		if level == 0:
-			print "fucking bullshit"
 			sort(self)
 
 	def getEntries(self):
