@@ -1,0 +1,17 @@
+AUTHORS
+ChangeLog
+COPYING
+README
+doc/menu.dtd
+setup.py
+test/test-desktop.py
+test/test-desktop-write.py
+test/test-icon.py
+test/test-menu.py
+xdg/BaseDirectory.py
+xdg/DesktopEntry.py
+xdg/Exceptions.py
+xdg/IconTheme.py
+xdg/IniFile.py
+xdg/Menu.py
+xdg/__init__.py

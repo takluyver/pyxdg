@@ -1,0 +1,18 @@
+TODO:
+=====
+
+Generic:
+	- Performance improvements
+	- MimeSpec from ROX
+	- DOCS
+
+Menu Spec:
+	- Menu Spec 0.7
+
+IniFile:
+	- Performance of get(...)
+
+Desktop Entry Spec:
+	- check if regex is valid
+	- check if URL is valid
+	- check Categories and NotShowIn/OnlyShowIn key

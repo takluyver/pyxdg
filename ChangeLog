@@ -1,0 +1,41 @@
+Version 0.5
+
+2003-10-98 Heinrich Wendel <h_wendel@cojobo.net>
+  * Completed write-support in IniFile
+
+2003-10-05 Heinrich Wendel <h_wendel@cojobo.net>
+  * Added support for Hidden and NoDisplay in menu-spec
+  * inital write-support in IniFile
+
+2003-10-04 Heinrich Wendel <h_wendel@cojobo.net>
+  * License change to LGPL-2
+  * initial support for menu-spec 0.7
+
+Version 0.4
+
+2003-09-30 Heinrich Wendel <h_wendel@cojobo.net>
+  * Bugfix release
+
+Version 0.3
+
+2003-09-12 Heinrich Wendel <h_wendel@cojobo.net>
+  * Complete IconSpec implementation, including cache and validation
+
+2003-09-07 Heinrich Wendel <h_wendel@cojobo.net>
+
+  * Basedir spec converted to version 0.6
+  * First part of separating DesktopEntry backend in IniFile
+  * added getPath(...) function to Menu.py
+
+Version 0.2
+
+2003-09-05 Heinrich Wendel <h_wendel@cojobo.net>
+
+  * Rewrite of menu-spec code
+  * Taken basedir-spec code from ROX
+
+Version 0.1
+
+2003-08-08 Heinrich Wendel <h_wendel@cojobo.net>
+
+  * initial public release

@@ -1,0 +1,82 @@
+<!-- For explanations see http://www.freedesktop.org/standards/menu-spec -->
+<!ELEMENT Menu (
+	Name, (
+	  Directory
+	| DefaultAppDirs
+	| AppDir
+	| DefaultDirectoryDirs
+	| DirectoryDir
+	| LegacyDir
+	| KDELegacyDirs
+	| MergeFile
+	| DefaultMergeDirs
+	| MergeDir
+	| OnlyUnallocated
+	| NotOnlyUnallocated
+	| Deleted
+	| NotDeleted
+	| Include
+	| Exclude
+	| Move
+	| Menu
+	| Layout
+	| DefaultLayout
+	)*
+)>
+
+<!ELEMENT Name (#PCDATA)>
+
+<!ELEMENT Directory (#PCDATA)>
+
+<!ELEMENT DefaultAppDirs EMPTY>
+<!ELEMENT AppDir         (#PCDATA)>
+
+<!ELEMENT DefaultDirectoryDirs EMPTY>
+<!ELEMENT DirectoryDir         (#PCDATA)>
+
+<!ELEMENT LegacyDir     (#PCDATA)>
+<!ATTLIST LegacyDir     prefix CDATA #IMPLIED>
+<!ELEMENT KDELegacyDirs EMPTY>
+
+<!ELEMENT MergeFile        (#PCDATA)>
+<!ELEMENT DefaultMergeDirs EMPTY>
+<!ELEMENT MergeDir         (#PCDATA)>
+
+<!ELEMENT OnlyUnallocated    EMPTY>
+<!ELEMENT NotOnlyUnallocated EMPTY>
+
+<!ELEMENT Deleted    EMPTY>
+<!ELEMENT NotDeleted EMPTY>
+
+<!ELEMENT Exclude  ((Category|Filename|And|Or|Not|All)*)> 
+<!ELEMENT Include  ((Category|Filename|And|Or|Not|All)*)>
+
+<!ELEMENT And      ((Category|Filename|And|Or|Not|All)*)>
+<!ELEMENT Or       ((Category|Filename|And|Or|Not|All)*)>
+<!ELEMENT Not      ((Category|Filename|And|Or|Not|All)*)>
+<!ELEMENT Filename (#PCDATA)>
+<!ELEMENT Category (#PCDATA)>
+<!ELEMENT All      EMPTY>
+
+<!ELEMENT Move ((Old,New)*)>
+<!ELEMENT Old  (#PCDATA)>
+<!ELEMENT New  (#PCDATA)>
+
+<!ELEMENT Layout ((Filename|Menuname|Separator|Merge)*)>
+<!ELEMENT DefaultLayout ((Filename|Menuname|Separator|Merge)*)>
+<!ATTLIST DefaultLayout show_empty (true|false) #IMPLIED>
+<!ATTLIST DefaultLayout inline (true|false) #IMPLIED>
+<!ATTLIST DefaultLayout inline_limit CDATA #IMPLIED>
+<!ATTLIST DefaultLayout inline_header (true|false) #IMPLIED>
+<!ATTLIST DefaultLayout inline_alias (true|false) #IMPLIED>
+
+<!ELEMENT Menuname (#PCDATA)>
+<!ATTLIST Menuname inline (true|false) #IMPLIED>
+<!ATTLIST Menuname inline_limit CDATA #IMPLIED>
+<!ATTLIST Menuname inline_header (true|false) #IMPLIED>
+<!ATTLIST Menuname inline_alias (true|false) #IMPLIED>
+
+<!ELEMENT Separator EMPTY>
+
+<!ELEMENT Merge EMPTY>
+<!ATTLIST Merge type (menus|files|all) #REQUIRED>
