@@ -105,16 +105,33 @@ class IniFile:
 
 		if list == True:
 			value = self.__getList(value)
-		if type == "boolean":
-			value = self.__getBoolean(value)
-		elif type == "integer":
-			value = int(value)
-		elif type == "numeric":
-			value = float(value)
-		elif type == "regex":
-			value = re.compile(value)
 
-		return value
+		if list == True:
+			result = []
+			for item in value:
+				if type == "boolean":
+					result.append(self.__getBoolean(item))
+				elif type == "integer":
+					result.append(int(item))
+				elif type == "numeric":
+					result.append(float(item))
+				elif type == "regex":
+					result.append(re.compile(item))
+				else:
+					result.append(item)
+		else:
+			if type == "boolean":
+				result = self.__getBoolean(value)
+			elif type == "integer":
+				result = int(value)
+			elif type == "numeric":
+				result = float(value)
+			elif type == "regex":
+				result = re.compile(value)
+			else:
+				result = value
+
+		return result
 	# end stuff to access the keys
 
 	# start subget
