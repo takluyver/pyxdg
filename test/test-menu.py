@@ -7,7 +7,7 @@ import xdg.DesktopEntry
 
 def show_menu(menu, depth = 0):
 #	print depth*"-" + "\x1b[01m" + menu.getName().encode("ascii", 'ignore') + "\x1b[0m"
-	depth += 1
+#	depth += 1
 	for entry in menu.getEntries():
 		if isinstance(entry, xdg.Menu.Menu):
 			show_menu(entry, depth)
@@ -18,7 +18,7 @@ def show_menu(menu, depth = 0):
 #			print depth*"-" + "|||"
 #		elif isinstance(entry, xdg.Menu.Header):
 #			print depth*"-" + "\x1b[01m" + entry.Name + "\x1b[0m"
-	depth -= 1
+#	depth -= 1
 
 try:
 	menu = xdg.Menu.parse(sys.argv[1])
