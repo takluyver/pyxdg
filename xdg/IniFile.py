@@ -104,7 +104,7 @@ class IniFile:
 			value = self.content[group][key]
 
 		if list == True:
-			values = self.__getList(value)
+			values = self.getList(value)
 		else:
 			values[0] = value
 
@@ -132,7 +132,7 @@ class IniFile:
 	# end stuff to access the keys
 
 	# start subget
-	def __getList(self, string):
+	def getList(self, string):
 		if re.search('(?!\\).|', string):
 			return re.split(r"(?!\\).|", string)
 		elif re.search('(?!\\).,', string):
@@ -244,7 +244,7 @@ class IniFile:
 	# check random stuff
 	def checkValue(self, key, value, type = "string", list = False):
 		if list == True:
-			values = self.__getList(value)
+			values = self.getList(value)
 		else:
 			values[0] = value
 

@@ -7,9 +7,7 @@ Not supported:
 - Does not check exec parameters
 - Does not check URL's
 - Does not completly validate deprecated/kde items
-
-- Does not check Category entries
-- Does not check OnlyShowIn entries
+- Does not completly check categories
 """
 
 from xdg.IniFile import *
@@ -246,12 +244,18 @@ class DesktopEntry(IniFile):
 		elif key == "Categories":
 			self.checkValue(key, value)
 			self.checkType(key, "Application")
+			if self.checkCategorie(value) == 1:
+				self.errors.append("Value of key '%s' is not a registered Categorie" % key);
 
 		elif key == "OnlyShowIn":
-			self.checkValue(key, value)
+			self.checkValue(key, value, list = True)
+			if self.checkOnlyShowIn(value) == 1:
+				self.errors.append("Value of key '%s' is not a registered OnlyShowIn value" % key);
 
 		elif key == "NotShowIn":
-			self.checkValue(key, value)
+			self.checkValue(key, value, list = True)
+			if self.checkOnlyShowIn(value) == 1:
+				self.errors.append("Value of key '%s' is not a registered OnlyShowIn value" % key);
 
 		elif key == "StartupNotify":
 			self.checkValue(key, value, type = "boolean")
@@ -344,3 +348,17 @@ class DesktopEntry(IniFile):
 	def checkType(self, key, type):
 		if not self.type == type:
 			self.errors.append("Key '%s' only allowed in Type=%s" % (key, type))
+
+	def checkOnlyShowIn(self, value):
+		values = self.getList(value)
+		valid = ["GNOME", "KDE", "ROX", "XFCE", "Old"]
+		for item in values:
+			if item not in valid:
+				return 1
+
+	def checkCategorie(self, value):
+		values = self.getList(value)
+		valid = ["Legacy","Core","Development","Building","Debugger","IDE","GUIDesigner","Profiling","RevisionControl","Translation","Office","Calendar","ContactManagement","Database","Dictionary","Chart","Email","Finance","FlowChart","PDA","ProjectManagement","Presentation","Spreadsheet","WordProcessor","Graphics","2DGraphics","VectorGraphics","RasterGraphics","3DGraphics","Scanning","OCR","Photograph","Viewer","Settings","DesktopSettings","HardwareSettings","PackageManager","Network","Dialup","InstantMessaging","IRCClient","FileTransfer","HamRadio","News","P2P","RemoteAccess","Telephony","WebBrowser","WebDevelopment","AudioVideo","Audio","Midi","Mixer","Sequencer","Tuner","Video","TV","AudioVideoEditing","Player","Recorder","DiscBurning","Game","ActionGame","AdventureGame","ArcadeGame","BoardGame","BlocksGame","CardGame","KidsGame","LogicGame","RolePlaying","Simulation","SportsGame","StrategyGame","Education","Art","Art","Contruction","Music","Languages","Science","Astronomy","Biology","Chemistry","Geology","Math","MedicalSoftware","Physics","Teaching","Amusement","Applet","Archiving","Electronics","Emulator","Engineering","FileManager","Shell","Screensaver","TerminalEmulator","TrayIcon","System","Filesystem","Monitor","Security","Utility","Accessibility","Calculator","Clock","TextEditor","KDE","GNOME","GTK","Qt","Motif","Java","ConsoleOnly"]
+		for item in values:
+			if item not in valid:
+				return 1
