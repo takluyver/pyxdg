@@ -7,7 +7,7 @@ Not Supported (and not planed):
 """
 
 from __future__ import generators
-import re, os, xml.dom.minidom
+import re, os, xml.dom.minidom, sys
 
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
@@ -73,7 +73,7 @@ class Menu:
 		if isinstance(other, unicode):
 			return cmp(self.Name, other)
 		else:
-			return cmp(self.Name, other.Name)
+			return cmp(self.getName(), other.getName())
 
 	def setWM(self, wm):
 		for entry in self.Entries:
@@ -141,13 +141,17 @@ class Menu:
 		if self.cache.has_key("name"):
 			return self.cache["name"]
 
-		value = self.Directory.getName()
+		try:
+			value = self.Directory.getName()
+		except:
+			value = ""
+
 		if value:
-			return value
 			self.cache["name"] = value
+			return value
 		else:
-			return self.Name
 			self.cache["name"] = self.Name
+			return self.Name
 
 	def getGenericName(self):
 		value = self.Directory.getGenericName()
@@ -437,11 +441,17 @@ class MenuEntry:
 		elif isinstance(other, Menu):
 			return cmp(self.Name, other.getName())
 
-	#def __eq__(self, other):
-	#	return cmp(self.DesktopFileID, other.DesktopFileID)
+	def __eq__(self, other):
+		if self.DesktopFileID == other.DesktopFileID:
+			return True
+		else:
+			return False
 
 	def __ne__(self, other):
-		return cmp(self.DesktopFileID, other.DesktopFileID)
+		if self.DesktopFileID != other.DesktopFileID:
+			return True
+		else:
+			return False
 
 	def __str_(self):
 		return self.DesktopFileID()
@@ -479,7 +489,7 @@ def parse(file = ""):
 		raise ParsingError('File not found', file)
 	except xml.parsers.expat.ExpatError:
 		raise ParsingError('Not a valid .menu file', file)
-
+	
 	# parse menufile
 	tmp["Root"] = ""
 	__preparse(doc, file)
@@ -725,9 +735,9 @@ def __genmenuOnlyAllocated(menu, cache):
 	if menu.getOnlyUnallocated():
 		cache.addEntries(menu.getAppDirs())
 		for entry in cache.getEntries(menu.getAppDirs()):
-			categories = entry.DesktopEntry.getCategories()
 			if entry.Allocated == True:
 				continue
+			categories = entry.DesktopEntry.getCategories()
 			inc = False
 			for rule in menu.Rules:
 				if eval(rule.Rule):
@@ -796,6 +806,7 @@ class DesktopEntryCache:
 			if self.cacheEntries.has_key(dir):
 				for entry in self.cacheEntries[dir]:
 					if not entry.DesktopFileID in ids:
+					#if not entry in list:
 						ids.append(entry.DesktopFileID)
 						list.append(entry)
 		return list
