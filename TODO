@@ -11,6 +11,3 @@ Menu Spec:
 
 IniFile:
 	- Performance of get(...)
-
-Desktop Entry Spec:
-	- check Categories and NotShowIn/OnlyShowIn key
