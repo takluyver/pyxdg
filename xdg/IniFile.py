@@ -151,12 +151,11 @@ class IniFile:
 		return list
 
 	def __getBoolean(self, boolean):
-		if boolean == 1:
+		if boolean == 1 or boolean == "true" or boolean == "True":
 			return True
-		elif boolean == 0:
+		elif boolean == 0 or boolean == "false" or boolean == "False":
 			return False
-		else:
-			return boolean.capitalize()
+		return False
 	# end subget
 
 	def resetCache(self):

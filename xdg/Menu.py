@@ -368,13 +368,17 @@ class Rule:
 
 	def compile(self):
 		exec("""
-def do(entries, type):
+def do(entries, type, run):
     for entry in entries:
+		if run == 2 and entry.MatchedInclude == True:
+			entry.Add = False
+			continue
 		if entry.Allocated:
-		    continue
+			continue
 		if %s:
 		    if type == "Include":
 				entry.Add = True
+				entry.MatchedInclude = True
 		    else:
 				entry.Add = False
     return entries
@@ -454,6 +458,7 @@ class MenuEntry:
 		self.DesktopFileID = Id
 		self.Allocated = Allocated
 		self.Add = False
+		self.MatchedInclude = False
 		# to implement the OnlyShowIn/NotShowIn keys
 		self.Show = True
 		# Caching
@@ -683,33 +688,29 @@ def __postparse(menu):
 			submenu.setDeleted(False)
 		if submenu.getOnlyUnallocated() == "notset":
 			submenu.setOnlyUnallocated(False)
-		# Delete <Deleted> menus
-		if submenu.getDeleted() == True:
-			remove.append(submenu)
-			continue
 		# add parent's app/directory dirs
 		for dir in menu.getAppDirs(reverse = True):
 			submenu.addAppDir(dir, 0)
 		for dir in menu.getDirectoryDirs(reverse = True):
 			submenu.addDirectoryDir(dir, 0)
 
+		# get the valid .directory file out of the list
+		entry = ""
+		for directory in submenu.getDirectories():
+			for dir in submenu.getDirectoryDirs():
+				if os.path.exists(os.path.join(dir, directory)):
+					try:
+						entry = DesktopEntry()
+						entry.parse(os.path.join(dir, directory))
+					except:
+						pass
+		if entry:
+			submenu.setDirectory(entry)
+		else:
+			submenu.setDirectory(DesktopEntry())
+
 		# enter submenus
 		__postparse(submenu)
-
-	# get the valid .directory file out of the list
-	entry = ""
-	for directory in menu.getDirectories():
-		for dir in menu.getDirectoryDirs():
-			if os.path.exists(os.path.join(dir, directory)):
-				try:
-					entry = DesktopEntry()
-					entry.parse(os.path.join(dir, directory))
-				except:
-					pass
-	if entry:
-		menu.setDirectory(entry)
-	else:
-		menu.setDirectory(DesktopEntry())
 	
 	# remove menus
 	for submenu in remove:
@@ -770,7 +771,7 @@ def __genmenuNotOnlyAllocated(menu, cache):
 		cache.addEntries(menu.getAppDirs())
 		entries = []
 		for rule in menu.getRules():
-			entries = rule.do(cache.getEntries(menu.getAppDirs()), rule.Type)
+			entries = rule.do(cache.getEntries(menu.getAppDirs()), rule.Type, 1)
 		for entry in entries:
 		    if entry.Add == True:
 				entry.Add = False
@@ -784,7 +785,7 @@ def __genmenuOnlyAllocated(menu, cache):
 		cache.addEntries(menu.getAppDirs())
 		entries = []
 		for rule in menu.getRules():
-			entries = rule.do(cache.getEntries(menu.getAppDirs()), rule.Type)
+			entries = rule.do(cache.getEntries(menu.getAppDirs()), rule.Type, 2)
 		for entry in entries:
 		    if entry.Add == True:
 			#	entry.Add = False
@@ -812,6 +813,13 @@ def sort(menu):
 
 		if submenu.Layout.show_empty == "false" and len(submenu.Entries) == 0:
 			remove.append(submenu)
+
+		# remove menus that should not be displayed
+		if submenu.getDeleted() == True \
+		or submenu.Directory.getNoDisplay() == True \
+		or submenu.Directory.getHidden() == True:
+			remove.append(submenu)
+			continue
 
 	for submenu in remove:
 		menu.removeSubmenu(submenu)
