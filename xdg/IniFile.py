@@ -228,7 +228,7 @@ class IniFile:
 		self.errors = []
 
 		# get file extension
-		self.fileExtension = re.sub(".*\.", "", file)
+		self.fileExtension = re.sub(".*\.", "", self.file)
 
 		# overwrite this for own checkings
 		self.checkExtras()
