@@ -286,9 +286,15 @@ class Move:
 		for child in node.childNodes:
 			if child.nodeType == xml.dom.Node.ELEMENT_NODE:
 				if child.tagName == "Old":
-					self.parseOld(child.childNodes[0].nodeValue)
+					try:
+						self.parseOld(child.childNodes[0].nodeValue)
+					except IndexError:
+						raise ValidationError('Old cannot be empty', '??')                                            
 				elif child.tagName == "New":
-					self.parseNew(child.childNodes[0].nodeValue)
+					try:
+						self.parseNew(child.childNodes[0].nodeValue)
+					except IndexError:
+						raise ValidationError('New cannot be empty', '??')                                            
 
 	def parseOld(self, value):
 		self.Old = value
@@ -345,7 +351,10 @@ class Layout:
 		self.order.append(["Separator"])
 
 	def parseFilename(self, child):
-		self.order.append(["Filename", child.childNodes[0].nodeValue])
+		try:
+			self.order.append(["Filename", child.childNodes[0].nodeValue])
+		except IndexError:
+			raise ValidationError('Filename cannot be empty')
 
 	def parseMerge(self, child):
 		self.order.append(["Merge", child.getAttribute("type")])
@@ -391,9 +400,15 @@ def do(entries, type, run):
 		for child in node.childNodes:
 			if child.nodeType == xml.dom.Node.ELEMENT_NODE:
 				if child.tagName == 'Filename':
-					self.parseFilename(child.childNodes[0].nodeValue)
+					try:
+						self.parseFilename(child.childNodes[0].nodeValue)
+					except IndexError:
+						raise ValidatingError('Filename cannot be empty', "???")
 				elif child.tagName == 'Category':
-					self.parseCategory(child.childNodes[0].nodeValue)
+					try:
+						self.parseCategory(child.childNodes[0].nodeValue)
+					except IndexError:
+						raise ValidatingError('Category cannot be empty', "???")
 				elif child.tagName == 'All':
 					self.parseAll()
 				elif child.tagName == 'And':
@@ -574,17 +589,29 @@ def __parse(node, file, parent = ""):
 			if child.tagName == 'Menu':
 				__parseMenu(child, file, parent)
 			elif child.tagName == 'AppDir':
-				__parseAppDir(child.childNodes[0].nodeValue, file, parent)
+				try:
+					__parseAppDir(child.childNodes[0].nodeValue, file, parent)
+				except IndexError:
+					raise ValidationError('AppDir cannot be empty', file)
 			elif child.tagName == 'DefaultAppDirs':
 				__parseDefaultAppDir(file, parent)
 			elif child.tagName == 'DirectoryDir':
-				__parseDirectoryDir(child.childNodes[0].nodeValue, file, parent)
+				try:
+					__parseDirectoryDir(child.childNodes[0].nodeValue, file, parent)
+				except IndexError:
+					raise ValidationError('DirectoryDir cannot be empty', file)
 			elif child.tagName == 'DefaultDirectoryDirs':
 				__parseDefaultDirectoryDir(file, parent)
 			elif child.tagName == 'Name' :
-				parent.Name = child.childNodes[0].nodeValue
+				try:
+					parent.Name = child.childNodes[0].nodeValue
+				except IndexError:
+					raise ValidationError('Name cannot be empty', file)
 			elif child.tagName == 'Directory' :
-				parent.addDirectory(child.childNodes[0].nodeValue)
+				try:
+					parent.addDirectory(child.childNodes[0].nodeValue)
+				except IndexError:
+					raise ValidationError('Directory cannot be empty', file)
 			elif child.tagName == 'OnlyUnallocated':
 				parent.setOnlyUnallocated(True)
 			elif child.tagName == 'NotOnlyUnallocated':
@@ -596,9 +623,16 @@ def __parse(node, file, parent = ""):
 			elif child.tagName == 'Include' or child.tagName == 'Exclude':
 				parent.addRule(Rule(child.tagName, child))
 			elif child.tagName == 'MergeFile':
-				__parseMergeFile(child.childNodes[0].nodeValue, child, file, parent)
+				# TODO: can a MergeFile be empty if it's got type="parent"??
+				try:
+					__parseMergeFile(child.childNodes[0].nodeValue, child, file, parent)
+				except IndexError:
+					raise ValidationError('MergeFile cannot be empty', file)
 			elif child.tagName == 'MergeDir':
-				__parseMergeDir(child.childNodes[0].nodeValue, child, file, parent)
+				try:
+					__parseMergeDir(child.childNodes[0].nodeValue, child, file, parent)
+				except IndexError:
+					raise ValidationError('MergeDir cannot be empty', file)
 			elif child.tagName == 'DefaultMergeDirs':
 				__parseDefaultMergeDirs(child, file, parent)
 			elif child.tagName == 'Move':
