@@ -21,6 +21,10 @@ class IniFile:
 
 	cache = {}
 
+	list1 = re.compile(r"(?<!\\)\;")
+	list2 = re.compile(r"(?<!\\)\|")
+	list3 = re.compile(r"(?<!\\),")
+
 	def __init__(self):
 		# reset content
 		self.content = dict()
@@ -138,12 +142,12 @@ class IniFile:
 
 	# start subget
 	def getList(self, string):
-		if re.search(r"(?<!\\)\;", string):
-			list = re.split(r"(?<!\\);", string)
-		elif re.search(r"(?<!\\)\|", string):
-			list = re.split(r"(?<!\\)\|", string)
-		elif re.search(r"(?<!\\),", string):
-			list = re.split(r"(?<!\\),", string)
+		if self.list1.search(string):
+			list = self.list1.split(r"(?<!\\);")
+		elif self.list2.search(r"(?<!\\)\|")):
+			list = self.list2.split(r"(?<!\\)\|")
+		elif self.list3.search(r"(?<!\\),"):
+			list = self.list3.split(r"(?<!\\),")
 		else:
 			list = [string]
 		if list[-1] == "":
