@@ -19,8 +19,6 @@ class IniFile:
 
 	locale = "(\[([a-zA-Z]+)(_[a-zA-Z]+)?(\.[a-zA-Z\-0-9]+)?(@[a-zA-Z]+)?\])?"
 
-	cache = {}
-
 	list1 = re.compile(r"(?<!\\)\;")
 	list2 = re.compile(r"(?<!\\)\|")
 	list3 = re.compile(r"(?<!\\),")
@@ -28,6 +26,7 @@ class IniFile:
 	def __init__(self):
 		# reset content
 		self.content = dict()
+		self.cache = dict()
 
 	def parse(self, filename, headers):
 		# for performance reasons
