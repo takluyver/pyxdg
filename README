@@ -1,17 +1,13 @@
 The XDG Package contains:
 
 	- Implementation of the XDG-Base-Directory Standard
-	  http://www.freedesktop.org/standards/basedir-spec/
+	  http://www.freedesktop.org/standards/basedir-spec
 
 	- Implementation of the XDG-Desktop Standard
-	  http://www.freedesktop.org/standards/desktop-entry-spec/
+	  http://www.freedesktop.org/standards/desktop-entry-spec
 
 	- Implementation of the XDG-Menu Standard
-	  http://www.freedesktop.org/standards/menu-spec/
+	  http://www.freedesktop.org/standards/menu-spec
 
 	- Implementation of the XDG-Icon-Theme Standard
-	  http://www.freedesktop.org/standards/icon-theme-spec/
-
----
-
-Only tested with Python 2.2
+	  http://www.freedesktop.org/standards/icon-theme-spec
