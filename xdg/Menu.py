@@ -562,7 +562,7 @@ def parse(file = ""):
 def __preparse(doc, file):
 	# extrace path and basename from file
 	path = os.path.dirname(file)
-	basename = os.path.splitext(os.path.basename(path))[0]
+	basename = os.path.splitext(os.path.basename(file))[0]
 
 	# replace default dir stuff
 	for name in [ "DefaultAppDirs", "DefaultDirectoryDirs", "DefaultMergeDirs" ]:
