@@ -35,41 +35,38 @@ class IniFile:
 
 		# parse file
 		try:
-			lines = file(filename, 'r').readlines()
-			self.file = filename
+			for line in file(filename,'r'):
+				line = line.strip()
+				# empty line
+				if not line:
+					continue
+				# comment
+				elif line[0] == '#':
+					continue
+				# new group
+				elif line[0] == '[':
+					currentGroup = line.lstrip("[").rstrip("]")
+					if debug and self.hasGroup(currentGroup):
+						raise DuplicateGroupError(currentGroup, self.filename)
+					else:
+						content[currentGroup] = {}
+				# key
+				else:
+					try:
+						tmp = line.split('=',1)
+						key = tmp[0].strip()
+						value = tmp[1].strip()
+					except IndexError:
+						raise ParsingError("Invalid Key=Value pair: %s" % line, filename)
+					try:
+						if debug and self.hasKey(key, currentGroup):
+							raise DuplicateKeyError(key, currentGroup, filename)
+						else:
+							content[currentGroup][key] = value
+					except IndexError:
+						raise ParsingError("[%s]-Header missing" % headers[0], filename)
 		except IOError:
 			raise ParsingError("File not found", filename)
-
-		for line in lines:
-			line = line.strip()
-			# empty line
-			if not line:
-				continue
-			# comment
-			elif line[0] == '#':
-				continue
-			# new group
-			elif line[0] == '[':
-				currentGroup = line.lstrip("[").rstrip("]")
-				if debug and self.hasGroup(currentGroup):
-					raise DuplicateGroupError(currentGroup, self.filename)
-				else:
-					content[currentGroup] = {}
-			# key
-			else:
-				try:
-					tmp = line.split('=',1)
-					key = tmp[0].strip()
-					value = tmp[1].strip()
-				except IndexError:
-					raise ParsingError("Invalid Key=Value pair: %s" % line, filename)
-				try:
-					if debug and self.hasKey(key, currentGroup):
-						raise DuplicateKeyError(key, currentGroup, filename)
-					else:
-						content[currentGroup][key] = value
-				except IndexError:
-					raise ParsingError("[%s]-Header missing" % headers[0], filename)
 
 		# check header
 		for header in headers:
