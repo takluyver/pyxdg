@@ -104,7 +104,7 @@ class Menu:
 		for entry in self.Entries:
 			if isinstance(entry, MenuEntry) and entry.Show == True:
 				yield entry
-			elif isinstance(entry, Menu):
+			else:
 				yield entry
 
 	def searchEntry(self, filename, deep = True, action = "echo"):
@@ -259,7 +259,7 @@ class Menu:
 			index = self.getSubmenus().index(name)
 			return self.getSubmenus()[index]
 		except ValueError:
-			return ""
+			return
 	def removeSubmenu(self, newmenu):
 		self.Submenus.remove(newmenu)
 
@@ -295,14 +295,15 @@ class Layout:
 		if node:
 			self.show_empty = node.getAttribute("show_empty") or "false"
 			self.inline = node.getAttribute("inline") or "false"
-			self.inline_limit = node.getAttribute("inline_limit") or "4"
+			self.inline_limit = node.getAttribute("inline_limit") or 4
 			self.inline_header = node.getAttribute("inline_header") or "true"
 			self.inline_alias = node.getAttribute("inline_alias") or "false"
+			self.inline_limit = int(self.inline_limit)
 			self.parseNode(node)
 		else:
 			self.show_empty = "false"
 			self.inline = "false"
-			self.inline_limit = "4"
+			self.inline_limit = 4
 			self.inline_headers = "true"
 			self.inline_alias = "false"
 			self.order.append(["Merge", "menus"])
@@ -324,12 +325,13 @@ class Layout:
 		self.order.append([
 			"Menuname",
 			child.childNodes[0].nodeValue,
-			child.getAttribute("show_empty"),
-			child.getAttribute("inline"),
-			child.getAttribute("inline_lmit"),
-			child.getAttribute("inline_header"),
-			child.getAttribute("inline_alias")
+			child.getAttribute("show_empty") or "false",
+			child.getAttribute("inline") or "false",
+			child.getAttribute("inline_limit") or 4,
+			child.getAttribute("inline_header") or "true",
+			child.getAttribute("inline_alias") or "false"
 		])
+		self.order[-1][4] = int(self.order[-1][4])
 
 	def parseSeparator(self, child):
 		self.order.append(["Separator"])
@@ -474,6 +476,17 @@ class MenuEntry:
 class Separator:
 	"Just a dummy class for Separators"
 	pass
+
+
+class Header:
+	"Class for Inline Headers"
+	def __init__(self, Name, GenericName, Comment):
+		self.Name = Name
+		self.GenericName = GenericName
+		self.Comment = Comment
+
+	def __str__(self):
+		return self.Name
 
 
 tmp = {}
@@ -772,20 +785,17 @@ def sort(menu):
 	remove = []
 	for submenu in menu.getSubmenus():
 		sort(submenu)
-		if len(submenu.Entries) == 0 and submenu.Layout.show_empty == "false":
+
+		# remove separators at the beginning and at the end
+		if len(submenu.Entries) > 0:
+			if isinstance(submenu.Entries[0], Separator):
+				submenu.Entries.pop(0)
+		if len(submenu.Entries) > 0:
+			if isinstance(submenu.Entries[-1], Separator):
+				submenu.Entries.pop(-1)
+
+		if submenu.Layout.show_empty == "false" and len(submenu.Entries) == 0:
 			remove.append(submenu)
-		#elif len(submenu.Entries) == 1 and submenu.inline_header == "true":
-		#	for submenu in menu.getSubmenus():
-		#		menu.Submenus.append(submenu)
-		#	for entry in menu.getDeskEntries():
-		#		menu.DeskEntries.append(entry)
-		#	# FIXME: mark the inline header
-		#	# FIXME: inline_header
-		#elif (len(submenu.Entries) <= submenu.Layout.inline_limit or submenu.Layout.inline_limit == 0) and submenu.Layout.inline = "true"
-		#	for submenu in menu.getSubmenus():
-		#		menu.Submenus.append(submenu)
-		#	for entry in menu.getDeskEntries():
-		#		menu.DeskEntries.append(entry)
 
 	for submenu in remove:
 		menu.removeSubmenu(submenu)
@@ -803,9 +813,13 @@ def sort(menu):
 		if order[0] == "Separator":
 			menu.Entries.append(Separator())
 		elif order[0] == "Filename":
-			menu.Entries.append(menu.getDeskEntry(order[1]))
+			entry = menu.getDeskEntry(order[1])
+			if entry:
+				menu.Entries.append(entry)
 		elif order[0] == "Menuname":
-			menu.Entries.append(menu.getSubmenu(order[1]))
+			submenu = menu.getSubmenu(order[1])
+			if submenu:
+				__parse_inline(submenu, menu)
 		elif order[0] == "Merge":
 			if order[1] == "files" or order[1] == "all":
 				menu.DeskEntries.sort()
@@ -816,8 +830,32 @@ def sort(menu):
 				menu.Submenus.sort()
 				for submenu in menu.getSubmenus():
 					if submenu.Name not in tmp_s:
-						menu.Entries.append(submenu)
+						__parse_inline(submenu, menu)
 
+# inline tags
+def __parse_inline(submenu, menu):
+	if submenu.Layout.inline == "true":
+		if len(submenu.Entries) == 1 and submenu.Layout.inline_alias == "true":
+			entry = submenu.Entries[0]
+			locale = entry.DesktopEntry.getLocale()
+			if locale == "C":
+				locale = ""
+			if locale:
+				locale = "[" + locale + "]"
+			entry.DesktopEntry.set("Name" + locale, submenu.getName())
+			entry.DesktopEntry.set("GenericName" + locale, submenu.getGenericName())
+			entry.DesktopEntry.set("Comment" + locale, submenu.getComment())
+			menu.Entries.append(entry)
+		elif len(submenu.Entries) <= submenu.Layout.inline_limit or submenu.Layout.inline_limit == 0:
+			if submenu.Layout.inline_header == "true":
+				header = Header(submenu.getName(), submenu.getGenericName(), submenu.getComment())
+				menu.Entries.append(header)
+			for entry in submenu.getEntries():
+				menu.Entries.append(entry)
+		else:
+			menu.Entries.append(submenu)
+	else:
+		menu.Entries.append(submenu)
 
 class DesktopEntryCache:
 	"Class to cache Desktop Entries"

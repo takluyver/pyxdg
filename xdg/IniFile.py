@@ -161,6 +161,10 @@ class IniFile:
 			return string.capitalize(boolean)
 	# end subget
 
+	def resetCache(self):
+		# delete cache
+		self.cache = {}
+
 	# start locale [] stuff
 	def setLocale(self, lc_messages):
 		"set locale for current desktop entry"
@@ -178,8 +182,7 @@ class IniFile:
 			self.locale_COUNTRY  = string.replace(m.group(2) or '', '_', '')
 			self.locale_ENCODING = string.replace(m.group(3) or '', '.', '')
 			self.locale_MODIFIER = string.replace(m.group(4) or '', '@', '')
-			# delete cache
-			self.cache = {}
+			self.resetCache()
 
 	def getLocale(self):
 		"return locale in lc_messages format"
@@ -352,6 +355,7 @@ class IniFile:
 				raise NoKeyError(key, group)
 
 		self.content[group][key] = value
+		self.resetCache()
 
 	def addGroup(self, group):
 		if self.hasGroup(group):

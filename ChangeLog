@@ -1,8 +1,7 @@
 Version 0.5
 
 2004-03-29 Heinrich Wendel <h_wendel@cojobo.net>
-	* Finished Support for <Merge>, <Filename>, <Menuname>, <Separator>
-	  in Layout parsing in Menu.py
+	* Finished Support for menu-spec 0.7
 
 2004-03-27 Heinrich Wendel <h_wendel@cojobo.net>
     * 5* speed improvement in Menu.py parsing code

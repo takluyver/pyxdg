@@ -14,12 +14,16 @@ def show_menu(menu, depth = 0):
 		elif isinstance(entry, xdg.Menu.MenuEntry):
 			print depth*"-" + entry.DesktopEntry.getName().encode("ascii", 'ignore')
 #			print re.sub("/KDE/", "", menu.getPath()) + "/\t" + entry.DesktopFileID + "\t" + entry.DesktopEntry.getFileName()
+		elif isinstance(entry, xdg.Menu.Separator):
+			print depth*"-" + "|||"
+		elif isinstance(entry, xdg.Menu.Header):
+			print depth*"-" + "\x1b[01m" + entry.Name + "\x1b[0m"
 	depth -= 1
 
 try:
 	menu = xdg.Menu.parse(sys.argv[1])
 	menu.setWM("GNOME")
-	#menu.setLocale("de")
+	menu.setLocale("de")
 	show_menu(menu)
 except IndexError:
 	show_menu(xdg.Menu.parse(), 0)
