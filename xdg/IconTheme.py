@@ -75,9 +75,9 @@ class IconTheme(IniFile):
 			self.warnings.append('[KDE Icon Theme]-Header is deprecated')
 
 		# file extension
-		if self.fileExtension == "theme":
+		if self.fileExtension == ".theme":
 			pass
-		elif self.fileExtension == "desktop":
+		elif self.fileExtension == ".desktop":
 			self.warnings.append('.desktop fileExtension is deprecated')
 		else:
 			self.warnings.append('Unknown File extension')
@@ -185,7 +185,7 @@ class IconData(IniFile):
 	# validation stuff
 	def checkExtras(self):
 		# file extension
-		if self.fileExtension != "icon":
+		if self.fileExtension != ".icon":
 			self.warnings.append('Unknown File extension')
 
 	def checkGroup(self, group):

@@ -1,3 +1,9 @@
+2004-10-18  Ross Burton  <ross@burtonini.com>
+	* xdg/DesktopEntry.py, xdg/IconTheme.py:
+	Add . to the literal FileExtensions so that the checks work.
+	* xdg/Menu.py:
+	Don't read .desktop-* files, only .desktop
+
 2004-10-18  Martin Grimme  <martin@pycage.de>
 	* xdg/IconTheme.py (getIconPath): The "hicolor" theme has to be used as
 	the fallback.

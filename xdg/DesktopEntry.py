@@ -124,9 +124,9 @@ class DesktopEntry(IniFile):
 			self.warnings.append('[KDE Desktop Entry]-Header is deprecated')
 
 		# file extension
-		if self.fileExtension == "kdelnk":
+		if self.fileExtension == ".kdelnk":
 			self.warnings.append("File extension .kdelnk is deprecated")
-		elif self.fileExtension != "desktop" and self.fileExtension != "directory":
+		elif self.fileExtension != ".desktop" and self.fileExtension != ".directory":
 			self.warnings.append('Unknown File extension')
 
 		# Type
@@ -174,9 +174,9 @@ class DesktopEntry(IniFile):
 			elif not (value == "Application" or value == "Link" or value == "FSDevice" or value == "Directory"):
 				self.errors.append("Value of key 'Type' must be Application, Link, FSDevice or Directory, but is '%s'" % value)
 
-			if self.fileExtension == "directory" and not value == "Directory":
+			if self.fileExtension == ".directory" and not value == "Directory":
 				self.warnings.append("File extension is .directory, but Type is '%s'" % value)
-			elif self.fileExtension == "desktop" and value == "Directory":
+			elif self.fileExtension == ".desktop" and value == "Directory":
 				self.warnings.append("Files with Type=Directory should have the extension .directory")
 
 		elif key == "Version":
