@@ -26,7 +26,7 @@ class IniFile:
 		self.content = dict()
 
 	def parse(self, file, headers):
-		# performance reasons
+		# for performance reasons
 		content = self.content
 
 		# check file extension
@@ -34,26 +34,25 @@ class IniFile:
 
 		# parse file
 		try:
-			f = codecs.open(file, 'r', 'utf-8')
+			lines = codecs.open(file, 'r', 'utf-8').readlines()
 			self.file = file
 		except IOError:
 			raise ParsingError("File not found", file)
-
-		try:
-			lines = f.readlines()
 		except UnicodeError:
 			raise ParsingError("File contains non UTF-8 chars", file)
 
+		strip = string.strip
+		split = string.split
 		for line in lines:
 			# empty line
-			if line.strip() == '':
+			if strip(line) == '':
 				pass
 			# comment
 			elif line[0] == '#':
 				pass
 			# new group
 			elif line[0] == '[':
-				currentGroup = string.strip(line).strip("[").strip("]")
+				currentGroup = strip(line).strip("[").strip("]")
 				if debug and self.hasGroup(currentGroup):
 					raise DuplicateGroupError(currentGroup)
 				else:
@@ -61,9 +60,9 @@ class IniFile:
 			# key
 			else:
 				try:
-					tmp = string.split(line, '=')
-					key = string.strip(tmp[0])
-					value = string.strip(tmp[1])
+					tmp = split(line, '=')
+					key = strip(tmp[0])
+					value = strip(tmp[1])
 				except IndexError:
 					raise ParsingError("Invalid Key=Value pair: " + line, file)
 				try:
