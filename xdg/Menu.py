@@ -121,7 +121,7 @@ class Menu:
 				for submenu in self.Submenus:
 					submenu.searchEntry(filename, deep, action)
 
-	def getPath(self, org = False):
+	def getPath(self, org = False, toplevel = False):
 		parent = self
 		names=[]
 		while 1:
@@ -135,8 +135,10 @@ class Menu:
 				break
 		names.reverse()
 		path = ""
+		if toplevel == False:
+			names.pop(0)
 		for name in names:
-			path = path + "/" + name
+			path = os.path.join(path, name)
 		return path
 
 	def getName(self):
