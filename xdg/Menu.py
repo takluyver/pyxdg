@@ -103,7 +103,8 @@ class Menu:
 
 	def getEntries(self):
 		for entry in self.Entries:
-			if isinstance(entry, MenuEntry) and entry.Show == True:
+			if isinstance(entry, MenuEntry) \
+			and entry.Show == True:
 				yield entry
 			else:
 				yield entry
@@ -801,6 +802,13 @@ def sort(menu):
 
 	remove = []
 	for submenu in menu.getSubmenus():
+		# remove menus that should not be displayed
+		if submenu.getDeleted() == True \
+		or submenu.Directory.getHidden() == True \
+		or submenu.Directory.getNoDisplay() == True:
+			remove.append(submenu)
+			continue
+
 		sort(submenu)
 
 		# remove separators at the beginning and at the end
@@ -814,14 +822,8 @@ def sort(menu):
 		if submenu.Layout.show_empty == "false" and len(submenu.Entries) == 0:
 			remove.append(submenu)
 
-		# remove menus that should not be displayed
-		if submenu.getDeleted() == True \
-		or submenu.Directory.getNoDisplay() == True \
-		or submenu.Directory.getHidden() == True:
-			remove.append(submenu)
-			continue
-
 	for submenu in remove:
+		print submenu
 		menu.removeSubmenu(submenu)
 
 	tmp_s = []
