@@ -370,12 +370,10 @@ class Rule:
 		exec("""
 def do(entries, type, run):
     for entry in entries:
-		if run == 2 and entry.MatchedInclude == True:
-			entry.Add = False
+		if run == 2 and entry.MatchedInclude == True \
+		or entry.Allocated == True:
 			continue
-		if entry.Allocated:
-			continue
-		if %s:
+		elif %s:
 		    if type == "Include":
 				entry.Add = True
 				entry.MatchedInclude = True
