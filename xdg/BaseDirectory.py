@@ -6,7 +6,7 @@ http://cvs.sourceforge.net/viewcvs.py/rox/ROX-Lib2/python/rox/basedir.py?rev=1.9
 The freedesktop.org Base Directory specification provides a way for
 applications to locate shared data and configuration:
 
-	http://www.freedesktop.org/standards/basedir-spec
+	http://standards.freedesktop.org/basedir-spec/
 
 (based on version 0.6)
 

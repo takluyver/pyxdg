@@ -1,6 +1,6 @@
 """
 Complete implementation of the XDG Icon Spec Version 0.8
-http://www.freedesktop.org/standards/icon-theme-spec
+http://standards.freedesktop.org/icon-theme-spec/
 """
 
 import os, sys, time

@@ -1,6 +1,6 @@
 """
-Implementation of the XDG Menu Specification Version 0.8
-http://www.freedesktop.org/standards/menu-spec
+Implementation of the XDG Menu Specification Version 0.91
+http://standards.freedesktop.org/menu-spec/
 
 Not Supported (and not planed):
     - <LegacyDir>, <KDELegacyDirs>
@@ -528,8 +528,7 @@ tmp["mergeFiles"] = []
 def parse(file = ""):
 	# if no file given, try default files
 	if not file:
-		dirs = xdg_config_dirs
-		for dir in dirs:
+		for dir in xdg_config_dirs:
 			file = os.path.join (dir, "menus" , "applications.menu")
 			if os.path.isdir(dir) and os.path.isfile(file):
 				break
@@ -722,9 +721,20 @@ def __parseDefaultDirectoryDir(file,parent):
 
 # Merge Stuff
 def __parseMergeFile(value, child, file, parent):
-	value = __check(value, file, "file")
-	if value:
-		__mergeFile(value, child, parent)
+	if child.getAttribute("type") == "parent":
+		for dir in xdg_config_dirs:
+			rel_file = file.replace(dir, "").strip("/")
+			if rel_file != file:
+				for p in xdg_config_dirs:
+					if dir == p:
+						continue
+					if os.path.isfile(os.path.join(p,rel_file)):
+						__mergeFile(os.path.join(p,rel_file),child,parent)
+						break
+	else:
+		value = __check(value, file, "file")
+		if value:
+			__mergeFile(value, child, parent)
 
 def __parseMergeDir(value, child, file, parent):
 	value = __check(value, file, "dir")
