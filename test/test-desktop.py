@@ -17,13 +17,12 @@ def checkfiles(path):
 			return
 
 		entry.setLocale("C")
-		for i in range(1,100000):
-			entry.getName()
+		entry.getName()
 
-#		try:
-#			entry.validate()
-#		except ValidationError, e:
-#			print e
+		try:
+			entry.validate()
+		except ValidationError, e:
+			print e
 
 try:
 	checkfiles(sys.argv[1])
