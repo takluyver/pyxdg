@@ -11,6 +11,7 @@
 	remove __preparse and don't edit the parsed document, so menu editing is
 	possible
 	store parsed document in Menu.Doc
+	store document name in Menu.Filename
 
 2005-03-18 Heinrich Wendel <h_wendel@cojobo.net>
 	* Menu.py:
