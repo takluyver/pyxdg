@@ -19,6 +19,7 @@ class Menu:
 		self.Name = ""
 		self.Entries = []
 		self.Doc = ""
+		self.Filename = ""
 #		self.Parent = ""
 
 		# Private stuff, only needed for parsing
@@ -554,6 +555,7 @@ def parse(file = ""):
 	__parse(doc, file, tmp["Root"])
 	__postparse(tmp["Root"])
 	tmp["Root"].Doc = doc
+	tmp["Root"].Filename = file
 
 	# generate the menu
 	cache = DesktopEntryCache()
