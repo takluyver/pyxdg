@@ -112,6 +112,7 @@ class IniFile:
 
 		if list == True:
 			values = self.getList(value)
+			result = []
 		else:
 			values = [value]
 
@@ -130,7 +131,6 @@ class IniFile:
 				value = string.split(",", value)
 
 			if list == True:
-				result = []
 				result.append(value)
 			else:
 				result = value
