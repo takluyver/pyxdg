@@ -19,14 +19,15 @@ class IniFile:
 
 	locale = "(\[([a-zA-Z]+)(_[a-zA-Z]+)?(\.[a-zA-Z\-0-9]+)?(@[a-zA-Z]+)?\])?"
 
-	list1 = re.compile(r"(?<!\\)\;")
-	list2 = re.compile(r"(?<!\\)\|")
-	list3 = re.compile(r"(?<!\\),")
 
 	def __init__(self):
 		# reset content
 		self.content = dict()
 		self.cache = dict()
+
+		self.list1 = re.compile(r"(?<!\\)\;")
+		self.list2 = re.compile(r"(?<!\\)\|")
+		self.list3 = re.compile(r"(?<!\\),")
 
 	def parse(self, filename, headers):
 		# for performance reasons
@@ -139,11 +140,11 @@ class IniFile:
 	# start subget
 	def getList(self, string):
 		if self.list1.search(string):
-			list = self.list1.split(r"(?<!\\);")
-		elif self.list2.search(r"(?<!\\)\|"):
-			list = self.list2.split(r"(?<!\\)\|")
-		elif self.list3.search(r"(?<!\\),"):
-			list = self.list3.split(r"(?<!\\),")
+			list = self.list1.split(string)
+		elif self.list2.search(string):
+			list = self.list2.split(string)
+		elif self.list3.search(string):
+			list = self.list3.split(string)
 		else:
 			list = [string]
 		if list[-1] == "":
