@@ -245,17 +245,17 @@ class DesktopEntry(IniFile):
 			self.checkValue(key, value)
 			self.checkType(key, "Application")
 			if self.checkCategorie(value) == 1:
-				self.errors.append("Value of key '%s' is not a registered Categorie" % key);
+				self.errors.append("'%s' is not a registered Category" % value);
 
 		elif key == "OnlyShowIn":
 			self.checkValue(key, value, list = True)
 			if self.checkOnlyShowIn(value) == 1:
-				self.errors.append("Value of key '%s' is not a registered OnlyShowIn value" % key);
+				self.errors.append("'%s' is not a registered OnlyShowIn value" % value);
 
 		elif key == "NotShowIn":
 			self.checkValue(key, value, list = True)
 			if self.checkOnlyShowIn(value) == 1:
-				self.errors.append("Value of key '%s' is not a registered OnlyShowIn value" % key);
+				self.errors.append("'%s' is not a registered OnlyShowIn value" % value);
 
 		elif key == "StartupNotify":
 			self.checkValue(key, value, type = "boolean")

@@ -19,6 +19,8 @@ class IniFile:
 
 	locale = "(\[([a-zA-Z]+)(_[a-zA-Z]+)?(\.[a-zA-Z\-0-9]+)?(@[a-zA-Z]+)?\])?"
 
+	cache = {}
+
 	def __init__(self):
 		# reset content
 		self.content = dict()
@@ -62,7 +64,7 @@ class IniFile:
 				except IndexError:
 					raise ParsingError("Invalid Key=Value pair: " + line, self.file)
 				try:
-					if self.hasKey(currentGroup, key) and debug:
+					if self.hasKey(key, currentGroup) and debug:
 						raise DuplicateKeyError(key, currentGroup)
 					else:
 						self.content[currentGroup][key] = value
@@ -82,6 +84,11 @@ class IniFile:
 		# set default group
 		if not group:
 			group = self.defaultGroup
+
+		cache_name = self.file+key+group+str(locale)+type+str(list)
+
+		if self.cache.has_key(cache_name):
+			return self.cache[cache_name]
 
 		# does Group exists?
 		if not self.hasGroup(group):
@@ -106,7 +113,7 @@ class IniFile:
 		if list == True:
 			values = self.getList(value)
 		else:
-			values[0] = value
+			values = [value]
 
 		for value in values:
 			if type == "string":
@@ -128,17 +135,22 @@ class IniFile:
 			else:
 				result = value
 
+		self.cache[cache_name] = result
+
 		return result
 	# end stuff to access the keys
 
 	# start subget
 	def getList(self, string):
-		if re.search('(?!\\).|', string):
-			return re.split(r"(?!\\).|", string)
-		elif re.search('(?!\\).,', string):
-			return re.split(r"(?!\\).,", string)
+		if re.search(r"(?<!\\)\|", string):
+			list = re.split(r"(?<!\\)\|", string)
+		elif re.search(r"(?<!\\),", string):
+			list = re.split(r"(?<!\\),", string)
 		else:
-			return re.split(r"(?!\\).;", string)
+			list = re.split(r"(?<!\\);", string)
+		if list[-1] == "":
+			list.pop()
+		return list
 
 	def __getBoolean(self, boolean):
 		if boolean == 1:
@@ -166,6 +178,8 @@ class IniFile:
 			self.locale_COUNTRY  = string.replace(m.group(2) or '', '_', '')
 			self.locale_ENCODING = string.replace(m.group(3) or '', '.', '')
 			self.locale_MODIFIER = string.replace(m.group(4) or '', '@', '')
+			# delete cache
+			self.cache = {}
 
 	def getLocale(self):
 		"return locale in lc_messages format"
@@ -246,7 +260,7 @@ class IniFile:
 		if list == True:
 			values = self.getList(value)
 		else:
-			values[0] = value
+			values = [value]
 
 		for value in values:
 			if type == "string":
