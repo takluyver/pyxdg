@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup( name = "pyxdg",
-       version = "0.8",
+       version = "0.9",
 	   description = "PyXDG contains implementations of freedesktop.org standards in python.",
 	   maintainer = "Heinrich Wendel",
 	   maintainer_email = "h_wendel@cojobo.net",
