@@ -49,7 +49,7 @@ class IniFile:
 			elif line[0] == '[':
 				currentGroup = line.strip().strip("[").strip("]")
 				if debug and self.hasGroup(currentGroup):
-					raise DuplicateGroupError(currentGroup)
+					raise DuplicateGroupError(currentGroup, file)
 				else:
 					content[currentGroup] = {}
 			# key
@@ -62,7 +62,7 @@ class IniFile:
 					raise ParsingError("Invalid Key=Value pair: %s" % line, file)
 				try:
 					if debug and self.hasKey(key, currentGroup):
-						raise DuplicateKeyError(key, currentGroup)
+						raise DuplicateKeyError(key, currentGroup, file)
 					else:
 						content[currentGroup][key] = value
 				except IndexError:
@@ -82,30 +82,22 @@ class IniFile:
 		if not group:
 			group = self.defaultGroup
 
-		cache_name = self.file+key+group+str(locale)+type+str(list)
+#		cache_name = self.file+key+group+str(locale)+type+str(list)
 
-		if self.cache.has_key(cache_name):
-			return self.cache[cache_name]
-
-		# does Group exists?
-		if not self.hasGroup(group):
-			if debug:
-				raise NoGroupError(group)
-			else:
-				return ""
-
-		# does key exists?
-		if not self.hasKey(key, group):
-			if debug:
-				raise NoKeyError(key, group)
-			else:
-				return ""
+#		if self.cache.has_key(cache_name):
+#			return self.cache[cache_name]
 
 		# return key (with locale)
-		if locale:
-			value = self.content[group][self.__addLocale(key, group)]
-		else:
-			value = self.content[group][key]
+		try:
+			if locale:
+				value = self.content[group][self.__addLocale(key, group)]
+			else:
+				value = self.content[group][key]
+		except KeyError, e:
+			if e == group:
+				raise NoGroupError(group, self.file)
+			else:
+				raise NoKeyError(key, group, self.file)
 
 		if list == True:
 			values = self.getList(value)
@@ -132,7 +124,7 @@ class IniFile:
 			else:
 				result = value
 
-		self.cache[cache_name] = result
+#		self.cache[cache_name] = result
 
 		return result
 	# end stuff to access the keys
@@ -350,24 +342,15 @@ class IniFile:
 		if not group:
 			group = self.defaultGroup
 
-		# does Group exists?
-		if not self.hasGroup(group):
-			if debug:
-				raise NoGroupError(group)
-
-		# does key exists?
-		if not self.hasKey(key, group):
-			if debug:
-				raise NoKeyError(key, group)
-
-		self.content[group][key] = value
-		self.resetCache()
+		try:
+			self.content[group][key] = value
+			self.resetCache()
+		except KeyError:
+			raise NoGroupError(group, self.file)
 
 	def addGroup(self, group):
-		if self.hasGroup(group):
-			if debug:
-				raise DuplicateGroupError(group)
-			pass
+		if debug and self.hasGroup(group):
+			raise DuplicateGroupError(group, self.file)
 		else:
 			self.content[group] = {}
 
@@ -377,7 +360,7 @@ class IniFile:
 			del self.content[group]
 		else:
 			if debug:
-				raise NoGroupError(group)
+				raise NoGroupError(group, self.file)
 		return existed
 
 	def removeKey(self, key, group = "", locales = True):
@@ -388,12 +371,12 @@ class IniFile:
 		# does Group exists?
 		if not self.hasGroup(group):
 			if debug:
-				raise NoGroupError(group)
+				raise NoGroupError(group, self.file)
 
 		# does key exists?
 		if not self.hasKey(key, group):
 			if debug:
-				raise NoKeyError(key, group)
+				raise NoKeyError(key, group, self.file)
 
 		if locales:
 			for (name, value) in self.content[group].items():
