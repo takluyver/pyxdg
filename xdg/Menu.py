@@ -313,7 +313,7 @@ class Layout:
 			if child.nodeType == xml.dom.Node.ELEMENT_NODE:
 				if child.tagName == "Menuname":
 					self.parseMenuname(child)
-				elif child.tagName == "Saperator":
+				elif child.tagName == "Separator":
 					self.parseSeparator(child)
 				elif child.tagName == "Filename":
 					self.parseFilename(child)
@@ -801,7 +801,7 @@ def sort(menu):
 
 	for order in menu.Layout.order:
 		if order[0] == "Separator":
-			menu.Entries.append(Seperator())
+			menu.Entries.append(Separator())
 		elif order[0] == "Filename":
 			menu.Entries.append(menu.getDeskEntry(order[1]))
 		elif order[0] == "Menuname":
