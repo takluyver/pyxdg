@@ -54,7 +54,7 @@ class IniFile:
 			# new group
 			elif line[0] == '[':
 				currentGroup = string.strip(line).strip("[").strip("]")
-				if self.hasGroup(currentGroup) and debug:
+				if debug and self.hasGroup(currentGroup):
 					raise DuplicateGroupError(currentGroup)
 				else:
 					content[currentGroup] = {}
@@ -67,7 +67,7 @@ class IniFile:
 				except IndexError:
 					raise ParsingError("Invalid Key=Value pair: " + line, file)
 				try:
-					if self.hasKey(key, currentGroup) and debug:
+					if debug and self.hasKey(key, currentGroup):
 						raise DuplicateKeyError(key, currentGroup)
 					else:
 						content[currentGroup][key] = value
