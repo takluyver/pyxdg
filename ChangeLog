@@ -1,3 +1,7 @@
+2005-03-18 Heinrich Wendel <h_wendel@cojobo.net>
+	* Menu.py
+	fix basename argument, thx to Matt Kynaston <mattkyn@gmail.com>
+
 2004-30-11 Heinrich Wendel <h_wendel@cojobo.net>
 	* Update BaseDirectory.py to the current ROX version
 
