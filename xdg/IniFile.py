@@ -144,7 +144,7 @@ class IniFile:
 	def getList(self, string):
 		if self.list1.search(string):
 			list = self.list1.split(r"(?<!\\);")
-		elif self.list2.search(r"(?<!\\)\|")):
+		elif self.list2.search(r"(?<!\\)\|"):
 			list = self.list2.split(r"(?<!\\)\|")
 		elif self.list3.search(r"(?<!\\),"):
 			list = self.list3.split(r"(?<!\\),")
