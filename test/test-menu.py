@@ -19,7 +19,7 @@ def show_menu(menu, depth = 0):
 try:
 	menu = xdg.Menu.parse(sys.argv[1])
 	menu.setWM("GNOME")
-	menu.setLocale("de")
+	#menu.setLocale("de")
 	show_menu(menu)
 except IndexError:
 	show_menu(xdg.Menu.parse(), 0)

@@ -108,16 +108,17 @@ class Menu:
 				yield entry
 
 	def searchEntry(self, filename, deep = True, action = "echo"):
-		for entry in self.DeskEntries:
-			if entry.DesktopEntry.getFileName() == filename:
-				if action == "echo":
-					print self.getPath()
-					return ""
-				elif action == "return":
-					return self.getPath()
-		if deep == True:
-			for submenu in self.Submenus:
-				submenu.searchEntry(filename, deep, action)
+		for entry in self.Entries:
+			if isinstance(entry, MenuEntry):
+				if entry.DesktopEntry.getFileName() == filename:
+					if action == "echo":
+						print self.getPath()
+						return ""
+					elif action == "return":
+						return self.getPath()
+			elif isinstance(entry, Menu) and deep == True:
+				for submenu in self.Submenus:
+					submenu.searchEntry(filename, deep, action)
 
 	def getPath(self, org = False):
 		parent = self
@@ -196,6 +197,12 @@ class Menu:
 			self.DeskEntries.append(entry)
 	def getDeskEntries(self):
 		return self.DeskEntries
+	def getDeskEntry(self, name):
+		try:
+			index = self.getDeskEntries().index(name)
+			return self.getDeskEntries()[index]
+		except ValueError:
+			return ""
 
 	def addDirectory(self, entry):
 		if not entry in self.getDirectories():
@@ -245,17 +252,14 @@ class Menu:
 		else:
 			self.Submenus.append(newmenu)
 			newmenu.Parent = self
-
 	def getSubmenus(self):
 		return self.Submenus
-
 	def getSubmenu(self, name):
 		try:
 			index = self.getSubmenus().index(name)
 			return self.getSubmenus()[index]
 		except ValueError:
 			return ""
-
 	def removeSubmenu(self, newmenu):
 		self.Submenus.remove(newmenu)
 
@@ -309,8 +313,8 @@ class Layout:
 			if child.nodeType == xml.dom.Node.ELEMENT_NODE:
 				if child.tagName == "Menuname":
 					self.parseMenuname(child)
-				elif child.tagName == "Seperator":
-					self.parseSeperator(child)
+				elif child.tagName == "Saperator":
+					self.parseSeparator(child)
 				elif child.tagName == "Filename":
 					self.parseFilename(child)
 				elif child.tagName == "Merge":
@@ -327,8 +331,8 @@ class Layout:
 			child.getAttribute("inline_alias")
 		])
 
-	def parseSeperator(self, child):
-		self.order.append(["Seperator"])
+	def parseSeparator(self, child):
+		self.order.append(["Separator"])
 
 	def parseFilename(self, child):
 		self.order.append(["Filename", child.childNodes[0].nodeValue])
@@ -442,23 +446,33 @@ class MenuEntry:
 			return cmp(self.Name, other.getName())
 
 	def __eq__(self, other):
-		if self.DesktopFileID == other.DesktopFileID:
+		if isinstance(other, unicode):
+			value = other
+		else:
+			value = other.DesktopFileID
+
+		if self.DesktopFileID == value:
 			return True
 		else:
 			return False
 
 	def __ne__(self, other):
-		if self.DesktopFileID != other.DesktopFileID:
+		if isinstance(other, unicode):
+			value = other
+		else:
+			value = other.DesktopFileID
+
+		if self.DesktopFileID != value:
 			return True
 		else:
 			return False
 
 	def __str_(self):
-		return self.DesktopFileID()
+		return self.DesktopFileID
 
 
-class Seperator:
-	"Just a dummy class for Seperators"
+class Separator:
+	"Just a dummy class for Separators"
 	pass
 
 
@@ -760,16 +774,50 @@ def sort(menu):
 		sort(submenu)
 		if len(submenu.Entries) == 0 and submenu.Layout.show_empty == "false":
 			remove.append(submenu)
+		#elif len(submenu.Entries) == 1 and submenu.inline_header == "true":
+		#	for submenu in menu.getSubmenus():
+		#		menu.Submenus.append(submenu)
+		#	for entry in menu.getDeskEntries():
+		#		menu.DeskEntries.append(entry)
+		#	# FIXME: mark the inline header
+		#	# FIXME: inline_header
+		#elif (len(submenu.Entries) <= submenu.Layout.inline_limit or submenu.Layout.inline_limit == 0) and submenu.Layout.inline = "true"
+		#	for submenu in menu.getSubmenus():
+		#		menu.Submenus.append(submenu)
+		#	for entry in menu.getDeskEntries():
+		#		menu.DeskEntries.append(entry)
 
 	for submenu in remove:
 		menu.removeSubmenu(submenu)
 
-	menu.Submenus.sort()
-	for submenu in menu.getSubmenus():
-		menu.Entries.append(submenu)
-	menu.DeskEntries.sort()
-	for entry in menu.getDeskEntries():
-		menu.Entries.append(entry)
+	tmp_s = []
+	tmp_e = []
+
+	for order in menu.Layout.order:
+		if order[0] == "Filename":
+			tmp_e.append(order[1])
+		elif order[0] == "Menuname":
+			tmp_s.append(order[1])
+
+	for order in menu.Layout.order:
+		if order[0] == "Separator":
+			menu.Entries.append(Seperator())
+		elif order[0] == "Filename":
+			menu.Entries.append(menu.getDeskEntry(order[1]))
+		elif order[0] == "Menuname":
+			menu.Entries.append(menu.getSubmenu(order[1]))
+		elif order[0] == "Merge":
+			if order[1] == "files" or order[1] == "all":
+				menu.DeskEntries.sort()
+				for entry in menu.getDeskEntries():
+					if entry.DesktopFileID not in tmp_e:
+						menu.Entries.append(entry)
+			elif order[1] == "menus" or order[1] == "all":
+				menu.Submenus.sort()
+				for submenu in menu.getSubmenus():
+					if submenu.Name not in tmp_s:
+						menu.Entries.append(submenu)
+
 
 class DesktopEntryCache:
 	"Class to cache Desktop Entries"
