@@ -54,7 +54,7 @@ class IniFile:
 			# key
 			else:
 				try:
-					tmp = line.split('=')
+					tmp = line.split('=',1)
 					key = tmp[0].strip()
 					value = tmp[1].strip()
 				except IndexError:
