@@ -1,7 +1,7 @@
 """
 This module is based on a rox module (LGPL):
 
-http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/*checkout*/rox/ROX-Lib2/python/rox/basedir.py?rev=HEAD&content-type=text/x-pyth%20%20+on
+http://cvs.sourceforge.net/viewcvs.py/rox/ROX-Lib2/python/rox/basedir.py?rev=1.9&view=log
 
 The freedesktop.org Base Directory specification provides a way for
 applications to locate shared data and configuration:
