@@ -1,3 +1,5 @@
+Version 0.8
+
 2004-10-18  Ross Burton  <ross@burtonini.com>
 	* xdg/DesktopEntry.py, xdg/IconTheme.py:
 	Add . to the literal FileExtensions so that the checks work.
