@@ -7,7 +7,7 @@ Not Supported (and not planed):
 """
 
 from __future__ import generators
-import re, os, xml.dom.minidom
+import re, os, xml.dom.minidom, sys
 
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
@@ -437,6 +437,9 @@ class MenuEntry:
 		elif isinstance(other, Menu):
 			return cmp(self.Name, other.getName())
 
+	#def __eq__(self, other):
+	#	return cmp(self.DesktopFileID, other.DesktopFileID)
+
 	def __ne__(self, other):
 		return cmp(self.DesktopFileID, other.DesktopFileID)
 
@@ -485,6 +488,7 @@ def parse(file = ""):
 
 	# generate the menu
 	cache = DesktopEntryCache()
+
 	__genmenuNotOnlyAllocated(tmp["Root"], cache)
 	__genmenuOnlyAllocated(tmp["Root"], cache)
 
@@ -714,7 +718,6 @@ def __genmenuNotOnlyAllocated(menu, cache):
 			if inc == True:
 				entry.Allocated = True
 				menu.addDeskEntry(entry)
-
 	for submenu in menu.getSubmenus():
 		__genmenuNotOnlyAllocated(submenu, cache)
 
@@ -787,9 +790,12 @@ class DesktopEntryCache:
 
 	def getEntries(self, dirs):
 		list = []
+		# don't compare MenuEntries, this is veryyyy slow, cache their DesktopFileIDs
+		ids = []
 		for dir in dirs:
 			if self.cacheEntries.has_key(dir):
 				for entry in self.cacheEntries[dir]:
-					if not entry in list:
+					if not entry.DesktopFileID in ids:
+						ids.append(entry.DesktopFileID)
 						list.append(entry)
 		return list

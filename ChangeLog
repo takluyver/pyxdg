@@ -1,5 +1,8 @@
 Version 0.5
 
+2004-03-27 Heinrich Wendel <h_wendel@cojobo.net>
+    * 5* speed improvement in Menu.py parsing code
+
 2004-03-20 Heinrich Wendel <h_wendel@cojobo.net>
 	* check values of Categories/OnlyShowIn keys
 	* various misc changes
