@@ -1,5 +1,15 @@
 Version 0.5
 
+2004-03-17  Martin Grimme  <martin@pycage.de>
+
+	* xdg/Menu.py (__preparse): 
+	* xdg/IconTheme.py (IconTheme.parse): Made compatible with Python 2.3
+	(None is a keyword).
+	(__parseTheme): Prepend new icon themes to make sure that they have
+	priority when looking up icons.
+	(icondirs): Add "~/.icons" to the paths where to look for icons. Users
+	may have icon themes installed in their home directory.
+
 2003-10-98 Heinrich Wendel <h_wendel@cojobo.net>
   * Completed write-support in IniFile
 

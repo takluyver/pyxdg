@@ -497,7 +497,7 @@ def parse(file = ""):
 def __preparse(doc, file):
 	# extrace path and basename from file
 	path = os.path.dirname(file)
-	(basename, None) = re.split(".[^.]*$", os.path.basename(file))
+	(basename, nil) = re.split(".[^.]*$", os.path.basename(file))
 
 	# replace default dir stuff
 	for name in [ "DefaultAppDirs", "DefaultDirectoryDirs", "DefaultMergeDirs" ]:

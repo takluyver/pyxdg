@@ -19,7 +19,7 @@ class IconTheme(IniFile):
 	def parse(self, file):
 		IniFile.parse(self, file, ["Icon Theme", "KDE Icon Theme"])
 		self.dir = os.path.dirname(file)
-		(None, self.name) = os.path.split(self.dir)
+		(nil, self.name) = os.path.split(self.dir)
 
 	def getDir(self):
 		return self.dir
@@ -213,6 +213,7 @@ icondirs = []
 for basedir in xdg_data_dirs:
 	icondirs.append(os.path.join(basedir, "icons"))
 icondirs.append("/usr/share/pixmaps")
+icondirs.append(os.path.expanduser("~/.icons"))
 
 # just cache variables, they give a 10x speed improvement
 themes = []
@@ -278,7 +279,7 @@ def __addTheme(theme):
 def __parseTheme(file):
 	theme = IconTheme()
 	theme.parse(file)
-	themes.append(theme)
+	themes = [theme] + themes
 	for subtheme in theme.getInherits():
 		__addTheme(subtheme)
 
