@@ -68,6 +68,8 @@ class IniFile:
 		except IOError:
 			raise ParsingError("File not found", filename)
 
+		self.file = filename
+
 		# check header
 		for header in headers:
 			if content.has_key(header):
