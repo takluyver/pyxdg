@@ -169,13 +169,18 @@ class IniFile:
 	def setLocale(self, lc_messages):
 		"set locale for current desktop entry"
 		# valid lc_messages format?
-		p = re.compile('^([a-zA-Z]+)(_[a-zA-Z]+)?(\.[a-zA-Z\-0-9]+)?(@[a-zA-Z]+)?$')
-		m = p.match(lc_messages)
+		try:
+			p = re.compile('^([a-zA-Z]+)(_[a-zA-Z]+)?(\.[a-zA-Z\-0-9]+)?(@[a-zA-Z]+)?$')
+			m = p.match(lc_messages)
+		except TypeError:
+			m = ""
+
 		if not m:
 			if debug:
 				raise ValueError('Invalid LC_MESSAGES value')
 			else:
 				return
+
 		# set lc_messages
 		else:
 			self.locale_LANG     = m.group(1)
