@@ -550,8 +550,7 @@ def parse(file = ""):
 	
 	# parse menufile
 	tmp["Root"] = ""
-	__preparse(doc, file)
-	__parse(doc, tmp["Root"])
+	__parse(doc, file, tmp["Root"])
 	__postparse(tmp["Root"])
 
 	# generate the menu
@@ -565,62 +564,20 @@ def parse(file = ""):
 
 	return tmp["Root"]
 
-def __preparse(doc, file):
-	# extrace path and basename from file
-	path = os.path.dirname(file)
-	basename = os.path.splitext(os.path.basename(file))[0]
 
-	# replace default dir stuff
-	for name in [ "DefaultAppDirs", "DefaultDirectoryDirs", "DefaultMergeDirs" ]:
-		if name == "DefaultMergeDirs":
-			dirs = xdg_config_dirs
-		else:
-			dirs = xdg_data_dirs
-		dirs.reverse()
-
-		nodes = doc.getElementsByTagName(name)
-		for node in nodes:
-			parent = node.parentNode
-			for dir in dirs:
-				if name == "DefaultAppDirs":
-					value = os.path.join(dir, "applications")
-				elif name == "DefaultDirectoryDirs":
-					value = os.path.join(dir, "desktop-directories")
-				elif name == "DefaultMergeDirs":
-					value = os.path.join(dir, "menus", basename + "-merged")
-
-				entry = doc.createElement(name.replace("Default", "").replace("Dirs", "Dir"))
-				entry.appendChild(doc.createTextNode(value))
-				parent.insertBefore(entry, node)
-			parent.removeChild(node)
-
-	# remove duplicate stuff, convert to absolute path and remove not existing path
-	for name in [ "MergeDir", "MergeFile", "DirectoryDir", "AppDir" ]:
-		values  = []
-		parents = []
-		nodes = doc.getElementsByTagName(name)
-		for node in nodes:
-			if not os.path.isabs(node.childNodes[0].nodeValue):
-				node.childNodes[0].nodeValue = os.path.join(path, node.childNodes[0].nodeValue)
-			value = node.childNodes[0].nodeValue
-			if ( value in values and node.parentNode in parents ) \
-			or ( not os.path.exists(value) ) \
-			or ( name != "MergeFile" and not os.path.isdir(value) ) \
-			or ( name == "MergeFile" and not os.path.isfile(value) ):
-				node.parentNode.removeChild(node)
-			else:
-				parents.append(node.parentNode)
-				values.append(value)
-
-def __parse(node, parent = ""):
+def __parse(node, file, parent = ""):
 	for child in node.childNodes:
 		if child.nodeType == xml.dom.Node.ELEMENT_NODE:
 			if child.tagName == 'Menu':
-				__parseMenu(child, parent)
+				__parseMenu(child, file, parent)
 			elif child.tagName == 'AppDir':
-				parent.addAppDir(child.childNodes[0].nodeValue)
+				__parseAppDir(child.childNodes[0].nodeValue, file, parent)
+			elif child.tagName == 'DefaultAppDirs':
+				__parseDefaultAppDir(file, parent)
 			elif child.tagName == 'DirectoryDir':
-				parent.addDirectoryDir(child.childNodes[0].nodeValue)
+				__parseDirectoryDir(child.childNodes[0].nodeValue, file, parent)
+			elif child.tagName == 'DefaultDirectoryDirs':
+				__parseDefaultDirectoryDir(file, parent)
 			elif child.tagName == 'Name' :
 				parent.Name = child.childNodes[0].nodeValue
 			elif child.tagName == 'Directory' :
@@ -636,13 +593,13 @@ def __parse(node, parent = ""):
 			elif child.tagName == 'Include' or child.tagName == 'Exclude':
 				parent.addRule(Rule(child.tagName, child))
 			elif child.tagName == 'MergeFile':
-				__parseMergeFile(child)
+				__parseMergeFile(child.childNodes[0].nodeValue, child, file, parent)
 			elif child.tagName == 'MergeDir':
-				__parseMergeDir(child)
+				__parseMergeDir(child.childNodes[0].nodeValue, child, file, parent)
+			elif child.tagName == 'DefaultMergeDirs':
+				__parseDefaultMergeDirs(child, file, parent)
 			elif child.tagName == 'Move':
 				parent.addMove(Move(child))
-			elif child.tagName == 'X-Python-MergeEnd':
-				__parseMergeEnd()
 			elif child.tagName == 'Layout':
 				if len(child.childNodes) > 1:
 					parent.Layout = Layout(child)
@@ -718,25 +675,76 @@ def __postparse(menu):
 		menu.removeSubmenu(submenu)
 
 # Menu parsing stuff
-def __parseMenu(child, parent):
+def __parseMenu(child, file, parent):
 	m = Menu()
-	__parse(child, m)
+	__parse(child, file, m)
 	if parent:
 		parent.addSubmenu(m)
 	else:
 		tmp["Root"] = m
 
+# helper function
+def __check(value, file, type):
+	path = os.path.dirname(file)
+
+	if not os.path.isabs(value):
+		value = os.path.join(path, value)
+
+	if type == "dir" and os.path.exists(value) and os.path.isdir(value):
+		return value
+	elif type == "file" and os.path.exists(value) and os.path.isfile(value):
+		return value
+	else:
+		return False
+
+# App/Directory Dir Stuff
+def __parseAppDir(value, file, parent):
+	value = __check(value, file, "dir")
+	if value:
+		parent.addAppDir(value)
+
+def __parseDefaultAppDir(file, parent):
+	for dir in xdg_data_dirs:
+		__parseAppDir(os.path.join(dir, "applications"), file, parent)
+
+def __parseDirectoryDir(value,file,parent):
+	value = __check(value, file, "dir")
+	if value:
+		parent.addDirectoryDir(value)
+
+def __parseDefaultDirectoryDir(file,parent):
+	for dir in xdg_data_dirs:
+		__parseDirectoryDir(os.path.join(dir, "desktop-directories"), file, parent)
+
 # Merge Stuff
-def __parseMergeFile(child):
-	__mergeFile(child.childNodes[0].nodeValue, child)
+def __parseMergeFile(value, child, file, parent):
+	value = __check(value, file, "file")
+	if value:
+		__mergeFile(value, child, parent)
 
-def __parseMergeDir(child):
-	files = os.listdir(child.childNodes[0].nodeValue)
-	for file in files:
-		if os.path.splitext(file)[1] == ".menu":
-			__mergeFile(os.path.join(child.childNodes[0].nodeValue, file), child)
+def __parseMergeDir(value, child, file, parent):
+	value = __check(value, file, "dir")
+	if value:
+		files = os.listdir(value)
+		for file in files:
+			if os.path.splitext(file)[1] == ".menu":
+				__mergeFile(os.path.join(value, file), child, parent)
 
-def __mergeFile(file, child):
+def __parseDefaultMergeDirs(child, file, parent):
+	basename = os.path.splitext(os.path.basename(file))[0]
+	for dir in xdg_config_dirs:
+		__parseMergeDir(os.path.join(dir, "menus", basename + "-merged"), child, file, parent)
+
+def __mergeFile(file, child, parent):
+	# check for infinite loops
+	if file in tmp["mergeFiles"]:
+		if debug:
+			raise ParsingError('Infinite MergeFile loop detected', file)
+		else:
+			pass
+
+	tmp["mergeFiles"].append(file)
+
 	# load file
 	try:
 		doc = xml.dom.minidom.parse(file)
@@ -745,26 +753,8 @@ def __mergeFile(file, child):
 	except xml.parsers.expat.ExpatError:
 		raise ParsingError('Not a valid .menu file', file)
 
-	# check for infinite loops
-	if file in tmp["mergeFiles"]:
-		raise ParsingError('Infinite MergeFile loop detected', file)
-
-	tmp["mergeFiles"].append(file)
-
 	# append file
-	__preparse(doc, file)
-	next = child.nextSibling
-	for node in doc.childNodes[1].childNodes:
-		if node.nodeType == xml.dom.Node.ELEMENT_NODE:
-			if node.tagName != "Name":
-				child.parentNode.insertBefore(node, next)
-
-	# Make endnode to pop __mergeFiles again
-	endnode = doc.createElement("X-Python-MergeEnd")
-	child.parentNode.insertBefore(endnode, next)
-
-def __parseMergeEnd():
-	tmp["mergeFiles"].pop()
+	__parse(doc.childNodes[1],file,parent)
 
 # Finally generate the menu
 def __genmenuNotOnlyAllocated(menu, cache):
