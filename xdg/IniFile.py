@@ -2,7 +2,7 @@
 Base Class for DesktopEntry, IconTheme and IconData
 """
 
-import re, os.path
+import re, os.path, codecs
 from Exceptions import *
 
 class IniFile:
@@ -135,7 +135,7 @@ class IniFile:
 
 	# start subget
 	def getList(self, string):
-		if re.search(r"(?<!\\)\;", string):
+		if re.search(r"(?<!\\)\;?", string):
 			list = re.split(r"(?<!\\);", string)
 		elif re.search(r"(?<!\\)\|", string):
 			list = re.split(r"(?<!\\)\|", string)
