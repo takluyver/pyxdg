@@ -506,7 +506,7 @@ def parse(file = ""):
 		file = os.path.abspath(file)
 
 	# check if it is a .menu file
-	if not os.path.splitext(file)[1].find("menu"):
+	if not os.path.splitext(file)[1].find(".menu") == 0:
 		raise ParsingError('Not a .menu file', file)
 
 	# create xml parser
@@ -706,7 +706,7 @@ def __parseMergeFile(child):
 def __parseMergeDir(child):
 	files = os.listdir(child.childNodes[0].nodeValue)
 	for file in files:
-		if os.path.splitext(file)[1].find("menu"):
+		if os.path.splitext(file)[1].find(".menu") == 0:
 			__mergeFile(os.path.join(child.childNodes[0].nodeValue, file), child)
 
 def __mergeFile(file, child):
@@ -871,8 +871,7 @@ class DesktopEntryCache:
 	def __addFiles(self, dir, subdir):
 		files = os.listdir(os.path.join(dir,subdir))
 		for file in files:
-			#if file.rfind(".desktop"):
-			if os.path.splitext(file)[1].find("desktop"):
+			if os.path.splitext(file)[1].find(".desktop") == 0:
 				try:
 					deskentry = DesktopEntry()
 					deskentry.parse(os.path.join(dir, subdir, file))
