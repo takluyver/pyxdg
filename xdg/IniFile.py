@@ -18,6 +18,8 @@ class IniFile:
 
 	locale = "(\[([a-zA-Z]+)(_[a-zA-Z]+)?(\.[a-zA-Z\-0-9]+)?(@[a-zA-Z]+)?\])?"
 
+	tainted = False
+
 	def __init__(self):
 		self.content = dict()
 
@@ -58,7 +60,8 @@ class IniFile:
 					raise ParsingError("[%s]-Header missing" % headers[0], filename)
 
 		self.file = filename
-
+		self.tainted = False
+                
 		# check header
 		for header in headers:
 			if content.has_key(header):
@@ -327,6 +330,7 @@ class IniFile:
 				for (key, value) in group.items():
 					fp.write("%s=%s\n" % (key, value))
 				fp.write("\n")
+		self.tainted = False
 
 	def set(self, key, value, group = ""):
 		# set default group
@@ -341,6 +345,8 @@ class IniFile:
 			self.resetCache()
 		except KeyError:
 			raise NoGroupError(group, self.file)
+		    
+		self.tainted = (value == self.get(key, group))
 
 	def addGroup(self, group):
 		if self.hasGroup(group):
@@ -350,11 +356,13 @@ class IniFile:
 				pass
 		else:
 			self.content[group] = {}
+			self.tainted = True
 
 	def removeGroup(self, group):
 		existed = group in self.content
 		if existed:
 			del self.content[group]
+			self.tainted = True
 		else:
 			if debug:
 				raise NoGroupError(group, self.file)
@@ -373,6 +381,7 @@ class IniFile:
 						del self.content[group][name]
 			value = self.content[group][key]
 			del self.content[group][key]
+			self.tainted = True
 			return value
 		except KeyError, e:
 			if debug:

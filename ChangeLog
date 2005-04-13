@@ -1,3 +1,9 @@
+2005-04-13 Heinrich Wendel <h_wendel@cojobo.net>
+	* IniFily.py:
+	Detect if a .desktop file was edited
+	* Menu.py
+	Fix bug caused by excluding NoDisplay/Hidden Items to early
+
 2005-03-23 Heinrich Wendel <h_wendel@cojobo.net>
 	* IniFile.py:
 	various speedups

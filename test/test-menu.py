@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python
 
 import sys
 
@@ -20,6 +20,5 @@ def show_menu(menu, depth = 0):
 #			print depth*"-" + "\x1b[01m" + entry.Name + "\x1b[0m"
 #	depth -= 1
 
-#import profile
-#profile.run("xdg.Menu.parse()")
-show_menu(xdg.Menu.parse())
+#show_menu(xdg.Menu.parse())
+xdg.Menu.parse()

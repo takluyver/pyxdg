@@ -108,7 +108,7 @@ class Menu:
 	def getEntries(self):
 		for entry in self.Entries:
 			if isinstance(entry, MenuEntry) \
-			and entry.Show == True:
+			and entry.Show == True and entry.MenuEntry.getHidden() == False and entry.MenuEntry.getNoDisplay == False:
 				yield entry
 			else:
 				yield entry
@@ -944,10 +944,8 @@ class DesktopEntryCache:
 				try:
 					deskentry = DesktopEntry()
 					deskentry.parse(os.path.join(dir, subdir, file))
-					if not deskentry.getHidden() \
-					and not deskentry.getNoDisplay():
-						entry = MenuEntry(deskentry, os.path.join(subdir,file).replace("/", "-"))
-						self.cacheEntries[dir].append(entry)
+					entry = MenuEntry(deskentry, os.path.join(subdir,file).replace("/", "-"))
+					self.cacheEntries[dir].append(entry)
 				except ParsingError:
 					continue
 			elif os.path.isdir(os.path.join(dir,subdir,file)):
