@@ -108,7 +108,7 @@ class Menu:
 	def getEntries(self):
 		for entry in self.Entries:
 			if isinstance(entry, MenuEntry) \
-			and entry.Show == True and entry.MenuEntry.getHidden() == False and entry.MenuEntry.getNoDisplay == False:
+			and entry.Show == True and entry.DesktopEntry.getHidden() == False and entry.DesktopEntry.getNoDisplay == False:
 				yield entry
 			else:
 				yield entry
