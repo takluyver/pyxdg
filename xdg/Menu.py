@@ -107,10 +107,10 @@ class Menu:
 
 	def getEntries(self):
 		for entry in self.Entries:
-			if isinstance(entry, MenuEntry) \
-			and entry.Show == True and entry.DesktopEntry.getHidden() == False and entry.DesktopEntry.getNoDisplay == False:
+			if isinstance(entry, Menu):
 				yield entry
-			else:
+			elif isinstance(entry, MenuEntry) \
+			and entry.Show == True and entry.DesktopEntry.getHidden() == False and entry.DesktopEntry.getNoDisplay() == False:
 				yield entry
 
 	def searchEntry(self, filename, deep = True, action = "echo"):

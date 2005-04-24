@@ -89,10 +89,7 @@ class IniFile:
 				elif not self.content[group].has_key(key):
 					raise NoKeyError(key, group, self.file)
 			else:
-				if list == True:
-					return []
-				else:
-					return ""
+				value = ""
 				
 		if list == True:
 			values = self.getList(value)
