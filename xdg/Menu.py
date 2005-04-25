@@ -265,6 +265,7 @@ class Menu:
 	def getSubmenus(self):
 		return self.Submenus
 	def getSubmenu(self, name):
+		# parses recursive menus
 		array = name.split("/")
 		try:
 			index = self.getSubmenus().index(array[0])
@@ -275,6 +276,7 @@ class Menu:
 		except ValueError:
 			return ""
 	def removeSubmenu(self, newmenu):
+		# parse recursive menus
 		try:
 			self.Submenus.remove(newmenu)
 			return True
@@ -667,15 +669,14 @@ def __parsemove(menu):
 		move_from_menu = menu.getSubmenu(move.Old)
 		if move_from_menu:
 			move_to_menu = menu.getSubmenu(move.New)
-			if move_to_menu:
-				move_to_menu += move_from_menu
-				menu.removeSubmenu(move_from_menu)
-			else:
+
+			if not move_to_menu:
 				move_to_menu = Menu()
 				move_to_menu.Name = move.New
 				menu.addSubmenu(move_to_menu)
-				move_to_menu += move_from_menu
-				menu.removeSubmenu(move_from_menu)
+
+			move_to_menu += move_from_menu
+			menu.removeSubmenu(move_from_menu)
 
 
 def __postparse(menu):
