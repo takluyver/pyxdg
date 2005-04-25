@@ -553,7 +553,6 @@ class Header:
 
 
 tmp = {}
-tmp["mergeFiles"] = []
 
 def parse(file = ""):
 	# if no file given, try default files
@@ -578,9 +577,10 @@ def parse(file = ""):
 		raise ParsingError('File not found', file)
 	except xml.parsers.expat.ExpatError:
 		raise ParsingError('Not a valid .menu file', file)
-	
+
 	# parse menufile
 	tmp["Root"] = ""
+	tmp["mergeFiles"] = []
 	__parse(doc, file, tmp["Root"])
 	__parsemove(tmp["Root"])
 	__postparse(tmp["Root"])
