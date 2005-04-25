@@ -1,3 +1,7 @@
+2005-04-26 Heinrich Wendel <h_wendel@cojobo.net>
+	* Menu.py:
+	various bug fixing to support version 1.0.draft-1
+
 2005-04-13 Heinrich Wendel <h_wendel@cojobo.net>
 	* IniFily.py:
 	Detect if a .desktop file was edited

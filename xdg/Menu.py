@@ -1,5 +1,5 @@
 """
-Implementation of the XDG Menu Specification Version 0.91
+Implementation of the XDG Menu Specification Version 1.0.draft-1
 http://standards.freedesktop.org/menu-spec/
 
 Not Supported (and not planed):
