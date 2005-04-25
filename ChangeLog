@@ -1,3 +1,5 @@
+Version 0.10
+
 2005-04-26 Heinrich Wendel <h_wendel@cojobo.net>
 	* Menu.py:
 	various bug fixing to support version 1.0.draft-1
@@ -7,6 +9,8 @@
 	Detect if a .desktop file was edited
 	* Menu.py
 	Fix bug caused by excluding NoDisplay/Hidden Items to early
+
+Version 0.9
 
 2005-03-23 Heinrich Wendel <h_wendel@cojobo.net>
 	* IniFile.py:
