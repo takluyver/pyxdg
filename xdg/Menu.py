@@ -265,13 +265,24 @@ class Menu:
 	def getSubmenus(self):
 		return self.Submenus
 	def getSubmenu(self, name):
+		array = name.split("/")
 		try:
-			index = self.getSubmenus().index(name)
-			return self.getSubmenus()[index]
+			index = self.getSubmenus().index(array[0])
+			if len(array) > 1:
+				return self.getSubmenus()[index].getSubmenu(array[1])
+			else:
+				return self.getSubmenus()[index]
 		except ValueError:
 			return ""
 	def removeSubmenu(self, newmenu):
-		self.Submenus.remove(newmenu)
+		try:
+			self.Submenus.remove(newmenu)
+			return True
+		except:
+			for submenu in self.Submenus:
+				value = submenu.removeSubmenu(newmenu)
+				if value == True:
+					break
 
 
 class Move:
@@ -569,6 +580,7 @@ def parse(file = ""):
 	# parse menufile
 	tmp["Root"] = ""
 	__parse(doc, file, tmp["Root"])
+	__parsemove(tmp["Root"])
 	__postparse(tmp["Root"])
 	tmp["Root"].Doc = doc
 	tmp["Root"].Filename = file
@@ -646,7 +658,10 @@ def __parse(node, file, parent = ""):
 				if len(child.childNodes) > 1:
 					parent.DefaultLayout = Layout(child)
 
-def __postparse(menu):
+def __parsemove(menu):
+	for submenu in menu.getSubmenus():
+		__parsemove(submenu)
+
 	# parse move operations
 	for move in menu.getMoves():
 		move_from_menu = menu.getSubmenu(move.Old)
@@ -656,8 +671,14 @@ def __postparse(menu):
 				move_to_menu += move_from_menu
 				menu.removeSubmenu(move_from_menu)
 			else:
-				move_from_menu.Name = move.New
+				move_to_menu = Menu()
+				move_to_menu.Name = move.New
+				menu.addSubmenu(move_to_menu)
+				move_to_menu += move_from_menu
+				menu.removeSubmenu(move_from_menu)
 
+
+def __postparse(menu):
 	# a list of menus to remove
 	remove = []
 
@@ -708,7 +729,7 @@ def __postparse(menu):
 
 		# enter submenus
 		__postparse(submenu)
-	
+
 	# remove menus
 	for submenu in remove:
 		menu.removeSubmenu(submenu)
