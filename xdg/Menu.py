@@ -751,6 +751,8 @@ def __check(value, file, type):
 	if not os.path.isabs(value):
 		value = os.path.join(path, value)
 
+	value = os.path.abspath(value)
+
 	if type == "dir" and os.path.exists(value) and os.path.isdir(value):
 		return value
 	elif type == "file" and os.path.exists(value) and os.path.isfile(value):
@@ -813,7 +815,7 @@ def __mergeFile(file, child, parent):
 		if debug:
 			raise ParsingError('Infinite MergeFile loop detected', file)
 		else:
-			pass
+			return
 
 	tmp["mergeFiles"].append(file)
 
