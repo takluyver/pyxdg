@@ -14,3 +14,6 @@ The XDG Package contains:
 
 	- Implementation of the XDG-Shared MIME-info Database
 	  http://www.freedesktop.org/standards/shared-mime-info
+
+	- Implementation of the XDG-Recent File Storage Specification
+	  http://www.freedesktop.org/standards/recent-file-spec

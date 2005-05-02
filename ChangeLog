@@ -8,6 +8,8 @@
 	Implementation of the Mime Specification
 	* Menu.py:
 	Now supports LegacyDirs
+	* RecentFiles.py:
+	Implementation of the Recent Files Specification
 
 Version 0.10
 
