@@ -97,9 +97,15 @@ class IniFile:
 			elif type == "boolean":
 				value = self.__getBoolean(value)
 			elif type == "integer":
-				value = int(value)
+				try:
+					value = int(value)
+				except ValueError:
+					value = 0
 			elif type == "numeric":
-				value = float(value)
+				try:
+					value = float(value)
+				except ValueError:
+					value = 0.0
 			elif type == "regex":
 				value = re.compile(value)
 			elif type == "point":
@@ -277,13 +283,10 @@ class IniFile:
 				fp.write("\n")
 		self.tainted = False
 
-	def set(self, key, value, group = "", locale = False):
+	def set(self, key, value, group = ""):
 		# set default group
 		if not group:
 			group = self.defaultGroup
-
-		if locale == True:
-			key += "[" + xdg.Locale.langs[0] + "]"
 
 		try:
 			if isinstance(value, unicode):

@@ -123,24 +123,22 @@ class Menu:
 			return self.Name
 
 	def getGenericName(self):
-		value = self.Directory.getGenericName()
-		if value:
-			return value
-		else:
+		try:
+			return self.Directory.getGenericName()
+		except:
 			return ""
 
 	def getComment(self):
-		value = self.Directory.getComment()
-		if value:
-			return value
-		else:
+		try:
+			return self.Directory.getComment()
+		except:
 			return ""
 
 	def getIcon(self):
-		value = self.Directory.getIcon()
-		if value:
+		try:
+			value = self.Directory.getIcon()
 			return xdg.IconTheme.getIconPath(value)
-		else:
+		except:
 			return ""
 
 	def addAppDir(self, dir, pos = -1):
@@ -315,7 +313,7 @@ class Layout:
 		try:
 			self.order.append(["Filename", child.childNodes[0].nodeValue])
 		except IndexError:
-			raise ValidationError('Filename cannot be empty', '')
+			raise ValidationError('Filename cannot be empty')
 
 	def parseMerge(self, child):
 		self.order.append(["Merge", child.getAttribute("type")])
@@ -365,12 +363,12 @@ def do(entries, type, run):
 					try:
 						self.parseFilename(child.childNodes[0].nodeValue)
 					except IndexError:
-						raise ValidationError('Filename cannot be empty', "")
+						raise ValidatingError('Filename cannot be empty', "???")
 				elif child.tagName == 'Category':
 					try:
 						self.parseCategory(child.childNodes[0].nodeValue)
 					except IndexError:
-						raise ValidationError('Category cannot be empty', "")
+						raise ValidatingError('Category cannot be empty', "???")
 				elif child.tagName == 'All':
 					self.parseAll()
 				elif child.tagName == 'And':
