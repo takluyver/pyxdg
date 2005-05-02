@@ -139,7 +139,7 @@ class Menu:
 	def getIcon(self):
 		value = self.Directory.getIcon()
 		if value:
-			return xdg.IconTheme.getPath(value)
+			return xdg.IconTheme.getIconPath(value)
 		else:
 			return ""
 
