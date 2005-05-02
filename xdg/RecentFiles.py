@@ -3,7 +3,8 @@ Implementation of the XDG Recent File Storage Specification Version 0.2
 http://standards.freedesktop.org/recent-file-spec
 """
 
-import xml.dom.minidom, os, time
+import xml.dom.minidom, xml.sax.saxutils
+import os, time, fcntl
 from xdg.Exceptions import *
 
 class RecentFiles:
@@ -13,7 +14,7 @@ class RecentFiles:
 	def parse(self, file = ""):
 		if not file:
 			file = os.path.join(os.getenv("HOME"), ".recently-used")
-	
+
 		try:
 			doc = xml.dom.minidom.parse(file)
 		except IOError:
@@ -61,12 +62,13 @@ class RecentFiles:
 			file = self.filename
 
 		f = open(file, "w")
+		fcntl.lockf(f, fcntl.LOCK_EX)
 		f.write('<?xml version="1.0"?>\n')
 		f.write("<RecentFiles>\n")
 
 		for r in self.RecentFiles:
 			f.write("  <RecentItem>\n")
-			f.write("    <URI>%s</URI>\n" % r.URI)
+			f.write("    <URI>%s</URI>\n" % xml.sax.saxutils.escape(r.URI))
 			f.write("    <Mime-Type>%s</Mime-Type>\n" % r.MimeType)
 			f.write("    <Timestamp>%s</Timestamp>\n" % r.Timestamp)
 			if r.Private == True:
@@ -79,6 +81,7 @@ class RecentFiles:
 			f.write("  </RecentItem>\n")
 
 		f.write("</RecentFiles>\n")
+		fcntl.lockf(f, fcntl.LOCK_UN)
 		f.close()
 
 	def getFiles(self, mimetypes = None, groups = None, limit = 0):
