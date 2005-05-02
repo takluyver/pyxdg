@@ -11,3 +11,6 @@ The XDG Package contains:
 
 	- Implementation of the XDG-Icon-Theme Standard
 	  http://www.freedesktop.org/standards/icon-theme-spec
+
+	- Implementation of the XDG-Shared MIME-info Database
+	  http://www.freedesktop.org/standards/shared-mime-info

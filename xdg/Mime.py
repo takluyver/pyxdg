@@ -16,6 +16,8 @@ shared mime database package.
 See http://www.freedesktop.org/standards/shared-mime-info-spec/ for
 information about the format of these files.
 
+(based on version 0.13)
+
 TODO:
 * Return Icon for MimeType
 """
