@@ -4,16 +4,19 @@ http://standards.freedesktop.org/icon-theme-spec/
 """
 
 import os, sys, time
+
 from xdg.IniFile import *
 from xdg.BaseDirectory import *
 from xdg.Exceptions import *
+
+import xdg.Config
 
 class IconTheme(IniFile):
 	"Class to parse and validate IconThemes"
 	def __init__(self):
 		IniFile.__init__(self)
 
-	def __str__(self):
+	def __repr__(self):
 		return self.name
 
 	def parse(self, file):
@@ -120,9 +123,9 @@ class IconTheme(IniFile):
 	def checkKey(self, key, value, group):
 		# standard keys		
 		if group == self.defaultGroup:
-			if re.match("^Name"+self.locale+"$", key):
+			if re.match("^Name"+xdg.Locale.regex+"$", key):
 				pass
-			elif re.match("^Comment"+self.locale+"$", key):
+			elif re.match("^Comment"+xdg.Locale.regex+"$", key):
 				pass
 			elif key == "Inherits":
 				self.checkValue(key, value, list = True)
@@ -168,7 +171,7 @@ class IconData(IniFile):
 	def __init__(self):
 		IniFile.__init__(self)
 
-	def __str__(self):
+	def __repr__(self):
 		return self.getDisplayName()
 
 	def parse(self, file):
@@ -196,7 +199,7 @@ class IconData(IniFile):
 
 	def checkKey(self, key, value, group):
 		# standard keys		
-		if re.match("^DisplayName"+self.locale+"$", key):
+		if re.match("^DisplayName"+xdg.Locale.regex+"$", key):
 			pass
 		elif key == "EmbeddedTextRectangle":
 			self.checkValue(key, value, type = "integer", list = True)
@@ -220,8 +223,13 @@ themes = []
 cache = dict()
 dache = dict()
 
-def getIconPath(iconname, size = 48, theme = "hicolor", extensions = ["png", "svg", "xpm"]):
+def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg", "xpm"]):
 	global themes
+
+	if size == None:
+		size = xdg.Config.icon_size
+	if theme == None:
+		theme = xdg.Config.icon_theme
 
 	# if we have an absolute path, just return it
 	if os.path.isabs(iconname):
@@ -240,7 +248,7 @@ def getIconPath(iconname, size = 48, theme = "hicolor", extensions = ["png", "sv
 		__addTheme(theme)
 
 	for thme in themes:
-		icon = LookupIcon(iconname, size, extensions, thme)
+		icon = LookupIcon(iconname, size, thme, extensions)
 		if icon:
 			return icon
 
@@ -289,7 +297,7 @@ def __parseTheme(file):
 	for subtheme in theme.getInherits():
 		__addTheme(subtheme)
 
-def LookupIcon(iconname, size, extensions, theme):
+def LookupIcon(iconname, size, theme, extensions):
 	# look for the cache
 	if not cache.has_key(theme.name):
 		cache[theme.name] = []

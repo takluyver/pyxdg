@@ -4,19 +4,13 @@ Base Class for DesktopEntry, IconTheme and IconData
 
 import re, os.path, codecs
 from Exceptions import *
+import xdg.Locale
 
 class IniFile:
 	defaultGroup = ''
 	fileExtension = ''
 
-	locale_LANG = 'C'
-	locale_COUNTRY = ''
-	locale_ENCODING = ''
-	locale_MODIFIER = ''
-
 	file = ''
-
-	locale = "(\[([a-zA-Z]+)(_[a-zA-Z]+)?(\.[a-zA-Z\-0-9]+)?(@[a-zA-Z]+)?\])?"
 
 	tainted = False
 
@@ -90,7 +84,7 @@ class IniFile:
 					raise NoKeyError(key, group, self.file)
 			else:
 				value = ""
-				
+
 		if list == True:
 			values = self.getList(value)
 			result = []
@@ -145,63 +139,17 @@ class IniFile:
 		# delete cache
 		self.cache = {}
 
-	# start locale [] stuff
-	def setLocale(self, lc_messages):
-		"set locale for current desktop entry"
-		# valid lc_messages format?
-		try:
-			p = re.compile('^([a-zA-Z]+)(_([a-zA-Z]+))?(\.([a-zA-Z\-0-9]+))?(@([a-zA-Z]+))?$')
-			m = p.match(lc_messages)
-		except TypeError:
-			m = ""
-
-		if not m:
-			if debug:
-				raise ValueError('Invalid LC_MESSAGES value')
-			else:
-				return
-
-		# set lc_messages
-		else:
-			self.locale_LANG     = m.group(1)
-			self.locale_COUNTRY  = m.group(3) or ''
-			self.locale_ENCODING = m.group(5) or ''
-			self.locale_MODIFIER = m.group(7) or ''
-			self.resetCache()
-
-	def getLocale(self):
-		"return locale in lc_messages format"
-		lc_messages = self.locale_LANG
-		if self.locale_COUNTRY:
-			lc_messages = lc_messages + '_' + self.locale_COUNTRY
-		if self.locale_ENCODING:
-			lc_messages = lc_messages + '.' + self.locale_ENCODING
-		if self.locale_MODIFIER:
-			lc_messages = lc_messages + '@' + self.locale_MODIFIER
-		return lc_messages
-
 	def __addLocale(self, key, group = ''):
 		"add locale to key according the current lc_messages"
 		# set default group
 		if not group:
 			group = self.defaultGroup
 
-		# add locale
-		if (self.locale_LANG and self.locale_COUNTRY and self.locale_MODIFIER) and \
-		(self.content[group].has_key(key+'['+self.locale_LANG+'_'+self.locale_COUNTRY+'@'+self.locale_MODIFIER+']')):
-			return key+'['+self.locale_LANG+'_'+self.locale_COUNTRY+'@'+self.locale_MODIFIER+']'
-		elif (self.locale_LANG and self.locale_COUNTRY) and \
-		(self.content[group].has_key(key+'['+self.locale_LANG+'_'+self.locale_COUNTRY+']')):
-			return key+'['+self.locale_LANG+'_'+self.locale_COUNTRY+']'
-		elif (self.locale_LANG and self.locale_MODIFIER) and \
-		(self.content[group].has_key(key+'['+self.locale_LANG+'@'+self.locale_MODIFIER+']')):
-			return key+'['+self.locale_LANG+'@'+self.locale_MODIFIER+']'
-		elif (self.locale_LANG) and \
-		(self.content[group].has_key(key+'['+self.locale_LANG+']')):
-			return key+'['+self.locale_LANG+']'
-		else:
-			return key
-	# end locale stuff
+		for lang in xdg.Locale.langs:
+			if self.content[group].has_key(key+'['+lang+']'):
+				return key+'['+lang+']'
+
+		return key
 
 	# start validation stuff
 	def validate(self, report = "All"):
@@ -373,7 +321,7 @@ class IniFile:
 		try:
 			if locales:
 				for (name, value) in self.content[group].items():
-					if re.match("^" + key + self.locale + "$", name) and name != key:
+					if re.match("^" + key + xdg.Locale.regex + "$", name) and name != key:
 						value = self.content[group][name]
 						del self.content[group][name]
 			value = self.content[group][key]

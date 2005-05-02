@@ -1,9 +1,6 @@
 """
 Implementation of the XDG Menu Specification Version 1.0.draft-1
 http://standards.freedesktop.org/menu-spec/
-
-Not Supported (and not planed):
-    - <LegacyDir>, <KDELegacyDirs>
 """
 
 from __future__ import generators
@@ -12,6 +9,10 @@ import os, xml.dom.minidom
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
 from xdg.Exceptions import *
+
+import xdg.Locale
+import xdg.Config
+import xdg.IconTheme
 
 ELEMENT_NODE = xml.dom.Node.ELEMENT_NODE
 
@@ -27,19 +28,16 @@ class Menu:
 		# Private stuff, only needed for parsing
 		self.AppDirs = []
 		self.DefaultLayout = ""
-		self.Deleted = "notset"
+		self.Deleted = False
 		self.DeskEntries = []
 		self.CacheDeskEntries = []
 		self.Directory = []
 		self.DirectoryDirs = []
 		self.Layout = ""
 		self.Moves = []
-		self.OnlyUnallocated = "notset"
+		self.OnlyUnallocated =  False
 		self.Rules = []
 		self.Submenus = []
-
-		# caching
-		self.cache = dict()
 
 	def __str__(self):
 		return self.Name
@@ -48,11 +46,7 @@ class Menu:
 		for dir in other.getAppDirs():
 			self.addAppDir(dir)
 
-		if self.getDeleted() == "notset":
-			self.setDeleted(other.getDeleted())
-
-		for entry in other.getDeskEntries():
-			self.addDeskEntry(entry)
+		self.Deleted = other.Deleted
 
 		for entry in other.getDirectories():
 			self.addDirectory(entry)
@@ -63,55 +57,28 @@ class Menu:
 		for move in other.getMoves():
 			self.addMove(move)
 
-		if self.getOnlyUnallocated() == "notset":
-			self.setOnlyUnallocated(other.getOnlyUnallocated())
+		self.OnlyUnallocated = other.OnlyUnallocated
 
 		for rule in other.getRules():
 			self.addRule(rule)
 
-		for submenu in other.getSubmenus():
+		for submenu in other.Submenus:
 			self.addSubmenu(submenu)
 
 		return self
 
 	def __cmp__(self, other):
-		if isinstance(other, unicode):
-			return cmp(self.Name, other)
+		return cmp(self.getName(), other.getName())
+
+	def __eq__(self,other):
+		if self.Name == str(other):
+			return True
 		else:
-			return cmp(self.getName(), other.getName())
-
-	def setWM(self, wm):
-		for entry in self.Entries:
-			if isinstance(entry, MenuEntry):
-				if wm not in entry.DesktopEntry.getOnlyShowIn() \
-				or wm in entry.DesktopEntry.getNotShowIn():
-					entry.Show = False
-				else:
-					entry.Show = True
-			elif isinstance(entry, Menu):
-				entry.setWM(wm)
-
-	def setLocale(self, lc_messages, level = 0):
-		for entry in self.Entries:
-			if isinstance(entry, MenuEntry):
-				entry.DesktopEntry.setLocale(lc_messages)
-				entry.cache()
-			elif isinstance(entry, Menu):
-				level += 1
-				entry.Directory.setLocale(lc_messages)
-				entry.cache = dict()
-				entry.setLocale(lc_messages, level)
-				level -= 1
-		if level == 0:
-			sort(self)
+			return False
 
 	def getEntries(self):
 		for entry in self.Entries:
-			if isinstance(entry, Menu):
-				yield entry
-			elif isinstance(entry, MenuEntry) \
-			and entry.Show == True and entry.DesktopEntry.getHidden() == False and entry.DesktopEntry.getNoDisplay() == False:
-				yield entry
+			yield entry
 
 	def searchEntry(self, filename, deep = True, action = "echo"):
 		for entry in self.Entries:
@@ -147,19 +114,12 @@ class Menu:
 		return path
 
 	def getName(self):
-		if self.cache.has_key("name"):
-			return self.cache["name"]
-
-		try:
-			value = self.Directory.getName()
-		except:
-			value = ""
-
-		if value:
-			self.cache["name"] = value
-			return value
+		if self.Directory:
+			try:
+				return self.Directory.getName()
+			except:
+				return self.Name
 		else:
-			self.cache["name"] = self.Name
 			return self.Name
 
 	def getGenericName(self):
@@ -179,7 +139,7 @@ class Menu:
 	def getIcon(self):
 		value = self.Directory.getIcon()
 		if value:
-			return value
+			return xdg.IconTheme.getPath(value)
 		else:
 			return ""
 
@@ -195,16 +155,8 @@ class Menu:
 			dirs.reverse()
 		return dirs
 
-	def setDeleted(self, boolean):
-		self.Deleted = boolean
-	def getDeleted(self):
-		return self.Deleted
-
 	def addDeskEntry(self, entry):
-		#if not entry in self.DeskEntries:
-		if not entry.Name in self.CacheDeskEntries:
-			self.CacheDeskEntries.append(entry.Name)
-			self.DeskEntries.append(entry)
+		self.DeskEntries.append(entry)
 	def getDeskEntries(self):
 		return self.DeskEntries
 	def getDeskEntry(self, name):
@@ -244,11 +196,6 @@ class Menu:
 	def getMoves(self):
 		return self.Moves
 
-	def setOnlyUnallocated(self, boolean):
-		self.OnlyUnallocated = boolean
-	def getOnlyUnallocated(self):
-		return self.OnlyUnallocated
-
 	def addRule(self, rule):
 		self.Rules.append(rule)
 	def getRules(self):
@@ -286,7 +233,6 @@ class Menu:
 				if value == True:
 					break
 
-
 class Move:
 	"A move operation"
 	def __init__(self, node):
@@ -294,7 +240,7 @@ class Move:
 		self.New = ""
 		self.parseNode(node)
 
-	def __eq__(self, other):
+	def __cmp__(self, other):
 		return cmp(self.Old, other.Old)
 
 	def parseNode(self, node):
@@ -377,7 +323,7 @@ class Layout:
 
 class Rule:
 	"Inlcude / Exclude Rules Class"
-	def __init__(self, type, node):
+	def __init__(self, type, node = None):
 		# Type is Include or Exclude
 		self.Type = type
 		# Rule is a python expression
@@ -389,8 +335,9 @@ class Rule:
 		self.New = True
 
 		# Begin parsing
-		self.parseNode(node)
-		self.compile()
+		if node != None:
+			self.parseNode(node)
+			self.compile()
 
 	def __str__(self):
 		return self.Rule
@@ -492,47 +439,23 @@ class MenuEntry:
 		self.Allocated = Allocated
 		self.Add = False
 		self.MatchedInclude = False
-		# to implement the OnlyShowIn/NotShowIn keys
-		self.Show = True
 		# Caching
-		self.Name = ""
 		self.Categories = ""
 		self.cache()
-	
+
 	def cache(self):
-		self.Name = self.DesktopEntry.getName()
-		if not self.Categories:
-			self.Categories = self.DesktopEntry.getCategories()
+		self.Categories = self.DesktopEntry.getCategories()
 
 	def __cmp__(self, other):
-		if isinstance(other, MenuEntry):
-			return cmp(self.Name, other.Name)
-		elif isinstance(other, Menu):
-			return cmp(self.Name, other.getName())
+		return cmp(self.DesktopEntry.getName(), other.DesktopEntry.getName())
 
-	def __eq__(self, other):
-		if isinstance(other, unicode):
-			value = other
-		else:
-			value = other.DesktopFileID
-
-		if self.DesktopFileID == value:
+	def __eq__(self,other):
+		if self.DesktopFileID == str(other):
 			return True
 		else:
 			return False
 
-	def __ne__(self, other):
-		if isinstance(other, unicode):
-			value = other
-		else:
-			value = other.DesktopFileID
-
-		if self.DesktopFileID != value:
-			return True
-		else:
-			return False
-
-	def __str__(self):
+	def __repr__(self):
 		return self.DesktopFileID
 
 
@@ -581,17 +504,19 @@ def parse(file = ""):
 	# parse menufile
 	tmp["Root"] = ""
 	tmp["mergeFiles"] = []
+	tmp["DirectoryDirs"] = []
+	tmp["cache"] = DesktopEntryCache()
+
 	__parse(doc, file, tmp["Root"])
 	__parsemove(tmp["Root"])
 	__postparse(tmp["Root"])
+
 	tmp["Root"].Doc = doc
 	tmp["Root"].Filename = file
 
 	# generate the menu
-	cache = DesktopEntryCache()
-
-	__genmenuNotOnlyAllocated(tmp["Root"], cache)
-	__genmenuOnlyAllocated(tmp["Root"], cache)
+	__genmenuNotOnlyAllocated(tmp["Root"])
+	__genmenuOnlyAllocated(tmp["Root"])
 
 	# and finally sort
 	sort(tmp["Root"])
@@ -629,13 +554,13 @@ def __parse(node, file, parent = ""):
 				except IndexError:
 					raise ValidationError('Directory cannot be empty', file)
 			elif child.tagName == 'OnlyUnallocated':
-				parent.setOnlyUnallocated(True)
+				parent.OnlyUnallocated = True
 			elif child.tagName == 'NotOnlyUnallocated':
-				parent.setOnlyUnallocated(False)
+				parent.OnlyUnallocated = False
 			elif child.tagName == 'Deleted':
-				parent.setDeleted(True)
+				parent.Deleted = True
 			elif child.tagName == 'NotDeleted':
-				parent.setDeleted(False)
+				parent.Deleted = False
 			elif child.tagName == 'Include' or child.tagName == 'Exclude':
 				parent.addRule(Rule(child.tagName, child))
 			elif child.tagName == 'MergeFile':
@@ -659,6 +584,13 @@ def __parse(node, file, parent = ""):
 			elif child.tagName == 'DefaultLayout':
 				if len(child.childNodes) > 1:
 					parent.DefaultLayout = Layout(child)
+			elif child.tagName == 'LegacyDir':
+				try:
+					__parseLegacyDir(child.childNodes[0].nodeValue, child.getAttribute("prefix"), file, parent)
+				except IndexError:
+					raise ValidationError('LegacyDir cannot be empty', file)
+			elif child.tagName == 'KDELegacyDirs':
+				__parseKDELegacyDirs(file, parent)
 
 def __parsemove(menu):
 	for submenu in menu.getSubmenus():
@@ -680,9 +612,6 @@ def __parsemove(menu):
 
 
 def __postparse(menu):
-	# a list of menus to remove
-	remove = []
-
 	# Layout Tags
 	if not menu.Layout or not menu.DefaultLayout:
 		if menu.DefaultLayout:
@@ -702,11 +631,6 @@ def __postparse(menu):
 
 	# go recursive through all menus
 	for submenu in menu.getSubmenus():
-		# notset required for move operations
-		if submenu.getDeleted() == "notset":
-			submenu.setDeleted(False)
-		if submenu.getOnlyUnallocated() == "notset":
-			submenu.setOnlyUnallocated(False)
 		# add parent's app/directory dirs
 		for dir in menu.getAppDirs(reverse = True):
 			submenu.addAppDir(dir, 0)
@@ -714,7 +638,7 @@ def __postparse(menu):
 			submenu.addDirectoryDir(dir, 0)
 
 		# get the valid .directory file out of the list
-		entry = ""
+		entry = None
 		for directory in submenu.getDirectories():
 			for dir in submenu.getDirectoryDirs():
 				if os.path.exists(os.path.join(dir, directory)):
@@ -723,17 +647,10 @@ def __postparse(menu):
 						entry.parse(os.path.join(dir, directory))
 					except:
 						pass
-		if entry:
-			submenu.setDirectory(entry)
-		else:
-			submenu.setDirectory(DesktopEntry())
+		submenu.setDirectory(entry)
 
 		# enter submenus
 		__postparse(submenu)
-
-	# remove menus
-	for submenu in remove:
-		menu.removeSubmenu(submenu)
 
 # Menu parsing stuff
 def __parseMenu(child, file, parent):
@@ -833,49 +750,86 @@ def __mergeFile(file, child, parent):
 	else:
 		__parse(doc.childNodes[1],file,parent)
 
+# Legacy Dir Stuff
+def __parseLegacyDir(dir, prefix, file, parent):
+	m = __mergeLegacyDir(dir,prefix,file,parent)
+	if m:
+		parent += m
+
+def __mergeLegacyDir(dir, prefix, file, parent):
+	dir = __check(dir,file,"dir")
+	if dir and dir not in tmp["DirectoryDirs"]:
+		tmp["DirectoryDirs"].append(dir)
+
+		m = Menu()
+		m.addAppDir(dir)
+		m.addDirectoryDir(dir)
+		m.Name = os.path.basename(dir)
+
+		for entry in os.listdir(dir):
+			if entry == ".directory":
+				m.addDirectory(entry)
+			elif os.path.isdir(os.path.join(dir,entry)):
+				m.addSubmenu(__mergeLegacyDir(os.path.join(dir,entry), prefix, file, parent))
+
+		tmp["cache"].addEntries([dir],prefix, False)
+		entries = tmp["cache"].getEntries([dir])
+
+		for entry in entries:
+			categories = entry.Categories
+			if len(categories) == 0:
+				r = Rule("Include")
+				r.parseFilename(entry.DesktopFileID)
+				r.compile()
+				m.addRule(r)
+			if not dir in parent.getAppDirs():
+				categories.append("Legacy")
+				entry.Categories = categories
+
+		return m
+
+def __parseKDELegacyDirs(file, parent):
+	f=os.popen3("kde-config --path apps")
+	output = f[1].readlines()
+	for dir in output[0].split(":"):
+		__parseLegacyDir(dir,"kde", file, parent)
+
 # Finally generate the menu
-def __genmenuNotOnlyAllocated(menu, cache):
-	if not menu.getOnlyUnallocated():
-		cache.addEntries(menu.getAppDirs())
+def __genmenuNotOnlyAllocated(menu):
+	for submenu in menu.getSubmenus():
+		__genmenuNotOnlyAllocated(submenu)
+
+	if menu.OnlyUnallocated == False:
+		tmp["cache"].addEntries(menu.getAppDirs())
 		entries = []
 		for rule in menu.getRules():
-			entries = rule.do(cache.getEntries(menu.getAppDirs()), rule.Type, 1)
+			entries = rule.do(tmp["cache"].getEntries(menu.getAppDirs()), rule.Type, 1)
 		for entry in entries:
 		    if entry.Add == True:
 				entry.Add = False
 				entry.Allocated = True
 				menu.addDeskEntry(entry)
-	for submenu in menu.getSubmenus():
-		__genmenuNotOnlyAllocated(submenu, cache)
 
-def __genmenuOnlyAllocated(menu, cache):
-	if menu.getOnlyUnallocated():
-		cache.addEntries(menu.getAppDirs())
+def __genmenuOnlyAllocated(menu):
+	for submenu in menu.getSubmenus():
+		__genmenuOnlyAllocated(submenu)
+
+	if menu.OnlyUnallocated == True:
+		tmp["cache"].addEntries(menu.getAppDirs())
 		entries = []
 		for rule in menu.getRules():
-			entries = rule.do(cache.getEntries(menu.getAppDirs()), rule.Type, 2)
+			entries = rule.do(tmp["cache"].getEntries(menu.getAppDirs()), rule.Type, 2)
 		for entry in entries:
 		    if entry.Add == True:
 			#	entry.Add = False
 			#	entry.Allocated = True
 				menu.addDeskEntry(entry)
 
-	for submenu in menu.getSubmenus():
-		__genmenuOnlyAllocated(submenu, cache)
-
 # And sorting ...
 def sort(menu):
 	menu.Entries = []
 
-	remove = []
 	for submenu in menu.getSubmenus():
-		# remove menus that should not be displayed
-		if submenu.getDeleted() == True \
-		or submenu.Directory.getHidden() == True \
-		or submenu.Directory.getNoDisplay() == True:
-			remove.append(submenu)
-			continue
-
 		sort(submenu)
 
 		# remove separators at the beginning and at the end
@@ -885,12 +839,6 @@ def sort(menu):
 		if len(submenu.Entries) > 0:
 			if isinstance(submenu.Entries[-1], Separator):
 				submenu.Entries.pop(-1)
-
-		if submenu.Layout.show_empty == "false" and len(submenu.Entries) == 0:
-			remove.append(submenu)
-
-	for submenu in remove:
-		menu.removeSubmenu(submenu)
 
 	tmp_s = []
 	tmp_e = []
@@ -916,7 +864,7 @@ def sort(menu):
 			if order[1] == "files" or order[1] == "all":
 				menu.DeskEntries.sort()
 				for entry in menu.getDeskEntries():
-					if entry.DesktopFileID not in tmp_e:
+					if entry not in tmp_e:
 						menu.Entries.append(entry)
 			elif order[1] == "menus" or order[1] == "all":
 				menu.Submenus.sort()
@@ -924,16 +872,39 @@ def sort(menu):
 					if submenu.Name not in tmp_s:
 						__parse_inline(submenu, menu)
 
+	# getHidden / NoDisplay / OnlyShowIn / NotOnlyShowIn / Deleted
+	remove = []
+	for entry in menu.Entries:
+		if isinstance(entry, Menu):
+			if entry.Directory:
+				if entry.Directory.getHidden() == True or entry.Directory.getNoDisplay() == True:
+					remove.append(entry)
+			if entry.Deleted == True:
+				remove.append(entry)
+		elif isinstance(entry, MenuEntry):
+			if entry.DesktopEntry.getHidden() == True or entry.DesktopEntry.getNoDisplay() == True:
+				remove.append(entry)
+			elif xdg.Config.windowmanager != None:
+				if ( entry.DesktopEntry.getOnlyShowIn() != [] and xdg.Config.windowmanager not in entry.DesktopEntry.getOnlyShowIn() ) \
+				or xdg.Config.windowmanager in entry.DesktopEntry.getNotShowIn():
+					remove.append(entry)
+	for entry in remove:
+		menu.Entries.remove(entry)
+
+	# show_empty tag
+	remove = []
+	for entry in menu.Entries:
+		if isinstance(entry,Menu) and entry.Layout.show_empty == "false" and len(entry.Entries) == 0:
+				remove.append(entry)
+	for entry in remove:
+		menu.Entries.remove(entry)
+
 # inline tags
 def __parse_inline(submenu, menu):
 	if submenu.Layout.inline == "true":
 		if len(submenu.Entries) == 1 and submenu.Layout.inline_alias == "true":
 			entry = submenu.Entries[0]
-			locale = entry.DesktopEntry.getLocale()
-			if locale == "C":
-				locale = ""
-			if locale:
-				locale = "[" + locale + "]"
+			locale = "[" + xdg.Locale.langs[0] + "]"
 			entry.DesktopEntry.set("Name" + locale, submenu.getName())
 			entry.DesktopEntry.set("GenericName" + locale, submenu.getGenericName())
 			entry.DesktopEntry.set("Comment" + locale, submenu.getComment())
@@ -955,29 +926,29 @@ class DesktopEntryCache:
 		self.cacheEntries = {}
 		self.cache = {}
 
-	def addEntries(self, dirs):
+	def addEntries(self, dirs, prefix = "", recursive = True):
 		for dir in dirs:
 			if not self.cacheEntries.has_key(dir):
 				self.cacheEntries[dir] = []
-				self.__addFiles(dir, "")
+				self.__addFiles(dir, "", prefix, recursive)
 
-	def __addFiles(self, dir, subdir):
+	def __addFiles(self, dir, subdir, prefix, recursive):
 		files = os.listdir(os.path.join(dir,subdir))
 		for file in files:
 			if os.path.splitext(file)[1] == ".desktop":
 				try:
 					deskentry = DesktopEntry()
 					deskentry.parse(os.path.join(dir, subdir, file))
-					entry = MenuEntry(deskentry, os.path.join(subdir,file).replace("/", "-"))
-					self.cacheEntries[dir].append(entry)
 				except ParsingError:
 					continue
-			elif os.path.isdir(os.path.join(dir,subdir,file)):
-				self.__addFiles(dir, os.path.join(subdir,file))
+
+				entry = MenuEntry(deskentry, os.path.join(prefix,subdir,file).replace("/", "-"))
+				self.cacheEntries[dir].append(entry)
+			elif os.path.isdir(os.path.join(dir,subdir,file)) and recursive == True:
+				self.__addFiles(dir, os.path.join(subdir,file), prefix, recursive)
 
 	def getEntries(self, dirs):
 		list = []
-		# don't compare MenuEntries, this is veryyyy slow, cache their DesktopFileIDs
 		ids = []
 		# cache the results again
 		key = "".join(dirs)
@@ -988,7 +959,7 @@ class DesktopEntryCache:
 		for dir in dirs:
 			if self.cacheEntries.has_key(dir):
 				for entry in self.cacheEntries[dir]:
-					if not entry.DesktopFileID in ids:
+					if entry.DesktopFileID not in ids:
 						ids.append(entry.DesktopFileID)
 						list.append(entry)
 		self.cache[key] = list

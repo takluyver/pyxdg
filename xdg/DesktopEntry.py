@@ -188,13 +188,13 @@ class DesktopEntry(IniFile):
 			elif not value == "UTF-8":
 				self.errors.append("Value of key 'Encoding' must be UTF-8")
 
-		elif re.match("^Name"+self.locale+"$", key):
+		elif re.match("^Name"+xdg.Locale.regex+"$", key):
 			pass # locale string
 
-		elif re.match("^GenericName"+self.locale+"$", key):
+		elif re.match("^GenericName"+xdg.Locale.regex+"$", key):
 			pass # locale string
 
-		elif re.match("^Comment"+self.locale+"$", key):
+		elif re.match("^Comment"+xdg.Locale.regex+"$", key):
 			pass # locale string
 
 		elif key == "NoDisplay":
@@ -219,10 +219,10 @@ class DesktopEntry(IniFile):
 			self.checkValue(key, value)
 			self.checkType(key, "Application")
 
-		elif re.match("^Icon"+self.locale+"$", key):
+		elif re.match("^Icon"+xdg.Locale.regex+"$", key):
 			self.checkValue(key, value)
 
-		elif re.match("^SwallowTitle"+self.locale+"$", key):
+		elif re.match("^SwallowTitle"+xdg.Locale.regex+"$", key):
 			self.checkType(key, "Application")
 
 		elif key == "SwallowExec":
@@ -281,7 +281,7 @@ class DesktopEntry(IniFile):
 			self.checkValue(key, value)
 			self.checkType(key, "FSDevice")
 
-		elif re.match("^UnmountIcon"+self.locale+"$", key):
+		elif re.match("^UnmountIcon"+xdg.Locale.regex+"$", key):
 			self.checkValue(key, value)
 			self.checkType(key, "FSDevice")
 
@@ -298,7 +298,7 @@ class DesktopEntry(IniFile):
 			self.checkValue(key, value)
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
-		elif re.match("^Keywords"+self.locale+"$", key):
+		elif re.match("^Keywords"+xdg.Locale.regex+"$", key):
 			self.checkValue(key, value, list = True)
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
@@ -307,7 +307,7 @@ class DesktopEntry(IniFile):
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
 		# deprecated keys
-		elif re.match("^MiniIcon"+self.locale+"$", key):
+		elif re.match("^MiniIcon"+xdg.Locale.regex+"$", key):
 			self.checkValue(key, value)
 			self.warnings.append("Key '%s' is deprecated" % key)
 

@@ -1,3 +1,14 @@
+2005-05-02 Heinrich Wendel <h_wendel@cojobo.net>
+	* Config.py:
+	Module to configure Basic Settings, currently available:
+	- Locale, IconTheme, IconSize, WindowManager
+	* Locale.py:
+	Internal Module to support Locales
+	* Mime.py:
+	Implementation of the Mime Specification
+	* Menu.py:
+	Now supports LegacyDirs
+
 Version 0.10
 
 2005-04-26 Heinrich Wendel <h_wendel@cojobo.net>

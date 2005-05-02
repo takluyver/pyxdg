@@ -1,1 +1,1 @@
-__all__ = [ "BaseDirectory", "DesktopEntry", "Menu", "Exceptions", "IniFile", "IconTheme" ]
+__all__ = [ "BaseDirectory", "DesktopEntry", "Menu", "Exceptions", "IniFile", "IconTheme", "Locale", "Config", "Mime" ]
