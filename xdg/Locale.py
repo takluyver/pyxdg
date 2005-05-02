@@ -70,7 +70,10 @@ def expand_languages(languages = None):
 
 def update(language = None):
 	global langs
-	langs = expand_languages(language)
+	if language:
+		langs = expand_languages([language])
+	else:
+		langs = expand_languages()
 
 langs = []
 update()
