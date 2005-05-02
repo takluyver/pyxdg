@@ -23,6 +23,7 @@ def setIconSize(size):
 
 def setLocale(lang):
 	import locale
+	lang = locale.normalize(lang)
 	locale.setlocale(locale.LC_ALL, lang)
 	import xdg.Locale
 	xdg.Locale.update(lang)
