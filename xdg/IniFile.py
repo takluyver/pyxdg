@@ -277,10 +277,13 @@ class IniFile:
 				fp.write("\n")
 		self.tainted = False
 
-	def set(self, key, value, group = ""):
+	def set(self, key, value, group = "", locale = False):
 		# set default group
 		if not group:
 			group = self.defaultGroup
+
+		if locale == True:
+			key += "[" + xdg.Locale.langs[0] + "]"
 
 		try:
 			if isinstance(value, unicode):
