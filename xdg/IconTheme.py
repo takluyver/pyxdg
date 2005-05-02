@@ -16,7 +16,7 @@ class IconTheme(IniFile):
 	def __init__(self):
 		IniFile.__init__(self)
 
-	def __repr__(self):
+	def __str__(self):
 		return self.name
 
 	def parse(self, file):
@@ -171,7 +171,7 @@ class IconData(IniFile):
 	def __init__(self):
 		IniFile.__init__(self)
 
-	def __repr__(self):
+	def __str__(self):
 		return self.getDisplayName()
 
 	def parse(self, file):
