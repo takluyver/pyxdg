@@ -27,6 +27,7 @@ class Menu:
 
 		# for getHidden() / getNoDisplay()
 		self.Show = True
+		self.Visible = 0
 
 		# Private stuff, only needed for parsing
 		self.AppDirs = []
@@ -882,6 +883,7 @@ def sort(menu):
 	hide = []
 	for entry in menu.Entries:
 		entry.Show = True
+		menu.Visible += 1
 		if isinstance(entry, Menu):
 			if entry.Deleted == True:
 				hide.append(entry)
@@ -897,11 +899,11 @@ def sort(menu):
 					hide.append(entry)
 	for entry in hide:
 		entry.Show = False
-		menu.Entries.hide(entry)
+		menu.Visible -= 1
 
 	# show_empty tag
 	for entry in menu.Entries:
-		if isinstance(entry,Menu) and entry.Layout.show_empty == "false" and len(entry.Entries) == len(hide):
+		if isinstance(entry,Menu) and entry.Layout.show_empty == "false" and menu.Visible == 0:
 				entry.Show = False
 
 # inline tags
