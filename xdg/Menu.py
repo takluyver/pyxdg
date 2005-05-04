@@ -743,10 +743,10 @@ def __mergeFile(file, child, parent):
 		raise ParsingError('Not a valid .menu file', file)
 
 	# append file
-	if doc.childNodes[0].nodeType == ELEMENT_NODE:
-		__parse(doc.childNodes[0],file,parent)
-	else:
-		__parse(doc.childNodes[1],file,parent)
+	for child in doc.childNodes:
+		if child.nodeType == ELEMENT_NODE:
+			__parse(child,file,parent)
+			break
 
 # Legacy Dir Stuff
 def __parseLegacyDir(dir, prefix, file, parent):
