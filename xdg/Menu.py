@@ -25,6 +25,9 @@ class Menu:
 		self.Filename = ""
 #		self.Parent = ""
 
+		# for getHidden() / getNoDisplay()
+		self.Show = True
+
 		# Private stuff, only needed for parsing
 		self.AppDirs = []
 		self.DefaultLayout = ""
@@ -76,9 +79,12 @@ class Menu:
 		else:
 			return False
 
-	def getEntries(self):
+	def getEntries(self, all = False):
 		for entry in self.Entries:
-			yield entry
+			if all == True:
+				yield entry
+			elif entry.Show == True:
+				yield entry
 
 	def searchEntry(self, filename, deep = True, action = "echo"):
 		for entry in self.Entries:
@@ -437,6 +443,8 @@ class MenuEntry:
 		self.Allocated = Allocated
 		self.Add = False
 		self.MatchedInclude = False
+		# Needed for getHidden() / getNoDisplay()
+		self.Show = True
 		# Caching
 		self.Categories = ""
 		self.cache()
@@ -871,31 +879,30 @@ def sort(menu):
 						__parse_inline(submenu, menu)
 
 	# getHidden / NoDisplay / OnlyShowIn / NotOnlyShowIn / Deleted
-	remove = []
+	hide = []
 	for entry in menu.Entries:
+		entry.Show = True
 		if isinstance(entry, Menu):
-			if entry.Directory:
-				if entry.Directory.getHidden() == True or entry.Directory.getNoDisplay() == True:
-					remove.append(entry)
 			if entry.Deleted == True:
-				remove.append(entry)
+				hide.append(entry)
+			elif entry.Directory:
+				if entry.Directory.getHidden() == True or entry.Directory.getNoDisplay() == True:
+					hide.append(entry)
 		elif isinstance(entry, MenuEntry):
 			if entry.DesktopEntry.getHidden() == True or entry.DesktopEntry.getNoDisplay() == True:
-				remove.append(entry)
+				hide.append(entry)
 			elif xdg.Config.windowmanager != None:
 				if ( entry.DesktopEntry.getOnlyShowIn() != [] and xdg.Config.windowmanager not in entry.DesktopEntry.getOnlyShowIn() ) \
 				or xdg.Config.windowmanager in entry.DesktopEntry.getNotShowIn():
-					remove.append(entry)
-	for entry in remove:
-		menu.Entries.remove(entry)
+					hide.append(entry)
+	for entry in hide:
+		entry.Show = False
+		menu.Entries.hide(entry)
 
 	# show_empty tag
-	remove = []
 	for entry in menu.Entries:
-		if isinstance(entry,Menu) and entry.Layout.show_empty == "false" and len(entry.Entries) == 0:
-				remove.append(entry)
-	for entry in remove:
-		menu.Entries.remove(entry)
+		if isinstance(entry,Menu) and entry.Layout.show_empty == "false" and len(entry.Entries) == len(hide):
+				entry.Show = False
 
 # inline tags
 def __parse_inline(submenu, menu):
