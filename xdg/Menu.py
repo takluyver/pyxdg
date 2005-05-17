@@ -897,14 +897,16 @@ def sort(menu):
 				if ( entry.DesktopEntry.getOnlyShowIn() != [] and xdg.Config.windowmanager not in entry.DesktopEntry.getOnlyShowIn() ) \
 				or xdg.Config.windowmanager in entry.DesktopEntry.getNotShowIn():
 					hide.append(entry)
+		elif isinstance(entry,Separator):
+			menu.Visible -= 1
 	for entry in hide:
 		entry.Show = False
 		menu.Visible -= 1
 
 	# show_empty tag
 	for entry in menu.Entries:
-		if isinstance(entry,Menu) and entry.Layout.show_empty == "false" and menu.Visible == 0:
-				entry.Show = False
+		if isinstance(entry,Menu) and entry.Layout.show_empty == "false" and entry.Visible == 0:
+			entry.Show = False
 
 # inline tags
 def __parse_inline(submenu, menu):
