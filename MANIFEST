@@ -3,7 +3,6 @@ ChangeLog
 COPYING
 README
 TODO
-doc/menu.dtd
 setup.py
 test/test-desktop.py
 test/test-desktop-write.py
@@ -15,4 +14,8 @@ xdg/Exceptions.py
 xdg/IconTheme.py
 xdg/IniFile.py
 xdg/Menu.py
+xdg/Mime.py
+xdg/RecentFiles.py
+xdg/Locale.py
+xdg/Config.py
 xdg/__init__.py
