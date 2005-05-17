@@ -11,7 +11,6 @@ Not supported:
 """
 
 from xdg.IniFile import *
-import xdg.IconTheme
 
 class DesktopEntry(IniFile):
 	"Class to parse and validate DesktopEntries"
@@ -43,7 +42,7 @@ class DesktopEntry(IniFile):
 	def getNoDisplay(self):
 		return self.get('NoDisplay', type = "boolean")
 	def getIcon(self):
-		return xdg.IconTheme.getIconPath(self.get('Icon', locale = True))
+		return self.get('Icon', locale = True)
 	def getHidden(self):
 		return self.get('Hidden', type = "boolean")
 	def getFilePattern(self):

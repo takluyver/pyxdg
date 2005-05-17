@@ -12,7 +12,6 @@ from xdg.Exceptions import *
 
 import xdg.Locale
 import xdg.Config
-import xdg.IconTheme
 
 ELEMENT_NODE = xml.dom.Node.ELEMENT_NODE
 
@@ -143,8 +142,7 @@ class Menu:
 
 	def getIcon(self):
 		try:
-			value = self.Directory.getIcon()
-			return xdg.IconTheme.getIconPath(value)
+			return self.Directory.getIcon()
 		except:
 			return ""
 
