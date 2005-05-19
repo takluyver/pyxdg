@@ -1,3 +1,6 @@
+2005-05-19 Heinrich Wendel <h_wendel@cojobo.net>
+	* Menu.py: Some helper stuff for Menu handling
+
 2005-05-17 Heinrich Wendel <h_wendel@cojobo.net>
 	* Menu.py: Small fixes
 	* DesktopEntry.py, Menu.py: Remove automatically retrieving of the icon
