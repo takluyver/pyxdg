@@ -79,25 +79,53 @@ class Menu:
 		else:
 			return False
 
-	def getEntries(self, all = False):
+	""" PUBLIC STUFF """
+	def getEntries(self, hidden = False):
 		for entry in self.Entries:
-			if all == True:
+			if hidden == True:
 				yield entry
 			elif entry.Show == True:
 				yield entry
 
-	def searchEntry(self, filename, deep = True, action = "echo"):
-		for entry in self.Entries:
+	def searchEntry(self, desktopfileid, hidden = False, deep = True):
+		for entry in self.getEntries(hidden):
 			if isinstance(entry, MenuEntry):
-				if entry.DesktopEntry.getFileName() == filename:
-					if action == "echo":
-						print self.getPath()
-						return ""
-					elif action == "return":
-						return self.getPath()
+				if entry.DesktopFileID == desktopfileid:
+					return self.getPath()
 			elif isinstance(entry, Menu) and deep == True:
 				for submenu in self.Submenus:
-					submenu.searchEntry(filename, deep, action)
+					submenu.searchEntry(desktopfileid, deep)
+
+	def getEntry(self, desktopfileid, hidden = False, deep = True):
+		for entry in self.getEntries(hidden):
+			if isinstance(entry, MenuEntry):
+				if entry.DesktopFileID == desktopfileid:
+					return entry
+			elif isinstance(entry, Menu) and deep == True:
+				for submenu in self.Submenus:
+					submenu.getEntry(desktopfileid, deep)
+
+	def searchMenu(self, name, hidden = False, deep = True):
+		for entry in self.getEntries(hidden):
+			if isinstance(entry, Menu):
+				if submenu.Name == name:
+					return submenu.getPath()
+				if deep == True:
+					for submenu in self.Submenus:
+						submenu.searchMenu(name, deep)
+
+	def getMenu(self, name, hidden = False, deep = True):
+		array = name.split("/", 1)
+		for entry in self.getEntries(hidden):
+			if isinstance(entry, Menu):
+				if submenu.Name == array[0]:
+					if len(array) > 1:
+						return self.getMenu(array[1], hidden)
+					else:
+						return submenu
+				if deep == True:
+					for submenu in self.Submenus:
+						submenu.searchMenu(name, deep)
 
 	def getPath(self, org = False, toplevel = False):
 		parent = self
@@ -146,6 +174,7 @@ class Menu:
 		except:
 			return ""
 
+	""" PRIVATE STUFF """
 	def addAppDir(self, dir, pos = -1):
 		if not dir in self.getAppDirs():
 			if pos == -1:
@@ -162,9 +191,9 @@ class Menu:
 		self.DeskEntries.append(entry)
 	def getDeskEntries(self):
 		return self.DeskEntries
-	def getDeskEntry(self, name):
+	def getDeskEntry(self, desktopfileid):
 		try:
-			index = self.getDeskEntries().index(name)
+			index = self.getDeskEntries().index(desktopfileid)
 			return self.getDeskEntries()[index]
 		except ValueError:
 			return ""
@@ -216,7 +245,7 @@ class Menu:
 		return self.Submenus
 	def getSubmenu(self, name):
 		# parses recursive menus
-		array = name.split("/")
+		array = name.split("/", 1)
 		try:
 			index = self.getSubmenus().index(array[0])
 			if len(array) > 1:
