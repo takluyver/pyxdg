@@ -865,10 +865,10 @@ def sort(menu, depth = 0):
 	menu.Entries = []
 	menu.Depth = depth
 
+	depth += 1
+
 	for submenu in menu.getSubmenus():
-		depth += 1
 		sort(submenu, depth)
-		depth -= 1
 
 		# remove separators at the beginning and at the end
 		if len(submenu.Entries) > 0:
@@ -877,6 +877,8 @@ def sort(menu, depth = 0):
 		if len(submenu.Entries) > 0:
 			if isinstance(submenu.Entries[-1], Separator):
 				submenu.Entries.pop(-1)
+
+	depth -= 1
 
 	tmp_s = []
 	tmp_e = []
