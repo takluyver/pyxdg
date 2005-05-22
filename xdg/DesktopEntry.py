@@ -20,8 +20,12 @@ class DesktopEntry(IniFile):
 	defaultGroup = 'Desktop Entry'
 	DesktopFileID = ""
 
-	def __init__(self):
+	def __init__(self, filename = "", type = ""):
 		IniFile.__init__(self)
+		if filename and os.path.exists(filename):
+			self.parse(filename)
+		elif filename:
+			self.new(filename, type)
 
 	def __str__(self):
 		return self.getName()
@@ -125,14 +129,16 @@ class DesktopEntry(IniFile):
 	# end deprecated keys
 
 	# create new entry
-	def new(self, filename, type = "Application"):
+	def new(self, filename, type = ""):
+		if not type:
+			type = "Application"
 		self.content = dict()
 		self.addGroup(self.defaultGroup)
 		self.set("Encoding", "UTF-8")
 		self.set("Type", type)
 		self.file = filename
 
-	def save(self):
+	def save(self, filename = ""):
 		if self.tainted == True:
 			if os.path.isabs(self.file) and os.acess(self.file, os.W_OK):
 				self.write()
@@ -145,11 +151,8 @@ class DesktopEntry(IniFile):
 				if path:
 					if not os.path.isdir(path):
 						os.makedirs(path)
-					filename = self.file
-					for dir in xdg_data_dirs:
-						filename = filename.replace(dir, "")
-					if filename == self.file:
-						filename == os.path.basename(self.file)
+					if not filename:
+						filename = os.path.basename(self.file)
 					self.write(os.path.join(path, filename))
 
 	# end create new entry
