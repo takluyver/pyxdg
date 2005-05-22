@@ -55,7 +55,7 @@ class IniFile:
 
 		self.file = filename
 		self.tainted = False
-                
+
 		# check header
 		for header in headers:
 			if content.has_key(header):
@@ -140,10 +140,6 @@ class IniFile:
 			return False
 		return False
 	# end subget
-
-	def resetCache(self):
-		# delete cache
-		self.cache = {}
 
 	def __addLocale(self, key, group = ''):
 		"add locale to key according the current lc_messages"
@@ -293,7 +289,6 @@ class IniFile:
 				self.content[group][key] = value.encode("utf-8", "ignore")
 			else:
 				self.content[group][key] = value
-			self.resetCache()
 		except KeyError:
 			raise NoGroupError(group, self.file)
 		    

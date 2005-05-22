@@ -11,9 +11,15 @@ Not supported:
 """
 
 from xdg.IniFile import *
+from xdg.BaseDirectory import *
+import os.path
 
 class DesktopEntry(IniFile):
 	"Class to parse and validate DesktopEntries"
+
+	defaultGroup = 'Desktop Entry'
+	DesktopFileID = ""
+
 	def __init__(self):
 		IniFile.__init__(self)
 
@@ -25,6 +31,7 @@ class DesktopEntry(IniFile):
 
 	def parse(self, file):
 		IniFile.parse(self, file, ["Desktop Entry", "KDE Desktop Entry"])
+		self.DesktopFileID = os.path.basename(self.file)
 
 	# start standard keys
 	def getType(self):
@@ -116,6 +123,36 @@ class DesktopEntry(IniFile):
 	def getMapNotify(self):
 		return self.get('MapNotify')
 	# end deprecated keys
+
+	# create new entry
+	def new(self, filename, type = "Application"):
+		self.content = dict()
+		self.addGroup(self.defaultGroup)
+		self.set("Encoding", "UTF-8")
+		self.set("Type", type)
+		self.file = filename
+
+	def save(self):
+		if self.tainted == True:
+			if os.path.isabs(self.file) and os.acess(self.file, os.W_OK):
+				self.write()
+			else:
+				path = ""
+				if self.DesktopEntry.getType() == "Application":
+					path = os.path.join(xdg_data_dirs[0], "applications")
+				elif self.DesktopEntry.getType() == "Directory":
+					path = os.path.join(xdg_data_dirs[0], "desktop-directories")
+				if path:
+					if not os.path.isdir(path):
+						os.makedirs(path)
+					filename = self.file
+					for dir in xdg_data_dirs:
+						filename = filename.replace(dir, "")
+					if filename == self.file:
+						filename == os.path.basename(self.file)
+					self.write(os.path.join(path, filename))
+
+	# end create new entry
 
 	# validation stuff
 	def checkExtras(self):
