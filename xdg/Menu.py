@@ -487,11 +487,13 @@ class MenuEntry:
 			else:
 				path = ""
 				if self.DesktopEntry.getType() == "Application":
-					path = os.path.join(xdg_data_dirs[0], "applications", self.DesktopFileID.replace("-","/"))
+					path = os.path.join(xdg_data_dirs[0], "applications")
 				elif self.DesktopEntry.getType() == "Directory":
-					path = os.path.join(xdg_data_dirs[0], "desktop-directories", self.DesktopFileID.replace("-","/"))
+					path = os.path.join(xdg_data_dirs[0], "desktop-directories")
 				if path:
-					self.DesktopEntry.write(path)
+					if not os.path.isdir(path):
+						os.makedirs(path)
+					self.DesktopEntry.write(os.path.join(path, self.DesktopFileID.replace("-", "/"))
 		
 
 	def __cmp__(self, other):
