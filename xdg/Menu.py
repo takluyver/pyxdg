@@ -465,8 +465,12 @@ def do(entries, type, run):
 
 class MenuEntry:
 	"Wrapper for 'Menu Style' Desktop Entries"
-	def __init__(self, Entry, Id = "", Allocated = False):
-		self.DesktopEntry = Entry
+	def __init__(self, Entry = "", Id, Allocated = False):
+		if not Entry:
+			self.DesktopEntry = DesktopEntry()
+			self.DesktopEntry.file = Id
+		else:
+			self.DesktopEntry = Entry
 		self.DesktopFileID = Id
 		self.Allocated = Allocated
 		self.Add = False
@@ -494,7 +498,6 @@ class MenuEntry:
 					if not os.path.isdir(path):
 						os.makedirs(path)
 					self.DesktopEntry.write(os.path.join(path, self.DesktopFileID.replace("-", "/"))
-		
 
 	def __cmp__(self, other):
 		return cmp(self.DesktopEntry.getName(), other.DesktopEntry.getName())
