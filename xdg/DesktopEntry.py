@@ -126,9 +126,9 @@ class DesktopEntry(IniFile):
 		return self.get('MapNotify')
 	# end deprecated keys
 
-	# create new entry
+	# desktop entry edit stuff
 	def new(self, filename, type = ""):
-		if not type:
+		if type == "":
 			type = "Application"
 		self.content = dict()
 		self.addGroup(self.defaultGroup)
@@ -152,8 +152,7 @@ class DesktopEntry(IniFile):
 					if not filename:
 						filename = os.path.basename(self.file)
 					self.write(os.path.join(path, filename))
-
-	# end create new entry
+	# end desktop entry edit stuff
 
 	# validation stuff
 	def checkExtras(self):
