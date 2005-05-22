@@ -480,6 +480,20 @@ class MenuEntry:
 	def cache(self):
 		self.Categories = self.DesktopEntry.getCategories()
 
+	def save(self):
+		if self.DesktopEntry.tainted == True:
+			if os.acess(self.DesktopEntry.file, os.W_OK):
+				self.DesktopEntry.write()
+			else:
+				path = ""
+				if self.DesktopEntry.getType() == "Application":
+					path = os.path.join(xdg_data_dirs[0], "applications", self.DesktopFileID.replace("-","/"))
+				elif self.DesktopEntry.getType() == "Directory":
+					path = os.path.join(xdg_data_dirs[0], "desktop-directories", self.DesktopFileID.replace("-","/"))
+				if path:
+					self.DesktopEntry.write(path)
+		
+
 	def __cmp__(self, other):
 		return cmp(self.DesktopEntry.getName(), other.DesktopEntry.getName())
 
