@@ -22,6 +22,7 @@ class Menu:
 		self.Entries = []
 		self.Doc = ""
 		self.Filename = ""
+		self.Depth = 0
 #		self.Parent = ""
 
 		# Can be one of Hidden/Empty/NotShowIn or True
@@ -860,11 +861,14 @@ def __genmenuOnlyAllocated(menu):
 				menu.addDeskEntry(entry)
 
 # And sorting ...
-def sort(menu):
+def sort(menu, depth = 0):
 	menu.Entries = []
+	menu.Depth = depth
 
 	for submenu in menu.getSubmenus():
-		sort(submenu)
+		depth += 1
+		sort(submenu, depth)
+		depth -= 1
 
 		# remove separators at the beginning and at the end
 		if len(submenu.Entries) > 0:
