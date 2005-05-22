@@ -18,7 +18,6 @@ class DesktopEntry(IniFile):
 	"Class to parse and validate DesktopEntries"
 
 	defaultGroup = 'Desktop Entry'
-	DesktopFileID = ""
 
 	def __init__(self, filename = "", type = ""):
 		IniFile.__init__(self)
@@ -35,7 +34,6 @@ class DesktopEntry(IniFile):
 
 	def parse(self, file):
 		IniFile.parse(self, file, ["Desktop Entry", "KDE Desktop Entry"])
-		self.DesktopFileID = os.path.basename(self.file)
 
 	# start standard keys
 	def getType(self):
