@@ -689,15 +689,14 @@ def __postparse(menu):
 		# get the valid .directory file out of the list
 		entry = None
 		for directory in submenu.getDirectories():
-			if not entry:
-				for dir in submenu.getDirectoryDirs():
-					if not entry:
-						if os.path.exists(os.path.join(dir, directory)):
-							try:
-								entry = DesktopEntry()
-								entry.parse(os.path.join(dir, directory))
-							except:
-								pass
+			for dir in submenu.getDirectoryDirs():
+				if os.path.exists(os.path.join(dir, directory)):
+					try:
+						entry = DesktopEntry()
+						entry.parse(os.path.join(dir, directory))
+						break
+					except:
+						pass
 		submenu.setDirectory(entry)
 
 		# enter submenus
