@@ -689,13 +689,15 @@ def __postparse(menu):
 		# get the valid .directory file out of the list
 		entry = None
 		for directory in submenu.getDirectories():
-			for dir in submenu.getDirectoryDirs():
-				if os.path.exists(os.path.join(dir, directory)):
-					try:
-						entry = DesktopEntry()
-						entry.parse(os.path.join(dir, directory))
-					except:
-						pass
+			if not entry:
+				for dir in submenu.getDirectoryDirs():
+					if not entry:
+						if os.path.exists(os.path.join(dir, directory)):
+							try:
+								entry = DesktopEntry()
+								entry.parse(os.path.join(dir, directory))
+							except:
+								pass
 		submenu.setDirectory(entry)
 
 		# enter submenus
@@ -1027,5 +1029,6 @@ class DesktopEntryCache:
 				if entry.DesktopFileID not in ids:
 					ids.append(entry.DesktopFileID)
 					list.append(entry)
-		self.cache[key] = list
+		if legacy == True:
+			self.cache[key] = list
 		return list
