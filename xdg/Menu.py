@@ -88,14 +88,14 @@ class Menu:
 			elif entry.Show == True:
 				yield entry
 
-	def searchEntry(self, desktopfileid, hidden = False, deep = True):
+	def searchEntry(self, desktopfileid, hidden = False, deep = True, org = False):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, MenuEntry):
 				if entry.DesktopFileID == desktopfileid:
-					return self.getPath()
+					return self.getPath(org)
 			elif isinstance(entry, Menu) and deep == True:
 				for submenu in self.Submenus:
-					submenu.searchEntry(desktopfileid, deep)
+					submenu.searchEntry(desktopfileid, hidden, deep, org)
 
 	def getEntry(self, desktopfileid, hidden = False, deep = True):
 		for entry in self.getEntries(hidden):
@@ -104,16 +104,16 @@ class Menu:
 					return entry
 			elif isinstance(entry, Menu) and deep == True:
 				for submenu in self.Submenus:
-					submenu.getEntry(desktopfileid, deep)
+					submenu.getEntry(desktopfileid, hidden, deep)
 
-	def searchMenu(self, name, hidden = False, deep = True):
+	def searchMenu(self, name, hidden = False, deep = True, org = False):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, Menu):
 				if submenu.Name == name:
-					return submenu.getPath()
+					return submenu.getPath(org)
 				if deep == True:
 					for submenu in self.Submenus:
-						submenu.searchMenu(name, deep)
+						submenu.searchMenu(name, hidden, deep, org)
 
 	def getMenu(self, name, hidden = False, deep = True):
 		array = name.split("/", 1)
@@ -126,7 +126,7 @@ class Menu:
 						return submenu
 				if deep == True:
 					for submenu in self.Submenus:
-						submenu.searchMenu(name, deep)
+						submenu.searchMenu(name, hidden, deep)
 
 	def getPath(self, org = False, toplevel = False):
 		parent = self
