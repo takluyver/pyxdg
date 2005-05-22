@@ -32,14 +32,14 @@ class Menu:
 		# Private stuff, only needed for parsing
 		self.AppDirs = []
 		self.DefaultLayout = ""
-		self.Deleted = False
+		self.Deleted = "notset"
 		self.DeskEntries = []
 		self.CacheDeskEntries = []
 		self.Directory = []
 		self.DirectoryDirs = []
 		self.Layout = ""
 		self.Moves = []
-		self.OnlyUnallocated =  False
+		self.OnlyUnallocated = "notset"
 		self.Rules = []
 		self.Submenus = []
 
@@ -50,7 +50,8 @@ class Menu:
 		for dir in other.getAppDirs():
 			self.addAppDir(dir)
 
-		self.Deleted = other.Deleted
+		if other.Deleted != "notset":
+			self.Deleted = other.Deleted
 
 		for entry in other.getDirectories():
 			self.addDirectory(entry)
@@ -61,7 +62,8 @@ class Menu:
 		for move in other.getMoves():
 			self.addMove(move)
 
-		self.OnlyUnallocated = other.OnlyUnallocated
+		if other.OnlyUnallocated != "notset":
+			self.OnlyUnallocated = other.OnlyUnallocated
 
 		for rule in other.getRules():
 			self.addRule(rule)
@@ -379,8 +381,8 @@ class Rule:
 		exec("""
 def do(entries, type, run):
     for entry in entries:
-		if run == 2 and entry.MatchedInclude == True \
-		or entry.Allocated == True:
+		if run == 2 and ( entry.MatchedInclude == True \
+		or entry.Allocated == True ):
 			continue
 		elif %s:
 		    if type == "Include":
@@ -653,6 +655,12 @@ def __parsemove(menu):
 
 
 def __postparse(menu):
+	# unallocated / deleted
+	if menu.Deleted == "notset":
+		menu.Deleted = False
+	if menu.OnlyUnallocated == "notset":
+		menu.OnlyUnallocated = False
+
 	# Layout Tags
 	if not menu.Layout or not menu.DefaultLayout:
 		if menu.DefaultLayout:
@@ -813,8 +821,8 @@ def __mergeLegacyDir(dir, prefix, file, parent):
 			elif os.path.isdir(os.path.join(dir,entry)):
 				m.addSubmenu(__mergeLegacyDir(os.path.join(dir,entry), prefix, file, parent))
 
-		tmp["cache"].addEntries([dir],prefix, False)
-		entries = tmp["cache"].getEntries([dir])
+		tmp["cache"].addEntries([dir],prefix, True)
+		entries = tmp["cache"].getEntries([dir], False)
 
 		for entry in entries:
 			categories = entry.Categories
@@ -974,14 +982,15 @@ class DesktopEntryCache:
 	def __init__(self):
 		self.cacheEntries = {}
 		self.cache = {}
+		self.legacy = []
 
-	def addEntries(self, dirs, prefix = "", recursive = True):
+	def addEntries(self, dirs, prefix = "", legacy = False):
 		for dir in dirs:
 			if not self.cacheEntries.has_key(dir):
 				self.cacheEntries[dir] = []
-				self.__addFiles(dir, "", prefix, recursive)
+				self.__addFiles(dir, "", prefix, legacy)
 
-	def __addFiles(self, dir, subdir, prefix, recursive):
+	def __addFiles(self, dir, subdir, prefix, legacy):
 		files = os.listdir(os.path.join(dir,subdir))
 		for file in files:
 			if os.path.splitext(file)[1] == ".desktop":
@@ -993,10 +1002,12 @@ class DesktopEntryCache:
 
 				entry = MenuEntry(os.path.join(prefix,subdir,file).replace("/", "-"), deskentry)
 				self.cacheEntries[dir].append(entry)
-			elif os.path.isdir(os.path.join(dir,subdir,file)) and recursive == True:
-				self.__addFiles(dir, os.path.join(subdir,file), prefix, recursive)
+				if legacy == True:
+					self.legacy.append(entry)
+			elif os.path.isdir(os.path.join(dir,subdir,file)) and legacy == False:
+				self.__addFiles(dir, os.path.join(subdir,file), prefix, legacy)
 
-	def getEntries(self, dirs):
+	def getEntries(self, dirs, legacy = True):
 		list = []
 		ids = []
 		# cache the results again
@@ -1011,5 +1022,10 @@ class DesktopEntryCache:
 					if entry.DesktopFileID not in ids:
 						ids.append(entry.DesktopFileID)
 						list.append(entry)
+		if legacy == True:
+			for entry in self.legacy:
+				if entry.DesktopFileID not in ids:
+					ids.append(entry.DesktopFileID)
+					list.append(entry)
 		self.cache[key] = list
 		return list
