@@ -147,11 +147,11 @@ class DesktopEntry(IniFile):
 				elif self.getType() == "Directory":
 					path = os.path.join(xdg_data_dirs[0], "desktop-directories")
 				if path:
-					if not os.path.isdir(path):
-						os.makedirs(path)
 					if not filename:
 						filename = os.path.basename(self.file)
-					self.write(os.path.join(path, filename))
+					if not os.path.isdir(os.path.dirname(os.path.join(path,filename)):
+						os.makedirs(os.path.dirname(os.path.join(path,filename))
+					self.write(os.path.join(path,filename))
 	# end desktop entry edit stuff
 
 	# validation stuff
