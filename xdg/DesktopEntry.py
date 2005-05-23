@@ -138,7 +138,7 @@ class DesktopEntry(IniFile):
 
 	def save(self, filename = ""):
 		if self.tainted == True:
-			if os.path.isabs(self.file) and os.acess(self.file, os.W_OK):
+			if os.path.isabs(self.file) and os.access(self.file, os.W_OK):
 				self.write()
 			else:
 				path = ""
