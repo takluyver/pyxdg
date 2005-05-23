@@ -468,12 +468,12 @@ def do(entries, type, run):
 
 class MenuEntry:
 	"Wrapper for 'Menu Style' Desktop Entries"
-	def __init__(self, Filename, Id = "", Entry = "", Allocated = False):
-		self.DesktopFileID = Id
+	def __init__(self, Filename, Prefix = "", Entry = "", Allocated = False):
+		self.DesktopFileID = os.path.join(prefix,filename).replace("/", "-")
 		if Entry:
 			self.DesktopEntry = Entry
 		else:
-			self.DesktopEntry = DesktopEntry(Id, "Application")
+			self.DesktopEntry = DesktopEntry(Filename, "Application")
 		self.Allocated = Allocated
 		self.Add = False
 		self.MatchedInclude = False
@@ -1002,7 +1002,7 @@ class DesktopEntryCache:
 				except ParsingError:
 					continue
 
-				entry = MenuEntry(os.path.join(subdir,file), os.path.join(prefix,subdir,file).replace("/", "-"), deskentry)
+				entry = MenuEntry(os.path.join(subdir,file), prefix, deskentry)
 				self.cacheEntries[dir].append(entry)
 				if legacy == True:
 					self.legacy.append(entry)
