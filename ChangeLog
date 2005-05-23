@@ -1,7 +1,7 @@
 Version 0.11
 
 2005-05-23 Heinrich Wendel <h_wendel@cojobo.net>
-	* DesktopEntry.p, Menu.py: Various bugfixes, thx to Travis Watkins
+	* DesktopEntry.p, Menu.py: A lot of bugfixes, thx to Travis Watkins
 	<alleykat@gmail.com>
 
 2005-05-02 Heinrich Wendel <h_wendel@cojobo.net>
