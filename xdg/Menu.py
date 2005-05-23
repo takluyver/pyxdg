@@ -111,8 +111,8 @@ class Menu:
 	def searchMenu(self, name, hidden=False, deep=True, org=False):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, Menu):
-				if submenu.Name == name:
-					return submenu.getPath(org)
+				if entry.Name == name:
+					return entry.getPath(org)
 				if deep == True:
 					for submenu in self.Submenus:
 						submenu.searchMenu(name, hidden, deep, org)
@@ -121,11 +121,11 @@ class Menu:
 		array = name.split("/", 1)
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, Menu):
-				if submenu.Name == array[0]:
+				if entry.Name == array[0]:
 					if len(array) > 1:
-						return self.getMenu(array[1], hidden)
+						return entry.getMenu(array[1], hidden)
 					else:
-						return submenu
+						return entry
 				if deep == True:
 					for submenu in self.Submenus:
 						submenu.searchMenu(name, hidden, deep)
@@ -350,7 +350,7 @@ class Layout:
 		try:
 			self.order.append(["Filename", child.childNodes[0].nodeValue])
 		except IndexError:
-			raise ValidationError('Filename cannot be empty')
+			raise ValidationError('Filename cannot be empty', "")
 
 	def parseMerge(self, child):
 		self.order.append(["Merge", child.getAttribute("type")])
@@ -400,12 +400,12 @@ def do(entries, type, run):
 					try:
 						self.parseFilename(child.childNodes[0].nodeValue)
 					except IndexError:
-						raise ValidatingError('Filename cannot be empty', "???")
+						raise ValidationError('Filename cannot be empty', "???")
 				elif child.tagName == 'Category':
 					try:
 						self.parseCategory(child.childNodes[0].nodeValue)
 					except IndexError:
-						raise ValidatingError('Category cannot be empty', "???")
+						raise ValidationError('Category cannot be empty', "???")
 				elif child.tagName == 'All':
 					self.parseAll()
 				elif child.tagName == 'And':

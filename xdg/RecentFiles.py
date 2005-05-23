@@ -12,18 +12,18 @@ class RecentFiles:
 		self.RecentFiles = []
 		self.filename = ""
 
-	def parse(self, file=None):
-		if not file:
-			file = os.path.join(os.getenv("HOME"), ".recently-used")
+	def parse(self, filename=None):
+		if not filename:
+			filename = os.path.join(os.getenv("HOME"), ".recently-used")
 
 		try:
-			doc = xml.dom.minidom.parse(file)
+			doc = xml.dom.minidom.parse(filename)
 		except IOError:
-			raise ParsingError('File not found', file)
+			raise ParsingError('File not found', filename)
 		except xml.parsers.expat.ExpatError:
-			raise ParsingError('Not a valid .menu file', file)
+			raise ParsingError('Not a valid .menu file', filename)
 
-		self.filename = file
+		self.filename = filename
 
 		for child in doc.childNodes:
 			if child.nodeType == xml.dom.Node.ELEMENT_NODE:
@@ -56,13 +56,13 @@ class RecentFiles:
 							if group.tagName == "Group":
 								recent.Groups.append(group.childNodes[0].nodeValue)
 
-	def write(self, file=None):
-		if not file and not self.filename:
-			raise ParsingError('File not found', file)
-		elif not file:
-			file = self.filename
+	def write(self, filename=None):
+		if not filename and not self.filename:
+			raise ParsingError('File not found', filename)
+		elif not filename:
+			filename = self.filename
 
-		f = open(file, "w")
+		f = open(filename, "w")
 		fcntl.lockf(f, fcntl.LOCK_EX)
 		f.write('<?xml version="1.0"?>\n')
 		f.write("<RecentFiles>\n")
@@ -88,30 +88,30 @@ class RecentFiles:
 	def getFiles(self, mimetypes=None, groups=None, limit=0):
 		tmp = []
 		i = 0
-		for file in self.RecentFiles:
+		for item in self.RecentFiles:
 			if groups:
 				for group in groups:
-					if group in file.Groups:
-						tmp.append(file)
+					if group in item.Groups:
+						tmp.append(item)
 						i += 1
 			elif mimetypes:
 				for mimetype in mimetypes:
-					if mimetype == file.MimeType:
-						tmp.append(file)
+					if mimetype == item.MimeType:
+						tmp.append(item)
 						i += 1
 			else:
-				if file.Private == False:
-					tmp.append(file)
+				if item.Private == False:
+					tmp.append(item)
 					i += 1
 			if limit != 0 and i == limit:
 				break
 
 		return tmp
 
-	def addFile(self, file, mimetype, groups=None, private=False):
+	def addFile(self, item, mimetype, groups=None, private=False):
 		# check if entry already there
-		if file in self.RecentFiles:
-			index = self.RecentFiles.index(file)
+		if item in self.RecentFiles:
+			index = self.RecentFiles.index(item)
 			recent = self.RecentFiles[index]
 		else:
 			# delete if more then 500 files
@@ -121,7 +121,7 @@ class RecentFiles:
 			recent = RecentFile()
 			self.RecentFiles.append(recent)
 
-		recent.URI = file
+		recent.URI = item
 		recent.MimeType = mimetype
 		recent.Timestamp = int(time.time())
 		recent.Private = private
@@ -129,9 +129,9 @@ class RecentFiles:
 
 		self.sort()
 
-	def deleteFile(self, file):
-		if file in self.RecentFiles:
-			self.RecentFiles.remove(file)
+	def deleteFile(self, item):
+		if item in self.RecentFiles:
+			self.RecentFiles.remove(item)
 
 	def sort(self):
 		self.RecentFiles.sort()

@@ -48,7 +48,7 @@ def _expand_lang(locale):
 	ret.reverse()
 	return ret
 
-def expand_languages(languages = None):
+def expand_languages(languages=None):
 	# Get some reasonable defaults for arguments that were not supplied
 	if languages is None:
 		languages = []
@@ -68,7 +68,7 @@ def expand_languages(languages = None):
 				nelangs.append(nelang)
 	return nelangs
 
-def update(language = None):
+def update(language=None):
 	global langs
 	if language:
 		langs = expand_languages([language])
