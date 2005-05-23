@@ -956,6 +956,7 @@ def sort(menu, depth = 0):
 	for entry in menu.Entries:
 		if isinstance(entry,Menu) and entry.Layout.show_empty == "false" and entry.Visible == 0:
 			entry.Show = "Empty"
+			menu.Visible -= 1
 
 # inline tags
 def __parse_inline(submenu, menu):
