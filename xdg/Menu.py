@@ -963,9 +963,9 @@ def __parse_inline(submenu, menu):
 	if submenu.Layout.inline == "true":
 		if len(submenu.Entries) == 1 and submenu.Layout.inline_alias == "true":
 			entry = submenu.Entries[0]
-			entry.DesktopEntry.set("Name", submenu.getName())
-			entry.DesktopEntry.set("GenericName", submenu.getGenericName())
-			entry.DesktopEntry.set("Comment", submenu.getComment())
+			entry.DesktopEntry.set("Name", submenu.getName(), locale = True)
+			entry.DesktopEntry.set("GenericName", submenu.getGenericName(), locale = True)
+			entry.DesktopEntry.set("Comment", submenu.getComment(), locale = True)
 			menu.Entries.append(entry)
 		elif len(submenu.Entries) <= submenu.Layout.inline_limit or submenu.Layout.inline_limit == 0:
 			if submenu.Layout.inline_header == "true":
