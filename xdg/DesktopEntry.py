@@ -149,8 +149,8 @@ class DesktopEntry(IniFile):
 				if path:
 					if not filename:
 						filename = os.path.basename(self.file)
-					if not os.path.isdir(os.path.dirname(os.path.join(path,filename)):
-						os.makedirs(os.path.dirname(os.path.join(path,filename))
+					if not os.path.isdir(os.path.dirname(os.path.join(path,filename))):
+						os.makedirs(os.path.dirname(os.path.join(path,filename)))
 					self.write(os.path.join(path,filename))
 	# end desktop entry edit stuff
 
