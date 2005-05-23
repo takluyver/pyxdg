@@ -469,7 +469,7 @@ def do(entries, type, run):
 class MenuEntry:
 	"Wrapper for 'Menu Style' Desktop Entries"
 	def __init__(self, Filename, Prefix = "", Entry = "", Allocated = False):
-		self.DesktopFileID = os.path.join(prefix,filename).replace("/", "-")
+		self.DesktopFileID = os.path.join(Prefix,Filename).replace("/", "-")
 		if Entry:
 			self.DesktopEntry = Entry
 		else:
