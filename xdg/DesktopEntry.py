@@ -19,12 +19,12 @@ class DesktopEntry(IniFile):
 
 	defaultGroup = 'Desktop Entry'
 
-	def __init__(self, filename=None, type=None):
+	def __init__(self, filename=None):
 		IniFile.__init__(self)
 		if filename and os.path.exists(filename):
 			self.parse(filename)
 		elif filename:
-			self.new(filename, type)
+			self.new(filename)
 
 	def __str__(self):
 		return self.getName()
@@ -127,9 +127,11 @@ class DesktopEntry(IniFile):
 	# end deprecated keys
 
 	# desktop entry edit stuff
-	def new(self, filename, type=None):
-		if not type:
+	def new(self, filename):
+		if os.path.splitext(filename)[1] == ".desktop":
 			type = "Application"
+		elif os.path.splitext(filename)[1] == ".directory":
+			type = "Directory"
 		self.content = dict()
 		self.addGroup(self.defaultGroup)
 		self.set("Encoding", "UTF-8")
