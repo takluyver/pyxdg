@@ -10,7 +10,7 @@ class IniFile:
 	defaultGroup = ''
 	fileExtension = ''
 
-	file = ''
+	filename = ''
 
 	tainted = False
 
@@ -53,7 +53,7 @@ class IniFile:
 				except IndexError:
 					raise ParsingError("[%s]-Header missing" % headers[0], filename)
 
-		self.file = filename
+		self.filename = filename
 		self.tainted = False
 
 		# check header
@@ -65,7 +65,7 @@ class IniFile:
 			raise ParsingError("[%s]-Header missing" % headers[0], filename)
 
 	# start stuff to access the keys
-	def get(self, key, group = "", locale = False, type = "string", list = False):
+	def get(self, key, group=None, locale=False, type="string", list=False):
 		# set default group
 		if not group:
 			group = self.defaultGroup
@@ -79,9 +79,9 @@ class IniFile:
 		else:
 			if debug:
 				if not self.content.has_key(group):
-					raise NoGroupError(group, self.file)
+					raise NoGroupError(group, self.filename)
 				elif not self.content[group].has_key(key):
-					raise NoKeyError(key, group, self.file)
+					raise NoKeyError(key, group, self.filename)
 			else:
 				value = ""
 
@@ -141,7 +141,7 @@ class IniFile:
 		return False
 	# end subget
 
-	def __addLocale(self, key, group = ''):
+	def __addLocale(self, key, group=None):
 		"add locale to key according the current lc_messages"
 		# set default group
 		if not group:
@@ -154,14 +154,14 @@ class IniFile:
 		return key
 
 	# start validation stuff
-	def validate(self, report = "All"):
+	def validate(self, report="All"):
 		"validate ... report = All / Warnings / Errors"
 
 		self.warnings = []
 		self.errors = []
 
 		# get file extension
-		self.fileExtension = os.path.splitext(self.file)[1]
+		self.fileExtension = os.path.splitext(self.filename)[1]
 
 		# overwrite this for own checkings
 		self.checkExtras()
@@ -187,7 +187,7 @@ class IniFile:
 				msg += "\n- " + line
 
 		if msg:
-			raise ValidationError(msg, self.file)
+			raise ValidationError(msg, self.filename)
 
 	# check if group header is valid
 	def checkGroup(self, group):
@@ -198,7 +198,7 @@ class IniFile:
 		pass
 
 	# check random stuff
-	def checkValue(self, key, value, type = "string", list = False):
+	def checkValue(self, key, value, type="string", list=False):
 		if list == True:
 			values = self.getList(value)
 		else:
@@ -263,12 +263,14 @@ class IniFile:
 			return 1
 
 	# write support
-	def write(self, file = ""):
-		fp = codecs.open(file, 'w')
-		if not file:
-			file = self.file
+	def write(self, filename=None):
+		if not filename and not self.filename:
+			raise ParsingError("File not found", "")
+		if filename:
+			self.filename = filename
 		else:
-			self.file = file
+			filename = self.filename
+		fp = codecs.open(filename, 'w')
 		if self.defaultGroup:
 			fp.write("[%s]\n" % self.defaultGroup)
 			for (key, value) in self.content[self.defaultGroup].items():
@@ -282,7 +284,7 @@ class IniFile:
 				fp.write("\n")
 		self.tainted = False
 
-	def set(self, key, value, group = "", locale = False):
+	def set(self, key, value, group=None, locale=False):
 		# set default group
 		if not group:
 			group = self.defaultGroup
@@ -296,14 +298,14 @@ class IniFile:
 			else:
 				self.content[group][key] = value
 		except KeyError:
-			raise NoGroupError(group, self.file)
+			raise NoGroupError(group, self.filename)
 		    
 		self.tainted = (value == self.get(key, group))
 
 	def addGroup(self, group):
 		if self.hasGroup(group):
 			if debug:
-				raise DuplicateGroupError(group, self.file)
+				raise DuplicateGroupError(group, self.filename)
 			else:
 				pass
 		else:
@@ -317,10 +319,10 @@ class IniFile:
 			self.tainted = True
 		else:
 			if debug:
-				raise NoGroupError(group, self.file)
+				raise NoGroupError(group, self.filename)
 		return existed
 
-	def removeKey(self, key, group = "", locales = True):
+	def removeKey(self, key, group=None, locales=True):
 		# set default group
 		if not group:
 			group = self.defaultGroup
@@ -338,9 +340,9 @@ class IniFile:
 		except KeyError, e:
 			if debug:
 				if e == group:
-					raise NoGroupError(group, self.file)
+					raise NoGroupError(group, self.filename)
 				else:
-					raise NoKeyError(key, group, self.file)
+					raise NoKeyError(key, group, self.filename)
 			else:
 				return ""
 
@@ -354,7 +356,7 @@ class IniFile:
 		else:
 			return False
 
-	def hasKey(self, key, group = ''):
+	def hasKey(self, key, group=None):
 		# set default group
 		if not group:
 			group = self.defaultGroup
@@ -365,4 +367,4 @@ class IniFile:
 			return False
 
 	def getFileName(self):
-		return self.file
+		return self.filename

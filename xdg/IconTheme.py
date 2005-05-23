@@ -29,43 +29,43 @@ class IconTheme(IniFile):
 
 	# Standard Keys
 	def getName(self):
-		return self.get('Name', locale = True)
+		return self.get('Name', locale=True)
 	def getComment(self):
-		return self.get('Comment', locale = True)
+		return self.get('Comment', locale=True)
 	def getInherits(self):
-		return self.get('Inherits', list = True)
+		return self.get('Inherits', list=True)
 	def getDirectories(self):
-		return self.get('Directories', list = True)
+		return self.get('Directories', list=True)
 	def getHidden(self):
-		return self.get('Hidden', type = "boolean")
+		return self.get('Hidden', type="boolean")
 	def getExample(self):
 		return self.get('Example')
 
 	# Per Directory Keys
 	def getSize(self, directory):
-		return self.get('Size', type = "integer", group = directory)
+		return self.get('Size', type="integer", group=directory)
 	def getContext(self, directory):
-		return self.get('Context', group = directory)
+		return self.get('Context', group=directory)
 	def getType(self, directory):
-		value = self.get('Type', group = directory)
+		value = self.get('Type', group=directory)
 		if value:
 			return value
 		else:
 			return "Threshold"
 	def getMaxSize(self, directory):
-		value = self.get('MaxSize', type = "integer", group = directory)
+		value = self.get('MaxSize', type="integer", group=directory)
 		if value or value == 0:
 			return value
 		else:
 			return self.getSize(directory)
 	def getMinSize(self, directory):
-		value = self.get('MinSize', type = "integer", group = directory)
+		value = self.get('MinSize', type="integer", group=directory)
 		if value or value == 0:
 			return value
 		else:
 			return self.getSize(directory)
 	def getThreshold(self, directory):
-		value = self.get('Threshold', type = "integer", group = directory)
+		value = self.get('Threshold', type="integer", group=directory)
 		if value or value == 0:
 			return value
 		else:
@@ -128,11 +128,11 @@ class IconTheme(IniFile):
 			elif re.match("^Comment"+xdg.Locale.regex+"$", key):
 				pass
 			elif key == "Inherits":
-				self.checkValue(key, value, list = True)
+				self.checkValue(key, value, list=True)
 			elif key == "Directories":
-				self.checkValue(key, value, list = True)
+				self.checkValue(key, value, list=True)
 			elif key == "Hidden":
-				self.checkValue(key, value, type = "boolean")
+				self.checkValue(key, value, type="boolean")
 			elif key == "Example":
 				self.checkValue(key, value)
 			elif re.match("^X-[a-zA-Z0-9-]+", key):
@@ -141,7 +141,7 @@ class IconTheme(IniFile):
 				self.errors.append("Invalid key: %s" % key)
 		elif group in self.getDirectories():
 			if key == "Size":
-				self.checkValue(key, value, type = "integer")
+				self.checkValue(key, value, type="integer")
 			elif key == "Context":
 				self.checkValue(key, value)
 			elif key == "Type":
@@ -149,15 +149,15 @@ class IconTheme(IniFile):
 				if value not in ["Fixed", "Scalable", "Threshold"]:
 					self.errors.append("Key 'Type' must be one out of 'Fixed','Scalable','Threshold', but is %s" % value)
 			elif key == "MaxSize":
-				self.checkValue(key, value, type = "integer")
+				self.checkValue(key, value, type="integer")
 				if self.type != "Scalable":
 					self.errors.append("Key 'MaxSize' give, but Type is %s" % self.type)
 			elif key == "MinSize":
-				self.checkValue(key, value, type = "integer")
+				self.checkValue(key, value, type="integer")
 				if self.type != "Scalable":
 					self.errors.append("Key 'MinSize' give, but Type is %s" % self.type)
 			elif key == "Threshold":
-				self.checkValue(key, value, type = "integer")
+				self.checkValue(key, value, type="integer")
 				if self.type != "Threshold":
 					self.errors.append("Key 'Threshold' give, but Type is %s" % self.type)
 			elif re.match("^X-[a-zA-Z0-9-]+", key):
@@ -179,11 +179,11 @@ class IconData(IniFile):
 
 	# Standard Keys
 	def getDisplayName(self):
-		return self.get('DisplayName', locale = True)
+		return self.get('DisplayName', locale=True)
 	def getEmbeddedTextRectangle(self):
-		return self.get('EmbeddedTextRectangle', list = True)
+		return self.get('EmbeddedTextRectangle', list=True)
 	def getAttachPoints(self):
-		return self.get('AttachPoints', type = "point", list = True)
+		return self.get('AttachPoints', type="point", list=True)
 
 	# validation stuff
 	def checkExtras(self):
@@ -202,9 +202,9 @@ class IconData(IniFile):
 		if re.match("^DisplayName"+xdg.Locale.regex+"$", key):
 			pass
 		elif key == "EmbeddedTextRectangle":
-			self.checkValue(key, value, type = "integer", list = True)
+			self.checkValue(key, value, type="integer", list=True)
 		elif key == "AttachPoints":
-			self.checkValue(key, value, type = "point", list = True)
+			self.checkValue(key, value, type="point", list=True)
 		elif re.match("^X-[a-zA-Z0-9-]+", key):
 			pass
 		else:

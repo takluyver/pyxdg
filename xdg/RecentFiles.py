@@ -8,10 +8,11 @@ import os, time, fcntl
 from xdg.Exceptions import *
 
 class RecentFiles:
-	RecentFiles = []
-	filename = ""
+	def __init__(self):
+		self.RecentFiles = []
+		self.filename = ""
 
-	def parse(self, file = ""):
+	def parse(self, file=None):
 		if not file:
 			file = os.path.join(os.getenv("HOME"), ".recently-used")
 
@@ -55,7 +56,7 @@ class RecentFiles:
 							if group.tagName == "Group":
 								recent.Groups.append(group.childNodes[0].nodeValue)
 
-	def write(self, file = ""):
+	def write(self, file=None):
 		if not file and not self.filename:
 			raise ParsingError('File not found', file)
 		elif not file:
@@ -84,7 +85,7 @@ class RecentFiles:
 		fcntl.lockf(f, fcntl.LOCK_UN)
 		f.close()
 
-	def getFiles(self, mimetypes = None, groups = None, limit = 0):
+	def getFiles(self, mimetypes=None, groups=None, limit=0):
 		tmp = []
 		i = 0
 		for file in self.RecentFiles:
@@ -107,7 +108,7 @@ class RecentFiles:
 
 		return tmp
 
-	def addFile(self, file, mimetype, groups = None, private = False):
+	def addFile(self, file, mimetype, groups=None, private=False):
 		# check if entry already there
 		if file in self.RecentFiles:
 			index = self.RecentFiles.index(file)

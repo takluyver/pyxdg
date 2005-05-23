@@ -83,14 +83,14 @@ class Menu:
 			return False
 
 	""" PUBLIC STUFF """
-	def getEntries(self, hidden = False):
+	def getEntries(self, hidden=False):
 		for entry in self.Entries:
 			if hidden == True:
 				yield entry
 			elif entry.Show == True:
 				yield entry
 
-	def searchEntry(self, desktopfileid, hidden = False, deep = True, org = False):
+	def searchEntry(self, desktopfileid, hidden=False, deep=True, org=False):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, MenuEntry):
 				if entry.DesktopFileID == desktopfileid:
@@ -99,7 +99,7 @@ class Menu:
 				for submenu in self.Submenus:
 					submenu.searchEntry(desktopfileid, hidden, deep, org)
 
-	def getEntry(self, desktopfileid, hidden = False, deep = True):
+	def getEntry(self, desktopfileid, hidden=False, deep=True):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, MenuEntry):
 				if entry.DesktopFileID == desktopfileid:
@@ -108,7 +108,7 @@ class Menu:
 				for submenu in self.Submenus:
 					submenu.getEntry(desktopfileid, hidden, deep)
 
-	def searchMenu(self, name, hidden = False, deep = True, org = False):
+	def searchMenu(self, name, hidden=False, deep=True, org=False):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, Menu):
 				if submenu.Name == name:
@@ -117,7 +117,7 @@ class Menu:
 					for submenu in self.Submenus:
 						submenu.searchMenu(name, hidden, deep, org)
 
-	def getMenu(self, name, hidden = False, deep = True):
+	def getMenu(self, name, hidden=False, deep=True):
 		array = name.split("/", 1)
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, Menu):
@@ -130,7 +130,7 @@ class Menu:
 					for submenu in self.Submenus:
 						submenu.searchMenu(name, hidden, deep)
 
-	def getPath(self, org = False, toplevel = False):
+	def getPath(self, org=False, toplevel=False):
 		parent = self
 		names=[]
 		while 1:
@@ -178,7 +178,7 @@ class Menu:
 			return ""
 
 	""" PRIVATE STUFF """
-	def addAppDir(self, dir, pos = -1):
+	def addAppDir(self, dir, pos=-1):
 		if not dir in self.getAppDirs():
 			if pos == -1:
 				self.AppDirs.append(dir)
@@ -199,7 +199,7 @@ class Menu:
 			index = self.getDeskEntries().index(desktopfileid)
 			return self.getDeskEntries()[index]
 		except ValueError:
-			return ""
+			return None
 
 	def addDirectory(self, entry):
 		if not entry in self.getDirectories():
@@ -209,7 +209,7 @@ class Menu:
 	def getDirectories(self):
 		return self.Directory
 
-	def addDirectoryDir(self, dir, pos = -1):
+	def addDirectoryDir(self, dir, pos=-1):
 		if not dir in self.getDirectoryDirs():
 			if pos == -1:
 				self.DirectoryDirs.append(dir)
@@ -256,7 +256,7 @@ class Menu:
 			else:
 				return self.getSubmenus()[index]
 		except ValueError:
-			pass
+			return None
 	def removeSubmenu(self, newmenu):
 		# parse recursive menus
 		try:
@@ -300,7 +300,7 @@ class Move:
 
 class Layout:
 	"Menu Layout class"
-	def __init__(self, node = ""):
+	def __init__(self, node=None):
 		self.order = []
 		if node:
 			self.show_empty = node.getAttribute("show_empty") or "false"
@@ -358,7 +358,7 @@ class Layout:
 
 class Rule:
 	"Inlcude / Exclude Rules Class"
-	def __init__(self, type, node = None):
+	def __init__(self, type, node=None):
 		# Type is Include or Exclude
 		self.Type = type
 		# Rule is a python expression
@@ -415,7 +415,7 @@ def do(entries, type, run):
 				elif child.tagName == 'Not':
 					self.parseNot(child)
 
-	def parseNew(self, set = True):
+	def parseNew(self, set=True):
 		if not self.New:
 			self.Rule += " " + self.Expr[self.Depth] + " "
 		if not set:
@@ -468,16 +468,19 @@ def do(entries, type, run):
 
 class MenuEntry:
 	"Wrapper for 'Menu Style' Desktop Entries"
-	def __init__(self, Filename, Prefix = "", Entry = ""):
-		self.DesktopFileID = os.path.join(Prefix,Filename).replace("/", "-")
-		if Entry:
-			self.DesktopEntry = Entry
+	def __init__(self, filename, prefix=None, entry=None):
+		if prefix:
+			self.DesktopFileID = os.path.join(prefix,filename).replace("/", "-")
 		else:
-			self.DesktopEntry = DesktopEntry(Filename, "Application")
+			self.DesktopFileID = filename.replace("/", "-")
+		if entry:
+			self.DesktopEntry = entry
+		else:
+			self.DesktopEntry = DesktopEntry(filename, "Application")
 		self.Allocated = False
 		self.Add = False
 		self.MatchedInclude = False
-		self.Filename = Filename
+		self.Filename = filename
 		# Can be one of Hidden/Empty/NotShowIn or True
 		self.Show = True
 		# Caching
@@ -510,10 +513,10 @@ class Separator:
 
 class Header:
 	"Class for Inline Headers"
-	def __init__(self, Name, GenericName, Comment):
-		self.Name = Name
-		self.GenericName = GenericName
-		self.Comment = Comment
+	def __init__(self, name, generic_name, comment):
+		self.Name = name
+		self.GenericName = generic_name
+		self.Comment = comment
 
 	def __str__(self):
 		return self.Name
@@ -521,29 +524,29 @@ class Header:
 
 tmp = {}
 
-def parse(file = ""):
+def parse(filename=None):
 	# if no file given, try default files
-	if not file:
+	if not filename:
 		for dir in xdg_config_dirs:
-			file = os.path.join (dir, "menus" , "applications.menu")
-			if os.path.isdir(dir) and os.path.isfile(file):
+			filename = os.path.join (dir, "menus" , "applications.menu")
+			if os.path.isdir(dir) and os.path.isfile(filename):
 				break
 
 	# convert to absolute path
-	if not os.path.isabs(file):
-		file = os.path.abspath(file)
+	if not os.path.isabs(filename):
+		filename = os.path.abspath(filename)
 
 	# check if it is a .menu file
-	if not os.path.splitext(file)[1] == ".menu":
-		raise ParsingError('Not a .menu file', file)
+	if not os.path.splitext(filename)[1] == ".menu":
+		raise ParsingError('Not a .menu file', filename)
 
 	# create xml parser
 	try:
-		doc = xml.dom.minidom.parse(file)
+		doc = xml.dom.minidom.parse(filename)
 	except IOError:
-		raise ParsingError('File not found', file)
+		raise ParsingError('File not found', filename)
 	except xml.parsers.expat.ExpatError:
-		raise ParsingError('Not a valid .menu file', file)
+		raise ParsingError('Not a valid .menu file', filename)
 
 	# parse menufile
 	tmp["Root"] = ""
@@ -551,12 +554,12 @@ def parse(file = ""):
 	tmp["DirectoryDirs"] = []
 	tmp["cache"] = DesktopEntryCache()
 
-	__parse(doc, file, tmp["Root"])
+	__parse(doc, filename, tmp["Root"])
 	__parsemove(tmp["Root"])
 	__postparse(tmp["Root"])
 
 	tmp["Root"].Doc = doc
-	tmp["Root"].Filename = file
+	tmp["Root"].Filename = filename
 
 	# generate the menu
 	__genmenuNotOnlyAllocated(tmp["Root"])
@@ -568,35 +571,35 @@ def parse(file = ""):
 	return tmp["Root"]
 
 
-def __parse(node, file, parent = ""):
+def __parse(node, filename, parent=None):
 	for child in node.childNodes:
 		if child.nodeType == ELEMENT_NODE:
 			if child.tagName == 'Menu':
-				__parseMenu(child, file, parent)
+				__parseMenu(child, filename, parent)
 			elif child.tagName == 'AppDir':
 				try:
-					__parseAppDir(child.childNodes[0].nodeValue, file, parent)
+					__parseAppDir(child.childNodes[0].nodeValue, filename, parent)
 				except IndexError:
-					raise ValidationError('AppDir cannot be empty', file)
+					raise ValidationError('AppDir cannot be empty', filename)
 			elif child.tagName == 'DefaultAppDirs':
-				__parseDefaultAppDir(file, parent)
+				__parseDefaultAppDir(filename, parent)
 			elif child.tagName == 'DirectoryDir':
 				try:
-					__parseDirectoryDir(child.childNodes[0].nodeValue, file, parent)
+					__parseDirectoryDir(child.childNodes[0].nodeValue, filename, parent)
 				except IndexError:
-					raise ValidationError('DirectoryDir cannot be empty', file)
+					raise ValidationError('DirectoryDir cannot be empty', filename)
 			elif child.tagName == 'DefaultDirectoryDirs':
-				__parseDefaultDirectoryDir(file, parent)
+				__parseDefaultDirectoryDir(filename, parent)
 			elif child.tagName == 'Name' :
 				try:
 					parent.Name = child.childNodes[0].nodeValue
 				except IndexError:
-					raise ValidationError('Name cannot be empty', file)
+					raise ValidationError('Name cannot be empty', filename)
 			elif child.tagName == 'Directory' :
 				try:
 					parent.addDirectory(child.childNodes[0].nodeValue)
 				except IndexError:
-					raise ValidationError('Directory cannot be empty', file)
+					raise ValidationError('Directory cannot be empty', filename)
 			elif child.tagName == 'OnlyUnallocated':
 				parent.OnlyUnallocated = True
 			elif child.tagName == 'NotOnlyUnallocated':
@@ -610,16 +613,16 @@ def __parse(node, file, parent = ""):
 			elif child.tagName == 'MergeFile':
 				# TODO: can a MergeFile be empty if it's got type="parent"??
 				try:
-					__parseMergeFile(child.childNodes[0].nodeValue, child, file, parent)
+					__parseMergeFile(child.childNodes[0].nodeValue, child, filename, parent)
 				except IndexError:
-					raise ValidationError('MergeFile cannot be empty', file)
+					raise ValidationError('MergeFile cannot be empty', filename)
 			elif child.tagName == 'MergeDir':
 				try:
-					__parseMergeDir(child.childNodes[0].nodeValue, child, file, parent)
+					__parseMergeDir(child.childNodes[0].nodeValue, child, filename, parent)
 				except IndexError:
-					raise ValidationError('MergeDir cannot be empty', file)
+					raise ValidationError('MergeDir cannot be empty', filename)
 			elif child.tagName == 'DefaultMergeDirs':
-				__parseDefaultMergeDirs(child, file, parent)
+				__parseDefaultMergeDirs(child, filename, parent)
 			elif child.tagName == 'Move':
 				parent.addMove(Move(child))
 			elif child.tagName == 'Layout':
@@ -630,11 +633,11 @@ def __parse(node, file, parent = ""):
 					parent.DefaultLayout = Layout(child)
 			elif child.tagName == 'LegacyDir':
 				try:
-					__parseLegacyDir(child.childNodes[0].nodeValue, child.getAttribute("prefix"), file, parent)
+					__parseLegacyDir(child.childNodes[0].nodeValue, child.getAttribute("prefix"), filename, parent)
 				except IndexError:
-					raise ValidationError('LegacyDir cannot be empty', file)
+					raise ValidationError('LegacyDir cannot be empty', filename)
 			elif child.tagName == 'KDELegacyDirs':
-				__parseKDELegacyDirs(file, parent)
+				__parseKDELegacyDirs(filename, parent)
 
 def __parsemove(menu):
 	for submenu in menu.getSubmenus():
@@ -704,17 +707,17 @@ def __postparse(menu):
 		__postparse(submenu)
 
 # Menu parsing stuff
-def __parseMenu(child, file, parent):
+def __parseMenu(child, filename, parent):
 	m = Menu()
-	__parse(child, file, m)
+	__parse(child, filename, m)
 	if parent:
 		parent.addSubmenu(m)
 	else:
 		tmp["Root"] = m
 
 # helper function
-def __check(value, file, type):
-	path = os.path.dirname(file)
+def __check(value, filename, type):
+	path = os.path.dirname(filename)
 
 	if not os.path.isabs(value):
 		value = os.path.join(path, value)
@@ -729,30 +732,30 @@ def __check(value, file, type):
 		return False
 
 # App/Directory Dir Stuff
-def __parseAppDir(value, file, parent):
-	value = __check(value, file, "dir")
+def __parseAppDir(value, filename, parent):
+	value = __check(value, filename, "dir")
 	if value:
 		parent.addAppDir(value)
 
-def __parseDefaultAppDir(file, parent):
+def __parseDefaultAppDir(filename, parent):
 	for dir in xdg_data_dirs:
-		__parseAppDir(os.path.join(dir, "applications"), file, parent)
+		__parseAppDir(os.path.join(dir, "applications"), filename, parent)
 
-def __parseDirectoryDir(value,file,parent):
-	value = __check(value, file, "dir")
+def __parseDirectoryDir(value, filename, parent):
+	value = __check(value, filename, "dir")
 	if value:
 		parent.addDirectoryDir(value)
 
-def __parseDefaultDirectoryDir(file,parent):
+def __parseDefaultDirectoryDir(filename, parent):
 	for dir in xdg_data_dirs:
-		__parseDirectoryDir(os.path.join(dir, "desktop-directories"), file, parent)
+		__parseDirectoryDir(os.path.join(dir, "desktop-directories"), filename, parent)
 
 # Merge Stuff
-def __parseMergeFile(value, child, file, parent):
+def __parseMergeFile(value, child, filename, parent):
 	if child.getAttribute("type") == "parent":
 		for dir in xdg_config_dirs:
-			rel_file = file.replace(dir, "").strip("/")
-			if rel_file != file:
+			rel_file = filename.replace(dir, "").strip("/")
+			if rel_file != filename:
 				for p in xdg_config_dirs:
 					if dir == p:
 						continue
@@ -760,55 +763,55 @@ def __parseMergeFile(value, child, file, parent):
 						__mergeFile(os.path.join(p,rel_file),child,parent)
 						break
 	else:
-		value = __check(value, file, "file")
+		value = __check(value, filename, "file")
 		if value:
 			__mergeFile(value, child, parent)
 
-def __parseMergeDir(value, child, file, parent):
-	value = __check(value, file, "dir")
+def __parseMergeDir(value, child, filename, parent):
+	value = __check(value, filename, "dir")
 	if value:
-		files = os.listdir(value)
-		for file in files:
-			if os.path.splitext(file)[1] == ".menu":
-				__mergeFile(os.path.join(value, file), child, parent)
+		items = os.listdir(value)
+		for item in items:
+			if os.path.splitext(item)[1] == ".menu":
+				__mergeFile(os.path.join(value, item), child, parent)
 
-def __parseDefaultMergeDirs(child, file, parent):
-	basename = os.path.splitext(os.path.basename(file))[0]
+def __parseDefaultMergeDirs(child, filename, parent):
+	basename = os.path.splitext(os.path.basename(filename))[0]
 	for dir in xdg_config_dirs:
-		__parseMergeDir(os.path.join(dir, "menus", basename + "-merged"), child, file, parent)
+		__parseMergeDir(os.path.join(dir, "menus", basename + "-merged"), child, filename, parent)
 
-def __mergeFile(file, child, parent):
+def __mergeFile(filename, child, parent):
 	# check for infinite loops
-	if file in tmp["mergeFiles"]:
+	if filename in tmp["mergeFiles"]:
 		if debug:
-			raise ParsingError('Infinite MergeFile loop detected', file)
+			raise ParsingError('Infinite MergeFile loop detected', filename)
 		else:
 			return
 
-	tmp["mergeFiles"].append(file)
+	tmp["mergeFiles"].append(filename)
 
 	# load file
 	try:
-		doc = xml.dom.minidom.parse(file)
+		doc = xml.dom.minidom.parse(filename)
 	except IOError:
-		raise ParsingError('File not found', file)
+		raise ParsingError('File not found', filename)
 	except xml.parsers.expat.ExpatError:
-		raise ParsingError('Not a valid .menu file', file)
+		raise ParsingError('Not a valid .menu file', filename)
 
 	# append file
 	for child in doc.childNodes:
 		if child.nodeType == ELEMENT_NODE:
-			__parse(child,file,parent)
+			__parse(child,filename,parent)
 			break
 
 # Legacy Dir Stuff
-def __parseLegacyDir(dir, prefix, file, parent):
-	m = __mergeLegacyDir(dir,prefix,file,parent)
+def __parseLegacyDir(dir, prefix, filename, parent):
+	m = __mergeLegacyDir(dir,prefix,filename,parent)
 	if m:
 		parent += m
 
-def __mergeLegacyDir(dir, prefix, file, parent):
-	dir = __check(dir,file,"dir")
+def __mergeLegacyDir(dir, prefix, filename, parent):
+	dir = __check(dir,filename,"dir")
 	if dir and dir not in tmp["DirectoryDirs"]:
 		tmp["DirectoryDirs"].append(dir)
 
@@ -821,7 +824,7 @@ def __mergeLegacyDir(dir, prefix, file, parent):
 			if entry == ".directory":
 				m.addDirectory(entry)
 			elif os.path.isdir(os.path.join(dir,entry)):
-				m.addSubmenu(__mergeLegacyDir(os.path.join(dir,entry), prefix, file, parent))
+				m.addSubmenu(__mergeLegacyDir(os.path.join(dir,entry), prefix, filename, parent))
 
 		tmp["cache"].addEntries([dir],prefix, True)
 		entries = tmp["cache"].getEntries([dir], False)
@@ -839,11 +842,11 @@ def __mergeLegacyDir(dir, prefix, file, parent):
 
 		return m
 
-def __parseKDELegacyDirs(file, parent):
+def __parseKDELegacyDirs(filename, parent):
 	f=os.popen3("kde-config --path apps")
 	output = f[1].readlines()
 	for dir in output[0].split(":"):
-		__parseLegacyDir(dir,"kde", file, parent)
+		__parseLegacyDir(dir,"kde", filename, parent)
 
 # Finally generate the menu
 def __genmenuNotOnlyAllocated(menu):
@@ -877,7 +880,7 @@ def __genmenuOnlyAllocated(menu):
 				menu.addDeskEntry(entry)
 
 # And sorting ...
-def sort(menu, depth = 0):
+def sort(menu, depth=0):
 	menu.Entries = []
 	menu.Depth = depth
 
@@ -986,30 +989,30 @@ class DesktopEntryCache:
 		self.cache = {}
 		self.legacy = []
 
-	def addEntries(self, dirs, prefix = "", legacy = False):
+	def addEntries(self, dirs, prefix=None, legacy=False):
 		for dir in dirs:
 			if not self.cacheEntries.has_key(dir):
 				self.cacheEntries[dir] = []
 				self.__addFiles(dir, "", prefix, legacy)
 
 	def __addFiles(self, dir, subdir, prefix, legacy):
-		files = os.listdir(os.path.join(dir,subdir))
-		for file in files:
-			if os.path.splitext(file)[1] == ".desktop":
+		items = os.listdir(os.path.join(dir,subdir))
+		for item in items:
+			if os.path.splitext(item)[1] == ".desktop":
 				try:
 					deskentry = DesktopEntry()
-					deskentry.parse(os.path.join(dir, subdir, file))
+					deskentry.parse(os.path.join(dir, subdir, item))
 				except ParsingError:
 					continue
 
-				entry = MenuEntry(os.path.join(subdir,file), prefix, deskentry)
+				entry = MenuEntry(os.path.join(subdir,item), prefix, deskentry)
 				self.cacheEntries[dir].append(entry)
 				if legacy == True:
 					self.legacy.append(entry)
-			elif os.path.isdir(os.path.join(dir,subdir,file)) and legacy == False:
-				self.__addFiles(dir, os.path.join(subdir,file), prefix, legacy)
+			elif os.path.isdir(os.path.join(dir,subdir,item)) and legacy == False:
+				self.__addFiles(dir, os.path.join(subdir,item), prefix, legacy)
 
-	def getEntries(self, dirs, legacy = True):
+	def getEntries(self, dirs, legacy=True):
 		list = []
 		ids = []
 		# cache the results again

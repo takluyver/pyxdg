@@ -19,7 +19,7 @@ class DesktopEntry(IniFile):
 
 	defaultGroup = 'Desktop Entry'
 
-	def __init__(self, filename = "", type = ""):
+	def __init__(self, filename=None, type=None):
 		IniFile.__init__(self)
 		if filename and os.path.exists(filename):
 			self.parse(filename)
@@ -39,23 +39,23 @@ class DesktopEntry(IniFile):
 	def getType(self):
 		return self.get('Type')
 	def getVersion(self):
-		return self.get('Version', type = "numeric")
+		return self.get('Version', type="numeric")
 	def getEncoding(self):
 		return self.get('Encoding')
 	def getName(self):
-		return self.get('Name', locale = True)
+		return self.get('Name', locale=True)
 	def getGenericName(self):
-		return self.get('GenericName', locale = True)
+		return self.get('GenericName', locale=True)
 	def getComment(self):
-		return self.get('Comment', locale = True)
+		return self.get('Comment', locale=True)
 	def getNoDisplay(self):
-		return self.get('NoDisplay', type = "boolean")
+		return self.get('NoDisplay', type="boolean")
 	def getIcon(self):
-		return self.get('Icon', locale = True)
+		return self.get('Icon', locale=True)
 	def getHidden(self):
-		return self.get('Hidden', type = "boolean")
+		return self.get('Hidden', type="boolean")
 	def getFilePattern(self):
-		return self.get('FilePattern', type = "regex")
+		return self.get('FilePattern', type="regex")
 	def getTryExec(self):
 		return self.get('TryExec')
 	def getExec(self):
@@ -63,17 +63,17 @@ class DesktopEntry(IniFile):
 	def getPath(self):
 		return self.get('Path')
 	def getTerminal(self):
-		return self.get('Terminal', type = "boolean")
+		return self.get('Terminal', type="boolean")
 	def getSwallowTitle(self):
-		return self.get('SwallowTitle', locale = True)
+		return self.get('SwallowTitle', locale=True)
 	def getSwallowExec(self):
 		return self.get('SwallowExec')
 	def getActions(self):
-		return self.get('Actions', list = True)
+		return self.get('Actions', list=True)
 	def getMimeType(self):
-		return self.get('MimeType', list = True, type = "regex")
+		return self.get('MimeType', list=True, type="regex")
 	def getSortOrder(self):	
-		return self.get('SortOrder', list = True)
+		return self.get('SortOrder', list=True)
 	def getDev(self):
 		return self.get('Dev')
 	def getFSType(self):
@@ -81,45 +81,45 @@ class DesktopEntry(IniFile):
 	def getMountPoint(self):
 		return self.get('MountPoint')
 	def getReadonly(self):
-		return self.get('ReadOnly', type = "boolean")
+		return self.get('ReadOnly', type="boolean")
 	def getUnmountIcon(self):
-		return self.get('UnmountIcon', locale = True)
+		return self.get('UnmountIcon', locale=True)
 	def getURL(self):
 		return self.get('URL')
 	def getCategories(self):
-		return self.get('Categories', list = True)
+		return self.get('Categories', list=True)
 	def getOnlyShowIn(self):
-		return self.get('OnlyShowIn', list = True)
+		return self.get('OnlyShowIn', list=True)
 	def getNotShowIn(self):
-		return self.get('NotShowIn', list = True)
+		return self.get('NotShowIn', list=True)
 	def getStartupNotify(self):
-		return self.get('StartupNotify', type = "boolean")
+		return self.get('StartupNotify', type="boolean")
 	def getStartupWMClass(self):
 		return self.get('StartupWMClass')
 	# end standard keys
 
 	# start kde keys
 	def getServiceTypes(self):
-		return self.get('ServiceTypes', list = True)
+		return self.get('ServiceTypes', list=True)
 	def getDocPath(self):
 		return self.get('DocPath')
 	def getKeywords(self):
-		return self.get('Keywords', list = True, locale = True)
+		return self.get('Keywords', list=True, locale=True)
 	def getInitialPreference(self):
 		return self.get('InitialPreference')
 	# end kde keys
 
 	# start deprecated keys
 	def getMiniIcon(self):
-		return self.get('MiniIcon', locale = True)
+		return self.get('MiniIcon', locale=True)
 	def getTerminalOptions(self):
 		return self.get('TerminalOptions')
 	def getDefaultApp(self):
 		return self.get('DefaultApp')
 	def getProtocols(self):
-		return self.get('Protocols', list = True)
+		return self.get('Protocols', list=True)
 	def getExtensions(self):
-		return self.get('Extensions', list = True)
+		return self.get('Extensions', list=True)
 	def getBinaryPattern(self):
 		return self.get('BinaryPattern')
 	def getMapNotify(self):
@@ -127,18 +127,18 @@ class DesktopEntry(IniFile):
 	# end deprecated keys
 
 	# desktop entry edit stuff
-	def new(self, filename, type = ""):
-		if type == "":
+	def new(self, filename, type=None):
+		if not type:
 			type = "Application"
 		self.content = dict()
 		self.addGroup(self.defaultGroup)
 		self.set("Encoding", "UTF-8")
 		self.set("Type", type)
-		self.file = filename
+		self.filename = filename
 
-	def save(self, filename = ""):
+	def save(self, filename=None):
 		if self.tainted == True:
-			if os.path.isabs(self.file) and os.access(self.file, os.W_OK):
+			if os.path.isabs(self.filename) and os.access(self.filename, os.W_OK):
 				self.write()
 			else:
 				path = ""
@@ -148,7 +148,7 @@ class DesktopEntry(IniFile):
 					path = os.path.join(xdg_data_dirs[0], "desktop-directories")
 				if path:
 					if not filename:
-						filename = os.path.basename(self.file)
+						filename = os.path.basename(self.filename)
 					if not os.path.isdir(os.path.dirname(os.path.join(path,filename))):
 						os.makedirs(os.path.dirname(os.path.join(path,filename)))
 					self.write(os.path.join(path,filename))
@@ -217,7 +217,7 @@ class DesktopEntry(IniFile):
 				self.warnings.append("Files with Type=Directory should have the extension .directory")
 
 		elif key == "Version":
-			self.checkValue(key, value, type = "number")
+			self.checkValue(key, value, type="number")
 
 		elif key == "Encoding":
 			if value == "Legacy-Mixed":
@@ -235,13 +235,13 @@ class DesktopEntry(IniFile):
 			pass # locale string
 
 		elif key == "NoDisplay":
-			self.checkValue(key, value, type = "boolean")
+			self.checkValue(key, value, type="boolean")
 
 		elif key == "Hidden":
-			self.checkValue(key, value, type = "boolean")
+			self.checkValue(key, value, type="boolean")
 
 		elif key == "Terminal":
-			self.checkValue(key, value, type = "boolean")
+			self.checkValue(key, value, type="boolean")
 			self.checkType(key, "Application")
 
 		elif key == "TryExec":
@@ -267,15 +267,15 @@ class DesktopEntry(IniFile):
 			self.checkType(key, "Application")
 
 		elif key == "FilePatterns":
-			self.checkValue(key, value, type = "regex", list = True)
+			self.checkValue(key, value, type="regex", list=True)
 			self.checkType(key, "Application")
 
 		elif key == "Actions":
-			self.checkValue(key, value, list = True)
+			self.checkValue(key, value, list=True)
 			self.checkType(key, "Application")
 
 		elif key == "MimeType":
-			self.checkValue(key, value, type = "regex", list = True)
+			self.checkValue(key, value, type="regex", list=True)
 			self.checkType(key, "Application")
 
 		elif key == "Categories":
@@ -284,22 +284,22 @@ class DesktopEntry(IniFile):
 			self.checkCategorie(value)
 
 		elif key == "OnlyShowIn":
-			self.checkValue(key, value, list = True)
+			self.checkValue(key, value, list=True)
 			self.checkOnlyShowIn(value)
 
 		elif key == "NotShowIn":
-			self.checkValue(key, value, list = True)
+			self.checkValue(key, value, list=True)
 			self.checkOnlyShowIn(value)
 
 		elif key == "StartupNotify":
-			self.checkValue(key, value, type = "boolean")
+			self.checkValue(key, value, type="boolean")
 			self.checkType(key, "Application")
 
 		elif key == "StartupWMClass":
 			self.checkType(key, "Application")
 
 		elif key == "SortOrder":
-			self.checkValue(key, value, list = True)
+			self.checkValue(key, value, list=True)
 			self.checkType(key, "Directory")
 
 		elif key == "URL":
@@ -323,12 +323,12 @@ class DesktopEntry(IniFile):
 			self.checkType(key, "FSDevice")
 
 		elif key == "ReadOnly":
-			self.checkValue(key, value, type = "boolean")
+			self.checkValue(key, value, type="boolean")
 			self.checkType(key, "FSDevice")
 
 		# kde extensions
 		elif key == "ServiceTypes":
-			self.checkValue(key, value, list = True)
+			self.checkValue(key, value, list=True)
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
 		elif key == "DocPath":
@@ -336,11 +336,11 @@ class DesktopEntry(IniFile):
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
 		elif re.match("^Keywords"+xdg.Locale.regex+"$", key):
-			self.checkValue(key, value, list = True)
+			self.checkValue(key, value, list=True)
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
 		elif key == "InitialPreference":
-			self.checkValue(key, value, type = "number")
+			self.checkValue(key, value, type="number")
 			self.warnings.append("Key '%s' is a KDE extension" % key)
 
 		# deprecated keys
@@ -357,11 +357,11 @@ class DesktopEntry(IniFile):
 			self.warnings.append("Key '%s' is deprecated" % key)
 
 		elif key == "Protocols":
-			self.checkValue(key, value, list = True)
+			self.checkValue(key, value, list=True)
 			self.warnings.append("Key '%s' is deprecated" % key)
 
 		elif key == "Extensions":
-			self.checkValue(key, value, list = True)
+			self.checkValue(key, value, list=True)
 			self.warnings.append("Key '%s' is deprecated" % key)
 
 		elif key == "BinaryPattern":
