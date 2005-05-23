@@ -263,9 +263,12 @@ class IniFile:
 			return 1
 
 	# write support
-	def write(self, file):
+	def write(self, file = ""):
 		fp = codecs.open(file, 'w')
-		self.file = file
+		if not file:
+			file = self.file
+		else:
+			self.file = file
 		if self.defaultGroup:
 			fp.write("[%s]\n" % self.defaultGroup)
 			for (key, value) in self.content[self.defaultGroup].items():
