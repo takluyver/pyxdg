@@ -477,7 +477,7 @@ class MenuEntry:
 		self.Allocated = Allocated
 		self.Add = False
 		self.MatchedInclude = False
-		self.Filename
+		self.Filename = ""
 		# Can be one of Hidden/Empty/NotShowIn or True
 		self.Show = True
 		# Caching
