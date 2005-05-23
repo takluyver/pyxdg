@@ -256,7 +256,7 @@ class Menu:
 			else:
 				return self.getSubmenus()[index]
 		except ValueError:
-			return ""
+			pass
 	def removeSubmenu(self, newmenu):
 		# parse recursive menus
 		try:
@@ -963,10 +963,9 @@ def __parse_inline(submenu, menu):
 	if submenu.Layout.inline == "true":
 		if len(submenu.Entries) == 1 and submenu.Layout.inline_alias == "true":
 			entry = submenu.Entries[0]
-			locale = "[" + xdg.Locale.langs[0] + "]"
-			entry.DesktopEntry.set("Name" + locale, submenu.getName())
-			entry.DesktopEntry.set("GenericName" + locale, submenu.getGenericName())
-			entry.DesktopEntry.set("Comment" + locale, submenu.getComment())
+			entry.DesktopEntry.set("Name", submenu.getName())
+			entry.DesktopEntry.set("GenericName", submenu.getGenericName())
+			entry.DesktopEntry.set("Comment", submenu.getComment())
 			menu.Entries.append(entry)
 		elif len(submenu.Entries) <= submenu.Layout.inline_limit or submenu.Layout.inline_limit == 0:
 			if submenu.Layout.inline_header == "true":
