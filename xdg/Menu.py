@@ -75,7 +75,7 @@ class Menu:
 	def __cmp__(self, other):
 		return cmp(self.getName(), other.getName())
 
-	def __eq__(self,other):
+	def __eq__(self, other):
 		if self.Name == str(other):
 			return True
 		else:
@@ -89,6 +89,7 @@ class Menu:
 			elif entry.Show == True:
 				yield entry
 
+	# FIXME: only search for desktopfileid`
 	def searchEntry(self, desktopfileid, hidden=False, deep=True, org=False):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, MenuEntry):
@@ -98,6 +99,7 @@ class Menu:
 				for submenu in self.Submenus:
 					submenu.searchEntry(desktopfileid, hidden, deep, org)
 
+	# FIXME: only search for desktopfileid`
 	def getEntry(self, desktopfileid, hidden=False, deep=True):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, MenuEntry):
@@ -607,7 +609,7 @@ def __parse(node, filename, parent=None):
 			elif child.tagName == 'Include' or child.tagName == 'Exclude':
 				parent.addRule(Rule(child.tagName, child))
 			elif child.tagName == 'MergeFile':
-				# TODO: can a MergeFile be empty if it's got type="parent"??
+				# FIXME: can a MergeFile be empty if it's got type="parent"??
 				try:
 					__parseMergeFile(child.childNodes[0].nodeValue, child, filename, parent)
 				except IndexError:
