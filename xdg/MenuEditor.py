@@ -59,11 +59,36 @@ class MenuEditor:
 		fd.write(self.doc.toprettyxml().replace('<?xml version="1.0" ?>\n', ''))
 		fd.close()
 
-	def createEntry(self, menu, name, command, comment=None, icon=None, term=None, after=None):
-		pass
+	def createEntry(self, menu, name, command=None, comment=None, icon=None, term=None, after=None):
+		filename = __getFileName(name, ".desktop")
+		menu_entry = MenuEntry(filename)
+		self.editEntry(menu_entry, name, command, comment, icon, term)
+		# FIXME: insert the Menu
+		# FIXME: create the xml
+		# FIXME: Layout tag respecting after
+		return menu_entry
 
 	def createMenu(self, menu, name, comment=None, icon=None, after=None):
-		pass
+		filename = __getFileName(name, ".directory")
+		directory = DesktopFile(filename)
+		self.editMenu(directory, name, comment, icon)
+		new_menu = Menu()
+		new_menu.Name = name
+		# FIXME: set new_menu.Depth
+		# FIXME: insert the Menu
+		# FIXME: create the xml
+		# FIXME: Layout tag respecting after
+		return new_menu
+
+	def __getFileName(self, name, extension):
+		postfix = 0
+		while True:
+			filename = name + "-" + str(postfix) + extension
+			if os.path.isfile(os.path.join(xdg_data_dirs[0], filename):
+				break
+			else:
+				postfix += 1
+		return filename
 
 	def createSeparator(self, menu, after=None):
 		pass
@@ -78,21 +103,47 @@ class MenuEditor:
 		pass
 
 	def editEntry(self, entry, name=None, comment=None, command=None, icon=None, term=None):
-		pass
+		if name:
+			entry.DesktopEntry.set("Name", name)
+		if command:
+			entry.DesktopEntry.set("Command", command)
+		if comment:
+			entry.DesktopEntry.set("Comment" comment)
+		if icon:
+			entry.DesktopEntry.set("Icon", icon)
+		if term:
+			entry.DesktopEntry.set("Terminal", term)
 
 	def editMenu(self, menu, name=None, comment=None, icon=None):
-		pass
-
-	def hideMenu(self, menu):
-		pass
-
-	def unhideMenu(self, menu):
-		pass
+		# FIXME: What if a Menu has no .directory file
+		if name:
+			menu.Directory.set("Name", name)
+		if comment:
+			menu.Directory.set("Comment", comment)
+		if icon:
+			menu.Directory.set("Icon", icon)
 
 	def hideEntry(self, entry):
-		pass
+		entry.DesktopEntry.set("NoDisplay", True)
+		entry.DesktopEntry.set("Hidden", True)
 
 	def unhideEntry(self, entry):
+		entry.DesktopEntry.set("NoDisplay", False)
+		entry.DesktopEntry.set("Hidden", False)
+
+	def hideMenu(self, menu):
+		# FIXME: What if a Menu has no .directory file
+		menu.Directory.set("NoDisplay", True)
+		menu.Directory.set("Hidden", True)
+
+	def unhideMenu(self, menu):
+		menu.Directory.set("NoDisplay", False)
+		menu.Directory.set("Hidden", False)
+
+	def deleteEntry(self, entry):
+		pass
+
+	def deleteMenu(self, menu):
 		pass
 
 	def deleteSeparator(self, separator):

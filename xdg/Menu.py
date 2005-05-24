@@ -151,12 +151,9 @@ class Menu:
 		return path
 
 	def getName(self):
-		if self.Directory:
-			try:
-				return self.Directory.getName()
-			except:
-				return self.Name
-		else:
+		try:
+			return self.Directory.getName()
+		except:
 			return self.Name
 
 	def getGenericName(self):
