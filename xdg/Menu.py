@@ -19,6 +19,7 @@ class Menu:
 	def __init__(self):
 		# Public stuff
 		self.Name = ""
+		self.Directory = None
 		self.Entries = []
 		self.Doc = ""
 		self.Filename = ""
@@ -34,7 +35,7 @@ class Menu:
 		self.DefaultLayout = ""
 		self.Deleted = "notset"
 		self.DeskEntries = []
-		self.Directory = []
+		self.Directories = []
 		self.DirectoryDirs = []
 		self.Layout = ""
 		self.Moves = []
@@ -46,32 +47,33 @@ class Menu:
 		return self.Name
 
 	def __add__(self, other):
-		for dir in other.getAppDirs():
-			self.addAppDir(dir)
+		for dir in other.AppDirs:
+			self.AppDirs.append(dir)
+
+		for dir in other.DirectoryDirs:
+			self.DirectoryDirs.append(dir)
+
+		for entry in other.Directories:
+			self.Directories.append(entry)
 
 		if other.Deleted != "notset":
 			self.Deleted = other.Deleted
 
-		for entry in other.getDirectories():
-			self.addDirectory(entry)
-
-		for dir in other.getDirectoryDirs():
-			self.addDirectoryDir(dir)
-
-		for move in other.getMoves():
-			self.addMove(move)
-
 		if other.OnlyUnallocated != "notset":
 			self.OnlyUnallocated = other.OnlyUnallocated
 
-		for rule in other.getRules():
-			self.addRule(rule)
+		for rule in other.Rules:
+			self.Rules.append(rule)
+
+		for move in other.Moves:
+			self.Moves.append(move)
 
 		for submenu in other.Submenus:
 			self.addSubmenu(submenu)
 
 		return self
 
+	# FIXME: cache getName()
 	def __cmp__(self, other):
 		return cmp(self.getName(), other.getName())
 
@@ -109,24 +111,22 @@ class Menu:
 					for submenu in self.Submenus:
 						submenu.searchMenu(string, hidden, deep, org)
 
-	def getEntry(self, desktopfileid, hidden=False):
-		for entry in self.getEntries(hidden):
-			if isinstance(entry, MenuEntry):
-				if entry.DesktopFileID == desktopfileid:
-					return entry
-			elif isinstance(entry, Menu):
-				for submenu in self.Submenus:
-					submenu.getEntry(desktopfileid, hidden, deep)
+	def getEntry(self, desktopfileid, deep = False):
+		for entry in self.DeskEntries:
+			if entry.DesktopFileID == desktopfileid:
+				return entry
+		if deep == True:
+			for menu in self.Submenus:
+				menu.getEntry(desktopfileid, deep)
 
-	def getMenu(self, path, hidden=False):
-		array = name.split("/", 1)
-		for entry in self.getEntries(hidden):
-			if isinstance(entry, Menu):
-				if entry.Name == array[0]:
-					if len(array) > 1:
-						return entry.getMenu(array[1], hidden)
-					else:
-						return entry
+	def getMenu(self, path):
+		array = path.split("/", 1)
+		for entry in self.Submenus:
+			if entry.Name == array[0]:
+				if len(array) > 1:
+					return entry.getMenu(array[1])
+				else:
+					return entry
 
 	def getPath(self, org=False, toplevel=False):
 		parent = self
@@ -173,102 +173,24 @@ class Menu:
 			return ""
 
 	""" PRIVATE STUFF """
-	def addAppDir(self, dir, pos=-1):
-		if not dir in self.getAppDirs():
-			if pos == -1:
-				self.AppDirs.append(dir)
-			else:
-				self.AppDirs.insert(pos,dir)
-	def getAppDirs(self, reverse = False):
-		dirs = self.AppDirs[:]
-		if reverse:
-			dirs.reverse()
-		return dirs
-
-	def addDeskEntry(self, entry):
-		self.DeskEntries.append(entry)
-	def getDeskEntries(self):
-		return self.DeskEntries
-	def getDeskEntry(self, desktopfileid):
-		try:
-			index = self.getDeskEntries().index(desktopfileid)
-			return self.getDeskEntries()[index]
-		except ValueError:
-			return None
-
-	def addDirectory(self, entry):
-		if not entry in self.getDirectories():
-			self.Directory.append(entry)
-	def setDirectory(self, entry):
-		self.Directory = entry
-	def getDirectories(self):
-		return self.Directory
-
-	def addDirectoryDir(self, dir, pos=-1):
-		if not dir in self.getDirectoryDirs():
-			if pos == -1:
-				self.DirectoryDirs.append(dir)
-			else:
-				self.DirectoryDirs.insert(pos,dir)
-	def getDirectoryDirs(self, reverse = False):
-		dirs = self.DirectoryDirs[:]
-		if reverse:
-			dirs.reverse()
-		return dirs
-
-	def addMove(self, newmove):
-		for move in self.getMoves():
-			if newmove.Old == move.Old:
-				move = newmove
-				break
-		else:
-			self.Moves.append(newmove)
-	def getMoves(self):
-		return self.Moves
-
-	def addRule(self, rule):
-		self.Rules.append(rule)
-	def getRules(self):
-		return self.Rules
-
 	def addSubmenu(self, newmenu):
-		for submenu in self.getSubmenus():
+		for submenu in self.Submenus:
 			if submenu == newmenu:
 				submenu += newmenu
 				break
 		else:
 			self.Submenus.append(newmenu)
 			newmenu.Parent = self
-	def getSubmenus(self):
-		return self.Submenus
-	def getSubmenu(self, name):
-		# parses recursive menus
-		array = name.split("/", 1)
-		try:
-			index = self.getSubmenus().index(array[0])
-			if len(array) > 1:
-				return self.getSubmenus()[index].getSubmenu(array[1])
-			else:
-				return self.getSubmenus()[index]
-		except ValueError:
-			return None
-	def removeSubmenu(self, newmenu):
-		# parse recursive menus
-		try:
-			self.Submenus.remove(newmenu)
-			return True
-		except:
-			for submenu in self.Submenus:
-				value = submenu.removeSubmenu(newmenu)
-				if value == True:
-					break
+			newmenu.Depth = self.Depth + 1
 
 class Move:
 	"A move operation"
-	def __init__(self, node):
-		self.Old = ""
-		self.New = ""
-		self.parseNode(node)
+	def __init__(self, node=None):
+		if node:
+			self.parseNode(node)
+		else:
+			self.Old = ""
+			self.New = ""
 
 	def __cmp__(self, other):
 		return cmp(self.Old, other.Old)
@@ -318,37 +240,35 @@ class Layout:
 		for child in node.childNodes:
 			if child.nodeType == ELEMENT_NODE:
 				if child.tagName == "Menuname":
-					self.parseMenuname(child)
+					self.parseMenuname(
+						child.childNodes[0].nodeValue,
+						child.getAttribute("show_empty") or "false",
+						child.getAttribute("inline") or "false",
+						child.getAttribute("inline_limit") or 4,
+						child.getAttribute("inline_header") or "true",
+						child.getAttribute("inline_alias") or "false" )
 				elif child.tagName == "Separator":
-					self.parseSeparator(child)
+					self.parseSeparator()
 				elif child.tagName == "Filename":
-					self.parseFilename(child)
+					try:
+						self.parseFilename(child.childNodes[0].nodeValue)
+					except IndexError:
+						raise ValidationError('Filename cannot be empty', "")
 				elif child.tagName == "Merge":
-					self.parseMerge(child)
+					self.parseMerge(child.getAttribute("type") or "all")
 
-	def parseMenuname(self, child):
-		self.order.append([
-			"Menuname",
-			child.childNodes[0].nodeValue,
-			child.getAttribute("show_empty") or "false",
-			child.getAttribute("inline") or "false",
-			child.getAttribute("inline_limit") or 4,
-			child.getAttribute("inline_header") or "true",
-			child.getAttribute("inline_alias") or "false"
-		])
+	def parseMenuname(self, value, empty="false", inline="false", inline_limit=4, inline_header="true", inline_alias="false"):
+		self.order.append(["Menuname", value, empty, inline, inline_limit, inline_header, inline_alias])
 		self.order[-1][4] = int(self.order[-1][4])
 
-	def parseSeparator(self, child):
+	def parseSeparator(self):
 		self.order.append(["Separator"])
 
-	def parseFilename(self, child):
-		try:
-			self.order.append(["Filename", child.childNodes[0].nodeValue])
-		except IndexError:
-			raise ValidationError('Filename cannot be empty', "")
+	def parseFilename(self, value):
+		self.order.append(["Filename", value])
 
-	def parseMerge(self, child):
-		self.order.append(["Merge", child.getAttribute("type")])
+	def parseMerge(self, type="all"):
+		self.order.append(["Merge", type])
 
 
 class Rule:
@@ -365,7 +285,7 @@ class Rule:
 		self.New = True
 
 		# Begin parsing
-		if node != None:
+		if node:
 			self.parseNode(node)
 			self.compile()
 
@@ -592,7 +512,7 @@ def __parse(node, filename, parent=None):
 					raise ValidationError('Name cannot be empty', filename)
 			elif child.tagName == 'Directory' :
 				try:
-					parent.addDirectory(child.childNodes[0].nodeValue)
+					parent.Directories.append(child.childNodes[0].nodeValue)
 				except IndexError:
 					raise ValidationError('Directory cannot be empty', filename)
 			elif child.tagName == 'OnlyUnallocated':
@@ -604,7 +524,7 @@ def __parse(node, filename, parent=None):
 			elif child.tagName == 'NotDeleted':
 				parent.Deleted = False
 			elif child.tagName == 'Include' or child.tagName == 'Exclude':
-				parent.addRule(Rule(child.tagName, child))
+				parent.Rules.append(Rule(child.tagName, child))
 			elif child.tagName == 'MergeFile':
 				# FIXME: can a MergeFile be empty if it's got type="parent"??
 				try:
@@ -619,7 +539,7 @@ def __parse(node, filename, parent=None):
 			elif child.tagName == 'DefaultMergeDirs':
 				__parseDefaultMergeDirs(child, filename, parent)
 			elif child.tagName == 'Move':
-				parent.addMove(Move(child))
+				parent.Moves.append(Move(child))
 			elif child.tagName == 'Layout':
 				if len(child.childNodes) > 1:
 					parent.Layout = Layout(child)
@@ -635,14 +555,14 @@ def __parse(node, filename, parent=None):
 				__parseKDELegacyDirs(filename, parent)
 
 def __parsemove(menu):
-	for submenu in menu.getSubmenus():
+	for submenu in menu.Submenus:
 		__parsemove(submenu)
 
 	# parse move operations
-	for move in menu.getMoves():
-		move_from_menu = menu.getSubmenu(move.Old)
+	for move in menu.Moves:
+		move_from_menu = menu.getMenu(move.Old)
 		if move_from_menu:
-			move_to_menu = menu.getSubmenu(move.New)
+			move_to_menu = menu.getMenu(move.New)
 
 			if not move_to_menu:
 				move_to_menu = Menu()
@@ -650,7 +570,7 @@ def __parsemove(menu):
 				menu.addSubmenu(move_to_menu)
 
 			move_to_menu += move_from_menu
-			menu.removeSubmenu(move_from_menu)
+			move_from_menu.Parent.Submenus.remove(move_from_menu)
 
 
 def __postparse(menu):
@@ -665,12 +585,12 @@ def __postparse(menu):
 		if menu.DefaultLayout:
 			menu.Layout = menu.DefaultLayout
 		elif menu.Layout:
-			if hasattr(menu, "Parent"):
+			if menu.Depth > 0:
 				menu.DefaultLayout = menu.Parent.DefaultLayout
 			else:
 				menu.DefaultLayout = Layout()
 		else:
-			if hasattr(menu, "Parent"):
+			if menu.Depth > 0:
 				menu.Layout = menu.Parent.DefaultLayout
 				menu.DefaultLayout = menu.Parent.DefaultLayout
 			else:
@@ -678,25 +598,31 @@ def __postparse(menu):
 				menu.DefaultLayout = Layout()
 
 	# go recursive through all menus
-	for submenu in menu.getSubmenus():
+	for submenu in menu.Submenus:
 		# add parent's app/directory dirs
-		for dir in menu.getAppDirs(reverse = True):
-			submenu.addAppDir(dir, 0)
-		for dir in menu.getDirectoryDirs(reverse = True):
-			submenu.addDirectoryDir(dir, 0)
+		submenu.AppDirs = menu.AppDirs + submenu.AppDirs
+		submenu.DirectoryDirs = menu.DirectoryDirs + submenu.DirectoryDirs
+
+		# remove duplicates
+		submenu.Directories = __removeDuplicates(submenu.Directories)
+		submenu.DirectoryDirs = __removeDuplicates(submenu.DirectoryDirs)
+		submenu.AppDirs = __removeDuplicates(submenu.AppDirs)
+
+		# reverse so handling is easier
+		submenu.Directories.reverse()
+		submenu.DirectoryDirs.reverse()
+		submenu.AppDirs.reverse()
 
 		# get the valid .directory file out of the list
-		entry = None
-		for directory in submenu.getDirectories():
-			for dir in submenu.getDirectoryDirs():
-				if os.path.exists(os.path.join(dir, directory)):
-					try:
-						entry = DesktopEntry()
-						entry.parse(os.path.join(dir, directory))
-						break
-					except:
-						pass
-		submenu.setDirectory(entry)
+		entry = DesktopEntry()
+		for directory in submenu.Directories:
+			for dir in submenu.DirectoryDirs:
+				try:
+					entry.parse(os.path.join(dir, directory))
+					submenu.Directory = entry
+					break
+				except:
+					pass
 
 		# enter submenus
 		__postparse(submenu)
@@ -730,19 +656,23 @@ def __check(value, filename, type):
 def __parseAppDir(value, filename, parent):
 	value = __check(value, filename, "dir")
 	if value:
-		parent.addAppDir(value)
+		parent.AppDirs.append(value)
 
 def __parseDefaultAppDir(filename, parent):
-	for dir in xdg_data_dirs:
+	dirs = xdg_data_dirs[:]
+	dirs.reverse()
+	for dir in dirs:
 		__parseAppDir(os.path.join(dir, "applications"), filename, parent)
 
 def __parseDirectoryDir(value, filename, parent):
 	value = __check(value, filename, "dir")
 	if value:
-		parent.addDirectoryDir(value)
+		parent.DirectoryDirs.append(value)
 
 def __parseDefaultDirectoryDir(filename, parent):
-	for dir in xdg_data_dirs:
+	dirs = xdg_data_dirs[:]
+	dirs.reverse()
+	for dir in dirs:
 		__parseDirectoryDir(os.path.join(dir, "desktop-directories"), filename, parent)
 
 # Merge Stuff
@@ -772,7 +702,9 @@ def __parseMergeDir(value, child, filename, parent):
 
 def __parseDefaultMergeDirs(child, filename, parent):
 	basename = os.path.splitext(os.path.basename(filename))[0]
-	for dir in xdg_config_dirs:
+	dirs = xdg_config_dirs[:]
+	dirs.reverse()
+	for dir in dirs:
 		__parseMergeDir(os.path.join(dir, "menus", basename + "-merged"), child, filename, parent)
 
 def __mergeFile(filename, child, parent):
@@ -811,13 +743,13 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
 		tmp["DirectoryDirs"].append(dir)
 
 		m = Menu()
-		m.addAppDir(dir)
-		m.addDirectoryDir(dir)
+		m.AppDirs.append(dir)
+		m.DirectoryDirs.append(dir)
 		m.Name = os.path.basename(dir)
 
 		for entry in os.listdir(dir):
 			if entry == ".directory":
-				m.addDirectory(entry)
+				m.Directories.append(entry)
 			elif os.path.isdir(os.path.join(dir,entry)):
 				m.addSubmenu(__mergeLegacyDir(os.path.join(dir,entry), prefix, filename, parent))
 
@@ -830,8 +762,8 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
 				r = Rule("Include")
 				r.parseFilename(entry.DesktopFileID)
 				r.compile()
-				m.addRule(r)
-			if not dir in parent.getAppDirs():
+				m.Rules.append(r)
+			if not dir in parent.AppDirs:
 				categories.append("Legacy")
 				entry.Categories = categories
 
@@ -843,46 +775,51 @@ def __parseKDELegacyDirs(filename, parent):
 	for dir in output[0].split(":"):
 		__parseLegacyDir(dir,"kde", filename, parent)
 
+# remove duplicate entries from a list
+def __removeDuplicates(list):
+	set = {}
+	list.reverse()
+	list = [set.setdefault(e,e) for e in list if e not in set]
+	list.reverse()
+	return list
+
 # Finally generate the menu
 def __genmenuNotOnlyAllocated(menu):
-	for submenu in menu.getSubmenus():
+	for submenu in menu.Submenus:
 		__genmenuNotOnlyAllocated(submenu)
 
 	if menu.OnlyUnallocated == False:
-		tmp["cache"].addEntries(menu.getAppDirs())
+		tmp["cache"].addEntries(menu.AppDirs)
 		entries = []
-		for rule in menu.getRules():
-			entries = rule.do(tmp["cache"].getEntries(menu.getAppDirs()), rule.Type, 1)
+		for rule in menu.Rules:
+			entries = rule.do(tmp["cache"].getEntries(menu.AppDirs), rule.Type, 1)
 		for entry in entries:
 		    if entry.Add == True:
 				entry.Add = False
 				entry.Allocated = True
-				menu.addDeskEntry(entry)
+				menu.DeskEntries.append(entry)
 
 def __genmenuOnlyAllocated(menu):
-	for submenu in menu.getSubmenus():
+	for submenu in menu.Submenus:
 		__genmenuOnlyAllocated(submenu)
 
 	if menu.OnlyUnallocated == True:
-		tmp["cache"].addEntries(menu.getAppDirs())
+		tmp["cache"].addEntries(menu.AppDirs)
 		entries = []
-		for rule in menu.getRules():
-			entries = rule.do(tmp["cache"].getEntries(menu.getAppDirs()), rule.Type, 2)
+		for rule in menu.Rules:
+			entries = rule.do(tmp["cache"].getEntries(menu.AppDirs), rule.Type, 2)
 		for entry in entries:
 		    if entry.Add == True:
 			#	entry.Add = False
 			#	entry.Allocated = True
-				menu.addDeskEntry(entry)
+				menu.DeskEntries.append(entry)
 
 # And sorting ...
-def sort(menu, depth=0):
+def sort(menu):
 	menu.Entries = []
-	menu.Depth = depth
 
-	depth += 1
-
-	for submenu in menu.getSubmenus():
-		sort(submenu, depth)
+	for submenu in menu.Submenus:
+		sort(submenu)
 
 		# remove separators at the beginning and at the end
 		if len(submenu.Entries) > 0:
@@ -891,8 +828,6 @@ def sort(menu, depth=0):
 		if len(submenu.Entries) > 0:
 			if isinstance(submenu.Entries[-1], Separator):
 				submenu.Entries.pop(-1)
-
-	depth -= 1
 
 	tmp_s = []
 	tmp_e = []
@@ -907,22 +842,22 @@ def sort(menu, depth=0):
 		if order[0] == "Separator":
 			menu.Entries.append(Separator())
 		elif order[0] == "Filename":
-			entry = menu.getDeskEntry(order[1])
+			entry = menu.getEntry(order[1])
 			if entry:
 				menu.Entries.append(entry)
 		elif order[0] == "Menuname":
-			submenu = menu.getSubmenu(order[1])
+			submenu = menu.getMenu(order[1])
 			if submenu:
 				__parse_inline(submenu, menu)
 		elif order[0] == "Merge":
 			if order[1] == "files" or order[1] == "all":
 				menu.DeskEntries.sort()
-				for entry in menu.getDeskEntries():
+				for entry in menu.DeskEntries:
 					if entry not in tmp_e:
 						menu.Entries.append(entry)
 			elif order[1] == "menus" or order[1] == "all":
 				menu.Submenus.sort()
-				for submenu in menu.getSubmenus():
+				for submenu in menu.Submenus:
 					if submenu.Name not in tmp_s:
 						__parse_inline(submenu, menu)
 
@@ -943,7 +878,7 @@ def sort(menu, depth=0):
 			if entry.DesktopEntry.getHidden() == True or entry.DesktopEntry.getNoDisplay() == True:
 				entry.Show = "Hide"
 				menu.Visible -= 1
-			elif xdg.Config.windowmanager != None:
+			elif xdg.Config.windowmanager:
 				if ( entry.DesktopEntry.getOnlyShowIn() != [] and xdg.Config.windowmanager not in entry.DesktopEntry.getOnlyShowIn() ) \
 				or xdg.Config.windowmanager in entry.DesktopEntry.getNotShowIn():
 					entry.Show = "NotShowIn"

@@ -115,6 +115,7 @@ class MenuEditor:
 		pass
 
 	def editEntry(self, entry, name=None, comment=None, command=None, icon=None, term=None):
+		# FIXME: locale options
 		if name:
 			entry.DesktopEntry.set("Name", name)
 		if command:
