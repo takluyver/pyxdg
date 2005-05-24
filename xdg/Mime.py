@@ -17,9 +17,6 @@ See http://www.freedesktop.org/standards/shared-mime-info-spec/ for
 information about the format of these files.
 
 (based on version 0.13)
-
-TODO:
-* Return Icon for MimeType
 """
 
 import os
@@ -78,6 +75,7 @@ class MIMEtype:
 					self._comment = (goodness, _get_node_data(comment))
 				if goodness == 2: return
 
+	# FIXME: add get_icon method
 	def get_comment(self):
 		"""Returns comment for current language, loading it if needed."""
 		# Should we ever reload?

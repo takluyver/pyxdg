@@ -91,7 +91,7 @@ class Menu:
 			elif entry.Show == True:
 				yield entry
 
-	# FIXME: only search for desktopfileid`
+	# FIXME: search for name/comment/genericname, return multiple items
 	def searchEntry(self, string, hidden=False, deep=True, org=False):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, MenuEntry):
@@ -101,7 +101,7 @@ class Menu:
 				for submenu in self.Submenus:
 					submenu.searchEntry(string, hidden, deep, org)
 
-	# FIXME: only search for desktopfileid`
+	# FIXME: only search for name/comment/genericname, return multiple items
 	def searchMenu(self, string, hidden=False, deep=True, org=False):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, Menu):
