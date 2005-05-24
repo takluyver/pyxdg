@@ -64,7 +64,6 @@ class MenuEditor:
 		menu_entry = MenuEntry(filename)
 		menu_entry = self.editEntry(menu_entry, name, command, comment, icon, term)
 
-		menu = self.__getEntry(menu)
 		menu.DeskEntries.append(menu_entry)
 		sort(menu)
 
@@ -81,7 +80,6 @@ class MenuEditor:
 		new_menu.Depth = menu.Depth + 1
 		new_menu = self.editMenu(new_menu, name, comment, icon)
 
-		menu = self.__getEntry(menu)
 		menu.Submenus.append(new_menu)
 		sort(menu)
 
@@ -100,20 +98,6 @@ class MenuEditor:
 				postfix += 1
 		return filename
 
-	def __getEntry(self, item):
-		# FIXME: Raise Exceptions
-		if isinstance(item, Menu):
-			return item
-		elif isinstance(item, DesktopEntry):
-			return item
-		elif isinstance(item, MenuEntry):
-			return item
-		elif isinstance(item, unicode):
-			if os.path.splitext(item)[1] == ".destkop":
-				return self.menu.getEntry(item, True)
-			else:
-				return self.menu.getMenu(item, True)
-
 	def __getMenu(self, item):
 		# FIXME: return or create the xml node for the menu
 		pass
@@ -131,8 +115,6 @@ class MenuEditor:
 		pass
 
 	def editEntry(self, entry, name=None, comment=None, command=None, icon=None, term=None):
-		entry = self.__getEntry(entry)
-
 		if name:
 			entry.DesktopEntry.set("Name", name)
 		if command:
@@ -143,53 +125,37 @@ class MenuEditor:
 			entry.DesktopEntry.set("Icon", icon)
 		if term:
 			entry.DesktopEntry.set("Terminal", term)
-
 		return entry
 
 	def editMenu(self, menu, name=None, comment=None, icon=None):
 		# FIXME: What if a Menu has no .directory file
-		menu = self.__getEntry(menu)
-
 		if name:
 			menu.Directory.set("Name", name)
 		if comment:
 			menu.Directory.set("Comment", comment)
 		if icon:
 			menu.Directory.set("Icon", icon)
-
 		return menu
 
 	def hideEntry(self, entry):
-		entry = self.__getEntry(entry)
-
 		entry.DesktopEntry.set("NoDisplay", True)
 		entry.DesktopEntry.set("Hidden", True)
-
 		return entry
 
 	def unhideEntry(self, entry):
-		entry = self.__getEntry(entry)
-
 		entry.DesktopEntry.set("NoDisplay", False)
 		entry.DesktopEntry.set("Hidden", False)
-
 		return entry
 
 	def hideMenu(self, menu):
 		# FIXME: What if a Menu has no .directory file
-		menu = self.__getEntry(menu)
-
 		menu.Directory.set("NoDisplay", True)
 		menu.Directory.set("Hidden", True)
-
 		return menu
 
 	def unhideMenu(self, menu):
-		menu = self.__getEntry(menu)
-
 		menu.Directory.set("NoDisplay", False)
 		menu.Directory.set("Hidden", False)
-
 		return menu
 
 	def deleteEntry(self, entry):

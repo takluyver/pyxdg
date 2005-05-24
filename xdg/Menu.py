@@ -90,35 +90,35 @@ class Menu:
 				yield entry
 
 	# FIXME: only search for desktopfileid`
-	def searchEntry(self, desktopfileid, hidden=False, deep=True, org=False):
+	def searchEntry(self, string, hidden=False, deep=True, org=False):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, MenuEntry):
-				if entry.DesktopFileID == desktopfileid:
+				if entry.DesktopFileID == string:
 					return self.getPath(org)
 			elif isinstance(entry, Menu) and deep == True:
 				for submenu in self.Submenus:
-					submenu.searchEntry(desktopfileid, hidden, deep, org)
+					submenu.searchEntry(string, hidden, deep, org)
 
 	# FIXME: only search for desktopfileid`
-	def getEntry(self, desktopfileid, hidden=False, deep=True):
+	def searchMenu(self, string, hidden=False, deep=True, org=False):
+		for entry in self.getEntries(hidden):
+			if isinstance(entry, Menu):
+				if entry.Name == string:
+					return entry.parent.getPath(org)
+				if deep == True:
+					for submenu in self.Submenus:
+						submenu.searchMenu(string, hidden, deep, org)
+
+	def getEntry(self, desktopfileid, hidden=False):
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, MenuEntry):
 				if entry.DesktopFileID == desktopfileid:
 					return entry
-			elif isinstance(entry, Menu) and deep == True:
+			elif isinstance(entry, Menu):
 				for submenu in self.Submenus:
 					submenu.getEntry(desktopfileid, hidden, deep)
 
-	def searchMenu(self, name, hidden=False, deep=True, org=False):
-		for entry in self.getEntries(hidden):
-			if isinstance(entry, Menu):
-				if entry.Name == name:
-					return entry.getPath(org)
-				if deep == True:
-					for submenu in self.Submenus:
-						submenu.searchMenu(name, hidden, deep, org)
-
-	def getMenu(self, name, hidden=False, deep=True):
+	def getMenu(self, path, hidden=False):
 		array = name.split("/", 1)
 		for entry in self.getEntries(hidden):
 			if isinstance(entry, Menu):
@@ -127,9 +127,6 @@ class Menu:
 						return entry.getMenu(array[1], hidden)
 					else:
 						return entry
-				if deep == True:
-					for submenu in self.Submenus:
-						submenu.searchMenu(name, hidden, deep)
 
 	def getPath(self, org=False, toplevel=False):
 		parent = self
