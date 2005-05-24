@@ -25,7 +25,7 @@ class Menu:
 		self.Depth = 0
 #		self.Parent = ""
 
-		# Can be one of Hidden/Empty/NotShowIn or True
+		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
 		self.Show = True
 		self.Visible = 0
 
@@ -34,7 +34,6 @@ class Menu:
 		self.DefaultLayout = ""
 		self.Deleted = "notset"
 		self.DeskEntries = []
-		self.CacheDeskEntries = []
 		self.Directory = []
 		self.DirectoryDirs = []
 		self.Layout = ""
@@ -935,7 +934,7 @@ def sort(menu, depth=0):
 		menu.Visible += 1
 		if isinstance(entry, Menu):
 			if entry.Deleted == True:
-				entry.Show = "Hide"
+				entry.Show = "Deleted"
 				menu.Visible -= 1
 			elif entry.Directory:
 				if entry.Directory.getHidden() == True or entry.Directory.getNoDisplay() == True:
