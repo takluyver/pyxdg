@@ -4,6 +4,7 @@ from xdg.Menu import *
 from xdg.BaseDirectory import *
 from xdg.Exceptions import *
 from xdg.DesktopEntry import *
+
 import xml.dom.minidom
 import os
 
@@ -58,10 +59,10 @@ class MenuEditor:
 		fd.write(self.doc.toprettyxml().replace('<?xml version="1.0" ?>\n', ''))
 		fd.close()
 
-	def createEntry(self, menu, name, comment, command, icon, term, after=None):
+	def createEntry(self, menu, name, command, comment=None, icon=None, term=None, after=None):
 		pass
 
-	def createMenu(self, menu, name, comment, icon, after=None):
+	def createMenu(self, menu, name, comment=None, icon=None, after=None):
 		pass
 
 	def createSeparator(self, menu, after=None):
