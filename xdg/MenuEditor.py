@@ -8,13 +8,13 @@ import xml.dom.minidom
 import os
 
 class MenuEditor:
-	def __init__(self, menu=None, filename=None)
+	def __init__(self, menu=None, filename=None):
 		self.menu = None
 		self.filename = None
 		self.doc = None
 		self.parse(menu, filename)
 
-	def parse(self, menu=None, filename=None)
+	def parse(self, menu=None, filename=None):
 		if isinstance(menu, Menu):
 			self.menu = menu
 		elif isinstance(menu, unicode):
@@ -40,18 +40,18 @@ class MenuEditor:
 		self.__saveEntries(self.menu)
 		self.__saveMenu()
 
-	def __saveEntries(self, menu)
+	def __saveEntries(self, menu):
 		if not menu:
 			menu = self.menu
 		if isinstance(menu.Directory, DesktopEntry):
 			menu.Directory.save()
-		for entry in self.getEntries(hidden = True):
+		for entry in menu.getEntries(hidden = True):
 			if isinstance(entry, MenuEntry):
 				entry.save()
 			elif isinstance(entry, Menu):
-				self.save(entry)
+				self.__saveEntries(entry)
 
-	def __saveMenu():
+	def __saveMenu(self):
 		if not os.path.isdir(os.path.basename(self.filename)):
 			os.makedirs(os.path.basename(self.filename))
 		fd = open(self.filename, 'w')
