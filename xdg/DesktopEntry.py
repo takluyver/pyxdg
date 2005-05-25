@@ -20,7 +20,7 @@ class DesktopEntry(IniFile):
 	defaultGroup = 'Desktop Entry'
 
 	def __init__(self, filename=None):
-		IniFile.__init__(self)
+		self.content = dict()
 		if filename and os.path.exists(filename):
 			self.parse(filename)
 		elif filename:

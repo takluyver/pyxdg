@@ -14,8 +14,10 @@ class IniFile:
 
 	tainted = False
 
-	def __init__(self):
+	def __init__(self, filename=None):
 		self.content = dict()
+		if filename:
+			self.parse(filename)
 
 	def parse(self, filename, headers):
 		# for performance reasons

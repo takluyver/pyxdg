@@ -73,7 +73,7 @@ class Menu:
 
 		return self
 
-	# FIXME: cache getName()
+	# FIXME: Performance: cache getName()
 	def __cmp__(self, other):
 		return cmp(self.getName(), other.getName())
 
@@ -382,6 +382,7 @@ def do(entries, type, run):
 
 
 class MenuEntry:
+	# FIXME: detect if the menu was edited or is new by the user or is root item
 	"Wrapper for 'Menu Style' Desktop Entries"
 	def __init__(self, filename, prefix=None, entry=None):
 		if prefix:
