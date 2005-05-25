@@ -397,10 +397,26 @@ class MenuEntry:
 		self.Categories = self.DesktopEntry.getCategories()
 
 	def save(self):
-		if self.DesktopEntry.tainted:
-			if self.Type == "System":
-				self.Type = "Both"
-			self.DesktopEntry.save(self.Filename)
+		# save the entry
+		if self.DesktopEntry.tainted == True:
+			# save global one?
+			if os.path.isabs(self.DesktopEntry.filename) and os.access(self.DesktopEntry.filename, os.W_OK):
+				self.DesktopEntry.write()
+			# save local one!
+			else:
+				# set self.Type
+				if self.Type == "System":
+					self.Type = "Both"
+
+				if self.DesktopEntry.getType() == "Application":
+					path = os.path.join(xdg_data_dirs[0], "applications")
+				else:
+					path = os.path.join(xdg_data_dirs[0], "desktop-directories")
+
+				if not os.path.isdir(os.path.dirname(os.path.join(path,self.Filename))):
+					os.makedirs(os.path.dirname(os.path.join(path,self.Filename)))
+
+				self.DesktopEntry.write(os.path.join(path,self.Filename))
 
 	def __cmp__(self, other):
 		return cmp(self.DesktopEntry.getName(), other.DesktopEntry.getName())
@@ -930,7 +946,7 @@ class DesktopEntryCache:
 				try:
 					deskentry = DesktopEntry()
 					deskentry.parse(os.path.join(dir, subdir, item))
-				except ParsingError:
+				except:
 					continue
 
 				entry = MenuEntry(os.path.join(subdir,item), prefix, deskentry)
