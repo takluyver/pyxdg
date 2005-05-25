@@ -946,7 +946,7 @@ class DesktopEntryCache:
 				try:
 					deskentry = DesktopEntry()
 					deskentry.parse(os.path.join(dir, subdir, item))
-				except:
+				except ParsingError:
 					continue
 
 				entry = MenuEntry(os.path.join(subdir,item), prefix, deskentry)
