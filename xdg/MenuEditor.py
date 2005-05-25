@@ -33,6 +33,7 @@ class MenuEditor:
 		try:
 			self.doc = xml.dom.minidom.parse(self.filename)
 		except IOError:
+			# FIXME use xdg_data_dir[1]
 			self.doc = xml.dom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">/etc/xdg/menus/applications.menu</MergeFile></Menu>')
 		except xml.parsers.expat.ExpatError:
 			raise ParsingError('Not a valid .menu file', self.filename)

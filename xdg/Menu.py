@@ -134,25 +134,25 @@ class Menu:
 
 	def getName(self):
 		try:
-			return self.Directory.getName()
+			return self.Directory.DesktopEntry.getName()
 		except:
 			return self.Name
 
 	def getGenericName(self):
 		try:
-			return self.Directory.getGenericName()
+			return self.Directory.DesktopEntry.getGenericName()
 		except:
 			return ""
 
 	def getComment(self):
 		try:
-			return self.Directory.getComment()
+			return self.Directory.DesktopEntry.getComment()
 		except:
 			return ""
 
 	def getIcon(self):
 		try:
-			return self.Directory.getIcon()
+			return self.Directory.DesktopEntry.getIcon()
 		except:
 			return ""
 
@@ -601,17 +601,6 @@ def __postparse(menu):
 	menu.DirectoryDirs = __removeDuplicates(menu.DirectoryDirs)
 	menu.AppDirs = __removeDuplicates(menu.AppDirs)
 
-	# get the valid .directory file out of the list
-	entry = DesktopEntry()
-	for directory in menu.Directories:
-		for dir in menu.DirectoryDirs:
-			try:
-				entry.parse(os.path.join(dir, directory))
-				menu.Directory = entry
-				break
-			except:
-				pass
-
 	# go recursive through all menus
 	for submenu in menu.Submenus:
 		__postparse(submenu)
@@ -620,6 +609,21 @@ def __postparse(menu):
 	menu.Directories.reverse()
 	menu.DirectoryDirs.reverse()
 	menu.AppDirs.reverse()
+
+	# get the valid .directory file out of the list
+	for directory in menu.Directories:
+		for dir in menu.DirectoryDirs:
+			if os.path.isfile(os.path.join(dir, directory)):
+				deskentry = DesktopEntry(os.path.join(dir, directory))
+				entry = MenuEntry(directory, entry = deskentry)
+				if not menu.Directory:
+					menu.Directory = entry
+				elif entry.Type != "User":
+					if menu.Directory.Type == "User":
+						menu.Directory.Type = "Both"
+		if menu.Directory:
+			break
+
 
 # Menu parsing stuff
 def __parseMenu(child, filename, parent):
@@ -859,10 +863,10 @@ def sort(menu):
 				entry.Show = "Deleted"
 				menu.Visible -= 1
 			elif entry.Directory:
-				if entry.Directory.getNoDisplay() == True:
+				if entry.Directory.DesktopEntry.getNoDisplay() == True:
 					entry.Show = "NoDisplay"
 					menu.Visible -= 1
-				elif entry.Directory.getHidden() == True:
+				elif entry.Directory.DesktopEntry.getHidden() == True:
 					entry.Show = "Hidden"
 					menu.Visible -= 1
 		elif isinstance(entry, MenuEntry):
