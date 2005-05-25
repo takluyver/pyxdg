@@ -948,7 +948,7 @@ class DesktopEntryCache:
 		if legacy == True:
 			appdirs.append("legacy")
 		# cache the results again
-		key = "".join(dirs)
+		key = "".join(appdirs)
 		try:
 			return self.cache[key]
 		except KeyError:
