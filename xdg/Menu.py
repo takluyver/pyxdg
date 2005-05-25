@@ -979,6 +979,7 @@ class DesktopEntryCache:
 					ids.append(entry.DesktopFileID)
 					list.append(entry)
 				elif entry.Type != "User":
+				# FIXME: This is only 99% correct, but still...
 					i = list.index(entry)
 					e = list[i]
 					if e.Type == "User":
