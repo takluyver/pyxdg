@@ -91,25 +91,9 @@ class Menu:
 			elif entry.Show == True:
 				yield entry
 
-	# FIXME: search for name/comment/genericname, return multiple items
-	def searchEntry(self, string, hidden=False, deep=True, org=False):
-		for entry in self.getEntries(hidden):
-			if isinstance(entry, MenuEntry):
-				if entry.DesktopFileID == string:
-					return self.getPath(org)
-			elif isinstance(entry, Menu) and deep == True:
-				for submenu in self.Submenus:
-					submenu.searchEntry(string, hidden, deep, org)
-
-	# FIXME: only search for name/comment/genericname, return multiple items
-	def searchMenu(self, string, hidden=False, deep=True, org=False):
-		for entry in self.getEntries(hidden):
-			if isinstance(entry, Menu):
-				if entry.Name == string:
-					return entry.parent.getPath(org)
-				if deep == True:
-					for submenu in self.Submenus:
-						submenu.searchMenu(string, hidden, deep, org)
+	# FIXME: Add searchEntry/seaqrchMenu function
+	# search for name/comment/genericname/desktopfileide
+	# return multiple items
 
 	def getEntry(self, desktopfileid, deep = False):
 		for entry in self.DeskEntries:
@@ -397,7 +381,14 @@ class MenuEntry:
 		self.Add = False
 		self.MatchedInclude = False
 		self.Filename = filename
-		# Can be one of Hidden/Empty/NotShowIn or True
+		# Can be one of System/User/Both
+		self.Type = ""
+		if xdg_data_home in self.DesktopEntry.filename \
+			or not os.path.isabs(self.DesktopEntry.filename):
+			self.Type = "User"
+		else:
+			self.Type = "System"
+		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
 		self.Show = True
 		# Caching
 		self.Categories = ""
@@ -407,7 +398,10 @@ class MenuEntry:
 		self.Categories = self.DesktopEntry.getCategories()
 
 	def save(self):
-		self.DesktopEntry.save(self.Filename)
+		if self.DesktopEntry.tainted:
+			if self.Type == "System":
+				self.Type = "Both"
+			self.DesktopEntry.save(self.Filename)
 
 	def __cmp__(self, other):
 		return cmp(self.DesktopEntry.getName(), other.DesktopEntry.getName())
@@ -943,6 +937,10 @@ class DesktopEntryCache:
 					continue
 
 				entry = MenuEntry(os.path.join(subdir,item), prefix, deskentry)
+				if xdg_data_home in dir:
+					entry.Type = "User"
+				else:
+					entry.Type = "System"
 				self.cacheEntries[dir].append(entry)
 				if legacy == True:
 					self.legacy.append(entry)
@@ -969,6 +967,11 @@ class DesktopEntryCache:
 				if entry.DesktopFileID not in ids:
 					ids.append(entry.DesktopFileID)
 					list.append(entry)
+				else:
+					i = list.index(entry)
+					e = list[i]
+					if e.Type == "User:"
+						e.Type = "Both"
 		if legacy == True:
 			self.cache[key] = list
 		return list
