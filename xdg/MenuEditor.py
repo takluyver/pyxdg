@@ -106,6 +106,7 @@ class MenuEditor:
 		pass
 
 	def moveEntry(self, entry, oldmenu, newmenu, after=None):
+		# FIXME: Also pass AppDirs around
 		pass
 
 	def moveMenu(self, menu, oldmenu, newmenu, after=None):
