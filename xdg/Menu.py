@@ -875,14 +875,14 @@ def sort(menu):
 					entry.Show = "NoDisplay"
 					menu.Visible -= 1
 				elif entry.Directory.getHidden() == True:
-					entry.Show = "Hide"
+					entry.Show = "Hidden"
 					menu.Visible -= 1
 		elif isinstance(entry, MenuEntry):
 			if entry.DesktopEntry.getNoDisplay() == True:
 				entry.Show = "NoDisplay"
 				menu.Visible -= 1
 			elif entry.DesktopEntry.getHidden() == True:
-				entry.Show = "Hide"
+				entry.Show = "Hidden"
 				menu.Visible -= 1
 			elif xdg.Config.windowmanager:
 				if ( entry.DesktopEntry.getOnlyShowIn() != [] and xdg.Config.windowmanager not in entry.DesktopEntry.getOnlyShowIn() ) \
