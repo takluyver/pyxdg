@@ -139,23 +139,19 @@ class MenuEditor:
 		return menu
 
 	def hideEntry(self, entry):
-		entry.DesktopEntry.set("NoDisplay", True)
 		entry.DesktopEntry.set("Hidden", True)
 		return entry
 
 	def unhideEntry(self, entry):
-		entry.DesktopEntry.set("NoDisplay", False)
 		entry.DesktopEntry.set("Hidden", False)
 		return entry
 
 	def hideMenu(self, menu):
 		# FIXME: What if a Menu has no .directory file
-		menu.Directory.set("NoDisplay", True)
 		menu.Directory.set("Hidden", True)
 		return menu
 
 	def unhideMenu(self, menu):
-		menu.Directory.set("NoDisplay", False)
 		menu.Directory.set("Hidden", False)
 		return menu
 

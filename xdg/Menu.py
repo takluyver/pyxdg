@@ -26,7 +26,7 @@ class Menu:
 		self.Depth = 0
 #		self.Parent = ""
 
-		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
+		# Can be one of Deleted/NoDisplay/Hidden/Empty/NotShowIn or True
 		self.Show = True
 		self.Visible = 0
 
@@ -871,11 +871,17 @@ def sort(menu):
 				entry.Show = "Deleted"
 				menu.Visible -= 1
 			elif entry.Directory:
-				if entry.Directory.getHidden() == True or entry.Directory.getNoDisplay() == True:
+				if entry.Directory.getNoDisplay() == True:
+					entry.Show = "NoDisplay"
+					menu.Visible -= 1
+				elif entry.Directory.getHidden() == True:
 					entry.Show = "Hide"
 					menu.Visible -= 1
 		elif isinstance(entry, MenuEntry):
-			if entry.DesktopEntry.getHidden() == True or entry.DesktopEntry.getNoDisplay() == True:
+			if entry.DesktopEntry.getNoDisplay() == True:
+				entry.Show = "NoDisplay"
+				menu.Visible -= 1
+			elif entry.DesktopEntry.getHidden() == True:
 				entry.Show = "Hide"
 				menu.Visible -= 1
 			elif xdg.Config.windowmanager:
