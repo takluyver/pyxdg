@@ -366,7 +366,6 @@ def do(entries, type, run):
 
 
 class MenuEntry:
-	# FIXME: detect if the menu was edited or is new by the user or is root item
 	"Wrapper for 'Menu Style' Desktop Entries"
 	def __init__(self, filename, prefix=None, entry=None):
 		if prefix:
@@ -592,35 +591,35 @@ def __postparse(menu):
 				menu.Layout = Layout()
 				menu.DefaultLayout = Layout()
 
+	# add parent's app/directory dirs
+	if menu.Depth > 0:
+		menu.AppDirs = menu.Parent.AppDirs + menu.AppDirs
+		menu.DirectoryDirs = menu.Parent.DirectoryDirs + menu.DirectoryDirs
+
+	# remove duplicates
+	menu.Directories = __removeDuplicates(menu.Directories)
+	menu.DirectoryDirs = __removeDuplicates(menu.DirectoryDirs)
+	menu.AppDirs = __removeDuplicates(menu.AppDirs)
+
+	# get the valid .directory file out of the list
+	entry = DesktopEntry()
+	for directory in menu.Directories:
+		for dir in menu.DirectoryDirs:
+			try:
+				entry.parse(os.path.join(dir, directory))
+				menu.Directory = entry
+				break
+			except:
+				pass
+
 	# go recursive through all menus
 	for submenu in menu.Submenus:
-		# add parent's app/directory dirs
-		submenu.AppDirs = menu.AppDirs + submenu.AppDirs
-		submenu.DirectoryDirs = menu.DirectoryDirs + submenu.DirectoryDirs
-
-		# remove duplicates
-		submenu.Directories = __removeDuplicates(submenu.Directories)
-		submenu.DirectoryDirs = __removeDuplicates(submenu.DirectoryDirs)
-		submenu.AppDirs = __removeDuplicates(submenu.AppDirs)
-
-		# reverse so handling is easier
-		submenu.Directories.reverse()
-		submenu.DirectoryDirs.reverse()
-		submenu.AppDirs.reverse()
-
-		# get the valid .directory file out of the list
-		entry = DesktopEntry()
-		for directory in submenu.Directories:
-			for dir in submenu.DirectoryDirs:
-				try:
-					entry.parse(os.path.join(dir, directory))
-					submenu.Directory = entry
-					break
-				except:
-					pass
-
-		# enter submenus
 		__postparse(submenu)
+
+	# reverse so handling is easier
+	menu.Directories.reverse()
+	menu.DirectoryDirs.reverse()
+	menu.AppDirs.reverse()
 
 # Menu parsing stuff
 def __parseMenu(child, filename, parent):
@@ -654,9 +653,7 @@ def __parseAppDir(value, filename, parent):
 		parent.AppDirs.append(value)
 
 def __parseDefaultAppDir(filename, parent):
-	dirs = xdg_data_dirs[:]
-	dirs.reverse()
-	for dir in dirs:
+	for dir in reversed(xdg_data_dirs):
 		__parseAppDir(os.path.join(dir, "applications"), filename, parent)
 
 def __parseDirectoryDir(value, filename, parent):
@@ -665,9 +662,7 @@ def __parseDirectoryDir(value, filename, parent):
 		parent.DirectoryDirs.append(value)
 
 def __parseDefaultDirectoryDir(filename, parent):
-	dirs = xdg_data_dirs[:]
-	dirs.reverse()
-	for dir in dirs:
+	for dir in reversed(xdg_data_dirs):
 		__parseDirectoryDir(os.path.join(dir, "desktop-directories"), filename, parent)
 
 # Merge Stuff
@@ -697,9 +692,7 @@ def __parseMergeDir(value, child, filename, parent):
 
 def __parseDefaultMergeDirs(child, filename, parent):
 	basename = os.path.splitext(os.path.basename(filename))[0]
-	dirs = xdg_config_dirs[:]
-	dirs.reverse()
-	for dir in dirs:
+	for dir in reversed(xdg_config_dirs):
 		__parseMergeDir(os.path.join(dir, "menus", basename + "-merged"), child, filename, parent)
 
 def __mergeFile(filename, child, parent):
@@ -917,8 +910,8 @@ class DesktopEntryCache:
 	"Class to cache Desktop Entries"
 	def __init__(self):
 		self.cacheEntries = {}
+		self.cacheEntries['legacy'] = []
 		self.cache = {}
-		self.legacy = []
 
 	def addEntries(self, dirs, prefix=None, legacy=False):
 		for dir in dirs:
@@ -943,35 +936,32 @@ class DesktopEntryCache:
 					entry.Type = "System"
 				self.cacheEntries[dir].append(entry)
 				if legacy == True:
-					self.legacy.append(entry)
+					self.cacheEntries['legacy'].append(entry)
 			elif os.path.isdir(os.path.join(dir,subdir,item)) and legacy == False:
 				self.__addFiles(dir, os.path.join(subdir,item), prefix, legacy)
 
 	def getEntries(self, dirs, legacy=True):
 		list = []
 		ids = []
+		# handle legacy items
+		appdirs = dirs[:]
+		if legacy == True:
+			appdirs.append("legacy")
 		# cache the results again
 		key = "".join(dirs)
 		try:
 			return self.cache[key]
 		except KeyError:
 			pass
-		for dir in dirs:
-			if self.cacheEntries.has_key(dir):
-				for entry in self.cacheEntries[dir]:
-					if entry.DesktopFileID not in ids:
-						ids.append(entry.DesktopFileID)
-						list.append(entry)
-		if legacy == True:
-			for entry in self.legacy:
+		for dir in appdirs:
+			for entry in self.cacheEntries[dir]:
 				if entry.DesktopFileID not in ids:
 					ids.append(entry.DesktopFileID)
 					list.append(entry)
-				else:
+				elif entry.Type != "User":
 					i = list.index(entry)
 					e = list[i]
-					if e.Type == "User:"
+					if e.Type == "User":
 						e.Type = "Both"
-		if legacy == True:
-			self.cache[key] = list
+		self.cache[key] = list
 		return list
