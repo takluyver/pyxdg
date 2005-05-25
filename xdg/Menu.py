@@ -135,25 +135,25 @@ class Menu:
 	def getName(self):
 		try:
 			return self.Directory.DesktopEntry.getName()
-		except:
+		except AttributeError:
 			return self.Name
 
 	def getGenericName(self):
 		try:
 			return self.Directory.DesktopEntry.getGenericName()
-		except:
+		except AttributeError:
 			return ""
 
 	def getComment(self):
 		try:
 			return self.Directory.DesktopEntry.getComment()
-		except:
+		except AttributeError:
 			return ""
 
 	def getIcon(self):
 		try:
 			return self.Directory.DesktopEntry.getIcon()
-		except:
+		except AttributeError:
 			return ""
 
 	""" PRIVATE STUFF """
