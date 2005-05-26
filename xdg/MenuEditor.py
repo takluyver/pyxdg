@@ -41,31 +41,12 @@ class MenuEditor:
 		self.__saveEntries(self.menu)
 		self.__saveMenu()
 
-	def __saveEntries(self, menu):
-		if not menu:
-			menu = self.menu
-		if isinstance(menu.Directory, MenuEntry):
-			menu.Directory.save()
-		for entry in menu.getEntries(hidden = True):
-			if isinstance(entry, MenuEntry):
-				entry.save()
-			elif isinstance(entry, Menu):
-				self.__saveEntries(entry)
-
-	def __saveMenu(self):
-		if not os.path.isdir(os.path.basename(self.filename)):
-			os.makedirs(os.path.basename(self.filename))
-		fd = open(self.filename, 'w')
-		fd.write(self.doc.toprettyxml().replace('<?xml version="1.0" ?>\n', ''))
-		fd.close()
-
 	def createEntry(self, parent, name, command=None, comment=None, icon=None, term=None, after=None):
 		filename = self.__getFileName(name, ".desktop")
 		entry = MenuEntry(filename)
 		entry = self.editEntry(entry, name, command, comment, icon, term)
 
 		# FIXME: Layout tag respecting after
-
 		parent.DeskEntries.append(entry)
 		sort(parent)
 
@@ -94,78 +75,16 @@ class MenuEditor:
 
 		return menu
 
-	def __getFileName(self, name, extension):
-		name = self.__getFixedName(name)
-
-		postfix = 0
-		while 1:
-			filename = name + "-" + str(postfix) + extension
-			if not os.path.isfile(os.path.join(xdg_data_dirs[0], filename)):
-				break
-			else:
-				postfix += 1
-
-		return filename
-
-	def __getFixedName(self, name):
-		chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456790"
-		for char in name:
-			if char not in chars:
-				name = name.replace(char, "")
-		return name
-
-	def __getXmlMenu(self, path, element=None):
-		if not element:
-			element = self.doc.documentElement
-
-		if "/" in path:
-			(name, path) = path.split("/", 1)
-		else:
-			name = path
-			path = ""
-
-		found = False
-		for node in element.childNodes:
-			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
-				for subnode in node.childNodes:
-					if subnode.nodeType == xml.dom.Node.ELEMENT_NODE and subnode.nodeName == 'Name':
-						if subnode.childNodes[0].nodeValue == name:
-							if path:
-								found = self.__getXmlMenu(path, node)
-							else:
-								found = node
-							break
-			if found:
-				break
-		if not found:
-			node = self.__addMenuElement(element, name)
-			if path:
-				found = self.__getXmlMenu(path, node)
-			else:
-				found = node
-
-		return found
-
-	def __addMenuElement(self, element, name):
-		node = self.doc.createElement('Menu')
-		self.__addTextElement(node, 'Name', name)
-		return element.appendChild(node)
-
-	def __addTextElement(self, element, name, text):
-		node = self.doc.createElement(name)
-		text = self.doc.createTextNode(text)
-		node.appendChild(text)
-		return element.appendChild(node)
-
-	def __addFilename(self, element, filename, type = "Include"):
-		node = self.doc.createElement(type)
-		node.appendChild(self.__addTextElement(node, 'Filename', filename))
-		return element.appendChild(node)
-
 	def moveEntry(self, entry, oldparent, newparent, after=None):
 		index = oldparent.DeskEntries.index(entry)
 		oldparent.DeskEntries.remove(index)
 		newparent.DeskEntries.append(entry)
+
+		#name, tmp = os.path.splitext(entry.DesktopFileID)
+		#self.__getFileName(name)
+		#new_entry = MenuEntry(self.__getFileName(name), "", DesktopEntry(entry.DesktopEntry.filename))
+		#new_entry.DesktopEntry.tainted = True
+		#newparent.DeskEntries.append(new_entry)
 
 		# FIXME: Layout tag respecting after
 		sort(oldparent)
@@ -176,6 +95,7 @@ class MenuEditor:
 		new_menu = self.__getXmlMenu(newparent)
 		self.__addFilename(old_menu, entry.DesktopFileID, "Exclude")
 		self.__addFilename(new_menu, entry.DesktopFileID, "Include")
+		#self.__addFilename(new_menu, new_entry.DesktopFileID, "Include")
 
 	def moveMenu(self, menu, oldparent, newparent, after=None):
 		index = oldparent.Submenus.index(menu)
@@ -188,12 +108,6 @@ class MenuEditor:
 
 		# FIXME: Also pass DirectoryDirs around
 		self.__addMove(self.doc, os.path.join(oldparent.getPath(), menu.Name), os.path.join(newparent.getPath(), menu.Name))
-
-	def __addMove(self, element, old, new):
-		node = self.doc.createElement("Move")
-		node.appendChild(self.__addTextElement(node, 'Old', old))
-		node.appendChild(self.__addTextElement(node, 'New', new))
-		return element.appendChild(node)
 
 	def editEntry(self, entry, name=None, genericname=None, comment=None, command=None, icon=None, term=None, hidden=None):
 		# FIXME: Also pass AppDirs around
@@ -284,3 +198,97 @@ class MenuEditor:
 
 	def deleteSeparator(self, separator):
 		pass
+
+	""" Private Stuff """
+	def __saveEntries(self, menu):
+		if not menu:
+			menu = self.menu
+		if isinstance(menu.Directory, MenuEntry):
+			menu.Directory.save()
+		for entry in menu.getEntries(hidden = True):
+			if isinstance(entry, MenuEntry):
+				entry.save()
+			elif isinstance(entry, Menu):
+				self.__saveEntries(entry)
+
+	def __saveMenu(self):
+		if not os.path.isdir(os.path.basename(self.filename)):
+			os.makedirs(os.path.basename(self.filename))
+		fd = open(self.filename, 'w')
+		fd.write(self.doc.toprettyxml().replace('<?xml version="1.0" ?>\n', ''))
+		fd.close()
+
+	def __getFileName(self, name, extension):
+		name = self.__getFixedName(name)
+
+		postfix = 0
+		prefix = "xdg-changed-"
+		while 1:
+			filename = prefix + name + "-" + str(postfix) + extension
+			if not os.path.isfile(os.path.join(xdg_data_dirs[0], filename)):
+				break
+			else:
+				postfix += 1
+
+		return filename
+
+	def __getFixedName(self, name):
+		chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456790"
+		for char in name:
+			if char not in chars:
+				name = name.replace(char, "")
+		return name
+
+	def __getXmlMenu(self, path, element=None):
+		if not element:
+			element = self.doc.documentElement
+
+		if "/" in path:
+			(name, path) = path.split("/", 1)
+		else:
+			name = path
+			path = ""
+
+		found = False
+		for node in element.childNodes:
+			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
+				for subnode in node.childNodes:
+					if subnode.nodeType == xml.dom.Node.ELEMENT_NODE and subnode.nodeName == 'Name':
+						if subnode.childNodes[0].nodeValue == name:
+							if path:
+								found = self.__getXmlMenu(path, node)
+							else:
+								found = node
+							break
+			if found:
+				break
+		if not found:
+			node = self.__addMenuElement(element, name)
+			if path:
+				found = self.__getXmlMenu(path, node)
+			else:
+				found = node
+
+		return found
+
+	def __addMenuElement(self, element, name):
+		node = self.doc.createElement('Menu')
+		self.__addTextElement(node, 'Name', name)
+		return element.appendChild(node)
+
+	def __addTextElement(self, element, name, text):
+		node = self.doc.createElement(name)
+		text = self.doc.createTextNode(text)
+		node.appendChild(text)
+		return element.appendChild(node)
+
+	def __addFilename(self, element, filename, type = "Include"):
+		node = self.doc.createElement(type)
+		node.appendChild(self.__addTextElement(node, 'Filename', filename))
+		return element.appendChild(node)
+
+	def __addMove(self, element, old, new):
+		node = self.doc.createElement("Move")
+		node.appendChild(self.__addTextElement(node, 'Old', old))
+		node.appendChild(self.__addTextElement(node, 'New', new))
+		return element.appendChild(node)
