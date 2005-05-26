@@ -34,7 +34,7 @@ class MenuEditor:
 			self.doc = xml.dom.minidom.parse(self.filename)
 		except IOError:
 			# FIXME use xdg_data_dir[1]
-			self.doc = xml.dom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">/etc/xdg/menus/applications.menu</MergeFile></Menu>')
+			self.doc = xml.dom.minidom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">/etc/xdg/menus/applications.menu</MergeFile></Menu>')
 		except xml.parsers.expat.ExpatError:
 			raise ParsingError('Not a valid .menu file', self.filename)
 
@@ -60,57 +60,103 @@ class MenuEditor:
 		fd.write(self.doc.toprettyxml().replace('<?xml version="1.0" ?>\n', ''))
 		fd.close()
 
-	def createEntry(self, menu, name, command=None, comment=None, icon=None, term=None, after=None):
+	def createEntry(self, parent, name, command=None, comment=None, icon=None, term=None, after=None):
 		filename = self.__getFileName(name, ".desktop")
-		menu_entry = MenuEntry(filename)
-		menu_entry = self.editEntry(menu_entry, name, command, comment, icon, term)
+		entry = MenuEntry(filename)
+		entry = self.editEntry(entry, name, command, comment, icon, term)
 
-		menu.DeskEntries.append(menu_entry)
-		sort(menu)
+		parent.DeskEntries.append(entry)
+		sort(parent)
 
 		# FIXME: create the xml
 		# FIXME: Layout tag respecting after
 
-		return menu_entry
+		return entry
 
-	def createMenu(self, menu, name, comment=None, icon=None, after=None):
+	def createMenu(self, parent, name, comment=None, icon=None, after=None):
+		# FIXME: name = name?
+		# FIXME: create Menu from path?
+		# FIXME: Menu names with "/"?
 		filename = self.__getFileName(name, ".directory")
-		new_menu = Menu()
-		new_menu.Name = name
-		new_menu.Directory = DesktopEntry(filename)
-		new_menu.Depth = menu.Depth + 1
-		new_menu = self.editMenu(new_menu, name, comment, icon)
+		menu = Menu()
+		menu.Name = name
+		menu.Directory = MenuEntry(filename)
+		menu = self.editMenu(menu, name, comment, icon)
 
-		menu.Submenus.append(new_menu)
+		# FIXME: Layout tag respecting after
+		menu.Layout = parent.DefaultLayout
+		menu.DefaultLayout = parent.DefaultLayout
+
+		parent.addSubmenu(menu)
 		sort(menu)
 
-		# FIXME: create the xml
-		# FIXME: Layout tag respecting after
+		xml_menu = self.__getXmlMenu(menu.getPath())
+		node = self.__addTextElement(xml_menu, 'Directory', filename)
 
-		return new_menu
+		return menu
 
 	def __getFileName(self, name, extension):
 		postfix = 0
-		while True:
+		while 1:
 			filename = name + "-" + str(postfix) + extension
-			if os.path.isfile(os.path.join(xdg_data_dirs[0], filename)):
+			if not os.path.isfile(os.path.join(xdg_data_dirs[0], filename)):
 				break
 			else:
 				postfix += 1
 		return filename
 
-	def __getMenu(self, item):
+	def __getXmlMenu(self, path, element=None):
 		# FIXME: return or create the xml node for the menu
-		pass
+		if not element:
+			element = self.doc.documentElement
+
+		if "/" in path:
+			(name, path) = path.split("/", 1)
+		else:
+			name = path
+			path = ""
+
+		found = False
+		for node in element.childNodes:
+			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
+				for subnode in node.childNodes:
+					if subnode.nodeType == xml.dom.Node.ELEMENT_NODE and subnode.nodeName == 'Name':
+						if subnode.childNodes[0].nodeValue == name:
+							if path:
+								found = self.__getXmlMenu(path, node)
+							else:
+								found = node
+							break
+			if found:
+				break
+		if not found:
+			node = self.__addMenuElement(element, name)
+			if path:
+				found = self.__getXmlMenu(path, node)
+			else:
+				found = node
+
+		return found
+
+	def __addMenuElement(self, element, name):
+		node = self.doc.createElement('Menu')
+		self.__addTextElement(node, 'Name', name)
+		return element.appendChild(node)
+
+	def __addTextElement(self, element, name, text):
+		node = self.doc.createElement(name)
+		text = self.doc.createTextNode(text)
+		node.appendChild(text)
+		return element.appendChild(node)
 
 	def createSeparator(self, menu, after=None):
 		pass
 
-	def moveEntry(self, entry, oldmenu, newmenu, after=None):
+	def moveEntry(self, entry, oldparent, newparent, after=None):
 		# FIXME: Also pass AppDirs around
 		pass
 
-	def moveMenu(self, menu, oldmenu, newmenu, after=None):
+	def moveMenu(self, menu, oldparent, newparent, after=None):
 		pass
 
 	def moveSeparator(self, separator, after=None):
@@ -134,11 +180,11 @@ class MenuEditor:
 	def editMenu(self, menu, name=None, comment=None, icon=None):
 		# FIXME: What if a Menu has no .directory file
 		if name:
-			menu.Directory.set("Name", name)
+			menu.Directory.DesktopEntry.set("Name", name)
 		if comment:
-			menu.Directory.set("Comment", comment)
+			menu.Directory.DesktopEntry.set("Comment", comment)
 		if icon:
-			menu.Directory.set("Icon", icon)
+			menu.Directory.DektopEntry.set("Icon", icon)
 		return menu
 
 	def hideEntry(self, entry):
@@ -153,11 +199,11 @@ class MenuEditor:
 
 	def hideMenu(self, menu):
 		# FIXME: What if a Menu has no .directory file
-		menu.Directory.set("Hidden", True)
+		menu.Directory.DesktopEntry.set("Hidden", True)
 		return menu
 
 	def unhideMenu(self, menu):
-		menu.Directory.set("Hidden", False)
+		menu.Directory.DesktopEntry.set("Hidden", False)
 		return menu
 
 	def deleteEntry(self, entry):

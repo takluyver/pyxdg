@@ -375,7 +375,7 @@ class MenuEntry:
 		if entry:
 			self.DesktopEntry = entry
 		else:
-			self.DesktopEntry = DesktopEntry(filename, "Application")
+			self.DesktopEntry = DesktopEntry(filename)
 		self.Allocated = False
 		self.Add = False
 		self.MatchedInclude = False
@@ -845,7 +845,7 @@ def sort(menu):
 			tmp_e.append(order[1])
 		elif order[0] == "Menuname":
 			tmp_s.append(order[1])
-
+	
 	for order in menu.Layout.order:
 		if order[0] == "Separator":
 			menu.Entries.append(Separator())
