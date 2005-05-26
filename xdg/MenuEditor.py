@@ -163,13 +163,37 @@ class MenuEditor:
 		return element.appendChild(node)
 
 	def moveEntry(self, entry, oldparent, newparent, after=None):
-		# FIXME: Also pass AppDirs around
+		index = oldparent.DeskEntries.index(entry)
+		oldparent.DeskEntries.remove(index)
+		newparent.DeskEntries.append(entry)
+
 		# FIXME: Layout tag respecting after
-		pass
+		sort(oldparent)
+		sort(newparent)
+
+		# FIXME: Also pass AppDirs around
+		old_menu = self.__getXmlMenu(oldparent)
+		new_menu = self.__getXmlMenu(newparent)
+		self.__addFilename(old_menu, entry.DesktopFileID, "Exclude")
+		self.__addFilename(new_menu, entry.DesktopFileID, "Include")
 
 	def moveMenu(self, menu, oldparent, newparent, after=None):
+		index = oldparent.Submenus.index(menu)
+		oldparent.Submenus.remove(index)
+		newparent.addSubmenu(menu)
+
 		# FIXME: Layout tag respecting after
-		pass
+		sort(oldparent)
+		sort(newparent)
+
+		# FIXME: Also pass DirectoryDirs around
+		self.__addMove(self.doc, os.path.join(oldparent.getPath(), menu.Name), os.path.join(newparent.getPath(), menu.Name))
+
+	def __addMove(self, element, old, new):
+		node = self.doc.createElement("Move")
+		node.appendChild(self.__addTextElement(node, 'Old', old))
+		node.appendChild(self.__addTextElement(node, 'New', new))
+		return element.appendChild(node)
 
 	def editEntry(self, entry, name=None, genericname=None, comment=None, command=None, icon=None, term=None, hidden=None):
 		# FIXME: Also pass AppDirs around
@@ -205,6 +229,7 @@ class MenuEditor:
 		return entry
 
 	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, hidden=None):
+		# FIXME: respect DirectoryDir
 		if isinstance(menu.Directory, MenuEntry):
 			deskentry = menu.Directory.DesktopEntry
 		else:
