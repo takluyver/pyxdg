@@ -33,8 +33,7 @@ class MenuEditor:
 		try:
 			self.doc = xml.dom.minidom.parse(self.filename)
 		except IOError:
-			# FIXME use xdg_data_dir[1]
-			self.doc = xml.dom.minidom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">/etc/xdg/menus/applications.menu</MergeFile></Menu>')
+			self.doc = xml.dom.minidom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">' + xdg_data_dirs[1] + '</MergeFile></Menu>')
 		except xml.parsers.expat.ExpatError:
 			raise ParsingError('Not a valid .menu file', self.filename)
 
@@ -45,7 +44,7 @@ class MenuEditor:
 	def __saveEntries(self, menu):
 		if not menu:
 			menu = self.menu
-		if isinstance(menu.Directory, DesktopEntry):
+		if isinstance(menu.Directory, MenuEntry):
 			menu.Directory.save()
 		for entry in menu.getEntries(hidden = True):
 			if isinstance(entry, MenuEntry):
@@ -65,23 +64,23 @@ class MenuEditor:
 		entry = MenuEntry(filename)
 		entry = self.editEntry(entry, name, command, comment, icon, term)
 
+		# FIXME: Layout tag respecting after
+
 		parent.DeskEntries.append(entry)
 		sort(parent)
 
-		# FIXME: create the xml
-		# FIXME: Layout tag respecting after
+		xml_menu = self.__getXmlMenu(parent.getPath())
+		self.__addFilename(xml_menu, filename, 'Include')
 
 		return entry
 
 	def createMenu(self, parent, name, comment=None, icon=None, after=None):
-		# FIXME: name = name?
-		# FIXME: create Menu from path?
-		# FIXME: Menu names with "/"?
 		filename = self.__getFileName(name, ".directory")
 		menu = Menu()
-		menu.Name = name
-		menu.Directory = MenuEntry(filename)
 		menu = self.editMenu(menu, name, comment, icon)
+
+		menuname = self.__getFixedName(name)
+		menu.Name = menuname
 
 		# FIXME: Layout tag respecting after
 		menu.Layout = parent.DefaultLayout
@@ -91,11 +90,13 @@ class MenuEditor:
 		sort(menu)
 
 		xml_menu = self.__getXmlMenu(menu.getPath())
-		node = self.__addTextElement(xml_menu, 'Directory', filename)
+		self.__addTextElement(xml_menu, 'Directory', filename)
 
 		return menu
 
 	def __getFileName(self, name, extension):
+		name = self.__getFixedName(name)
+
 		postfix = 0
 		while 1:
 			filename = name + "-" + str(postfix) + extension
@@ -103,10 +104,17 @@ class MenuEditor:
 				break
 			else:
 				postfix += 1
+
 		return filename
 
+	def __getFixedName(self, name):
+		chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456790"
+		for char in name:
+			if char not in chars:
+				name = name.replace(char, "")
+		return name
+
 	def __getXmlMenu(self, path, element=None):
-		# FIXME: return or create the xml node for the menu
 		if not element:
 			element = self.doc.documentElement
 
@@ -149,67 +157,104 @@ class MenuEditor:
 		node.appendChild(text)
 		return element.appendChild(node)
 
-	def createSeparator(self, menu, after=None):
-		pass
+	def __addFilename(self, element, filename, type = "Include"):
+		node = self.doc.createElement(type)
+		node.appendChild(self.__addTextElement(node, 'Filename', filename))
+		return element.appendChild(node)
 
 	def moveEntry(self, entry, oldparent, newparent, after=None):
 		# FIXME: Also pass AppDirs around
+		# FIXME: Layout tag respecting after
 		pass
 
 	def moveMenu(self, menu, oldparent, newparent, after=None):
+		# FIXME: Layout tag respecting after
 		pass
 
-	def moveSeparator(self, separator, after=None):
-		pass
+	def editEntry(self, entry, name=None, genericname=None, comment=None, command=None, icon=None, term=None, hidden=None):
+		# FIXME: Also pass AppDirs around
+		deskentry = entry.DesktopEntry
 
-	def editEntry(self, entry, name=None, comment=None, command=None, icon=None, term=None):
-		# FIXME: locale options
-		# FIXME: Set X-PyXDG-Edited / X-PyXDG-New
 		if name:
-			entry.DesktopEntry.set("Name", name)
-		if command:
-			entry.DesktopEntry.set("Command", command)
+			if not deskentry.hasKey("Name"):
+				deskentry.set("Name", name)
+			deskentry.set("Name", name, locale = True)
 		if comment:
-			entry.DesktopEntry.set("Comment", comment)
+			if not deskentry.hasKey("Comment"):
+				deskentry.set("Comment", comment)
+			deskentry.set("Comment", comment, locale = True)
+		if genericname:
+			if not deskentry.hasKey("GnericNe"):
+				deskentry.set("GenericName", genericname)
+			deskentry.set("GenericName", genericname, locale = True)
+		if command:
+			deskentry.set("Command", command)
 		if icon:
-			entry.DesktopEntry.set("Icon", icon)
-		if term:
-			entry.DesktopEntry.set("Terminal", term)
+			deskentry.set("Icon", icon)
+
+		if term == True:
+			deskentry.set("Terminal", "true")
+		elif term == False:
+			deskentry.set("Terminal", "false")
+
+		if hidden == True:
+			deskentry.set("Hidden", "true")
+		elif hidden == False:
+			deskentry.set("Hidden", "false")
+
 		return entry
 
-	def editMenu(self, menu, name=None, comment=None, icon=None):
-		# FIXME: What if a Menu has no .directory file
+	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, hidden=None):
+		if isinstance(menu.Directory, MenuEntry):
+			deskentry = menu.Directory.DesktopEntry
+		else:
+			deskentry = MenuEntry(self.__getFileName(name))
+			menu.Directory = deskentry
+
 		if name:
-			menu.Directory.DesktopEntry.set("Name", name)
+			if not deskentry.hasKey("Name"):
+				deskentry.set("Name", name)
+			deskentry.set("Name", name, locale = True)
+		if genericname:
+			if not deskentry.hasKey("GenericName"):
+				deskentry.set("GenericName", genericname)
+			deskentry.set("GenericName", genericname, locale = True)
 		if comment:
-			menu.Directory.DesktopEntry.set("Comment", comment)
+			if not deskentry.hasKey("Comment"):
+				deskentry.set("Comment", comment)
+			deskentry.set("Comment", comment, locale = True)
 		if icon:
-			menu.Directory.DektopEntry.set("Icon", icon)
+			deskentry.set("Icon", icon)
+
+		if hidden == True:
+			deskentry.set("Hidden", "true")
+		elif hidden == False:
+			deskentry.set("Hidden", "false")
+
 		return menu
 
 	def hideEntry(self, entry):
-		# FIXME what to set NoDisplay or Hidden?
-		entry.DesktopEntry.set("NoDisplay", True)
-		return entry
+		return self.editEntry(entry, hidden=True)
 
 	def unhideEntry(self, entry):
-		# FIXME what to set NoDisplay or Hidden?
-		entry.DesktopEntry.set("NoDisplay", False)
-		return entry
+		return self.editEntry(entry, hidden=False)
 
 	def hideMenu(self, menu):
-		# FIXME: What if a Menu has no .directory file
-		menu.Directory.DesktopEntry.set("Hidden", True)
-		return menu
+		return self.editMenu(menu, hidden=True)
 
 	def unhideMenu(self, menu):
-		menu.Directory.DesktopEntry.set("Hidden", False)
-		return menu
+		return self.editMenu(menu, hidden=False)
 
 	def deleteEntry(self, entry):
 		pass
 
 	def deleteMenu(self, menu):
+		pass
+
+	def createSeparator(self, parent, after=None):
+		pass
+
+	def moveSeparator(self, separator, after=None):
 		pass
 
 	def deleteSeparator(self, separator):
