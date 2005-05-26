@@ -5,7 +5,7 @@ from xdg.BaseDirectory import *
 from xdg.Exceptions import *
 from xdg.DesktopEntry import *
 
-import Xml.dom.minidom
+import xml.dom.minidom
 import os
 
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
@@ -34,10 +34,10 @@ class MenuEditor:
 			self.filename = os.path.join(xdg_config_dirs[0], "menus", "applications.menu")
 
 		try:
-			self.doc = Xml.dom.minidom.parse(self.filename)
+			self.doc = xml.dom.minidom.parse(self.filename)
 		except IOError:
-			self.doc = Xml.dom.minidom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">' + xdg_config_dirs[1] + '/menus/applications.menu</MergeFile></Menu>')
-		except Xml.parsers.expat.ExpatError:
+			self.doc = xml.dom.minidom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">' + xdg_config_dirs[1] + '/menus/applications.menu</MergeFile></Menu>')
+		except xml.parsers.expat.ExpatError:
 			raise ParsingError('Not a valid .menu file', self.filename)
 
 	def save(self):
@@ -310,12 +310,12 @@ class MenuEditor:
 
 		found = False
 		for node in element.childNodes:
-			if node.nodeType == Xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
+			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
 				if path == "":
 					found = node
 					break
 				for subnode in node.childNodes:
-					if subnode.nodeType == Xml.dom.Node.ELEMENT_NODE and subnode.nodeName == 'Name':
+					if subnode.nodeType == xml.dom.Node.ELEMENT_NODE and subnode.nodeName == 'Name':
 						if subnode.childNodes[0].nodeValue == name:
 							if path:
 								found = self.__getXmlMenu(path, node)
@@ -358,7 +358,7 @@ class MenuEditor:
 	def __addXmlLayout(self, element, layout):
 		# remove old layout
 		for node in element.childNodes:
-			if node.nodeType == Xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Layout':
+			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Layout':
 				element.removeChild(node)
 				break
 
@@ -396,7 +396,7 @@ class MenuEditor:
 
 		return entry
 
-	def __addLayout(self, parent)
+	def __addLayout(self, parent):
 		layout = Layout()
 		layout.order = []
 		layout.show_empty = parent.Layout.show_empty
