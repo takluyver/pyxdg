@@ -41,6 +41,9 @@ xdg_config_home = os.environ.get('XDG_CONFIG_HOME',
 xdg_config_dirs = [xdg_config_home] + \
 	os.environ.get('XDG_CONFIG_DIRS', '/etc/xdg').split(':')
 
+xdg_cache_home = os.environ.get('XDG_CACHE_HOME',
+			os.path.join(_home, '.cache'))
+
 xdg_data_dirs = filter(lambda x: x, xdg_data_dirs)
 xdg_config_dirs = filter(lambda x: x, xdg_config_dirs)
 
