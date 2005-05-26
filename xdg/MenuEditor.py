@@ -215,7 +215,7 @@ class MenuEditor:
 		if not os.path.isdir(os.path.dirname(self.filename)):
 			os.makedirs(os.path.dirname(self.filename))
 		fd = open(self.filename, 'w')
-		fd.write(self.doc.toprettyxml().replace('<?xml version="1.0" ?>\n', ''))
+		fd.write(self.doc.toxml().replace('<?xml version="1.0" ?>\n', ''))
 		fd.close()
 
 	def __getFileName(self, name, extension):
