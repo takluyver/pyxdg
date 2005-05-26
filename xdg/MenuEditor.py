@@ -33,7 +33,7 @@ class MenuEditor:
 		try:
 			self.doc = xml.dom.minidom.parse(self.filename)
 		except IOError:
-			self.doc = xml.dom.minidom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">' + xdg_data_dirs[1] + '</MergeFile></Menu>')
+			self.doc = xml.dom.minidom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">' + xdg_config_dirs[1] + '/menus/applications.menu</MergeFile></Menu>')
 		except xml.parsers.expat.ExpatError:
 			raise ParsingError('Not a valid .menu file', self.filename)
 
@@ -109,7 +109,7 @@ class MenuEditor:
 		# FIXME: Also pass DirectoryDirs around
 		self.__addMove(self.doc, os.path.join(oldparent.getPath(), menu.Name), os.path.join(newparent.getPath(), menu.Name))
 
-	def editEntry(self, entry, name=None, genericname=None, comment=None, command=None, icon=None, term=None, hidden=None):
+	def editEntry(self, entry, name=None, genericname=None, comment=None, command=None, icon=None, term=None, nodisplay=None):
 		# FIXME: Also pass AppDirs around
 		deskentry = entry.DesktopEntry
 
@@ -135,14 +135,14 @@ class MenuEditor:
 		elif term == False:
 			deskentry.set("Terminal", "false")
 
-		if hidden == True:
-			deskentry.set("Hidden", "true")
-		elif hidden == False:
-			deskentry.set("Hidden", "false")
+		if nodisplay == True:
+			deskentry.set("NoDisplay", "true")
+		elif nodisplay == False:
+			deskentry.set("NoDisplay", "false")
 
 		return entry
 
-	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, hidden=None):
+	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, nodisplay=None):
 		# FIXME: respect DirectoryDir
 		if isinstance(menu.Directory, MenuEntry):
 			deskentry = menu.Directory.DesktopEntry
@@ -165,24 +165,24 @@ class MenuEditor:
 		if icon:
 			deskentry.set("Icon", icon)
 
-		if hidden == True:
-			deskentry.set("Hidden", "true")
-		elif hidden == False:
-			deskentry.set("Hidden", "false")
+		if nodisplay == True:
+			deskentry.set("NoDisplay", "true")
+		elif nodisplay == False:
+			deskentry.set("NoDisplay", "false")
 
 		return menu
 
 	def hideEntry(self, entry):
-		return self.editEntry(entry, hidden=True)
+		return self.editEntry(entry, nodisplay=True)
 
 	def unhideEntry(self, entry):
-		return self.editEntry(entry, hidden=False)
+		return self.editEntry(entry, nodisplay=False)
 
 	def hideMenu(self, menu):
-		return self.editMenu(menu, hidden=True)
+		return self.editMenu(menu, nodisplay=True)
 
 	def unhideMenu(self, menu):
-		return self.editMenu(menu, hidden=False)
+		return self.editMenu(menu, nodisplay=False)
 
 	def deleteEntry(self, entry):
 		pass
@@ -205,7 +205,7 @@ class MenuEditor:
 			menu = self.menu
 		if isinstance(menu.Directory, MenuEntry):
 			menu.Directory.save()
-		for entry in menu.getEntries(hidden = True):
+		for entry in menu.getEntries(hidden=True):
 			if isinstance(entry, MenuEntry):
 				entry.save()
 			elif isinstance(entry, Menu):

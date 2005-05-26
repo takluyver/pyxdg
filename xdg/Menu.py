@@ -878,7 +878,7 @@ def sort(menu):
 			if entry.Deleted == True:
 				entry.Show = "Deleted"
 				menu.Visible -= 1
-			elif entry.Directory:
+			elif isinstance(entry.Directory, MenuEntry):
 				if entry.Directory.DesktopEntry.getNoDisplay() == True:
 					entry.Show = "NoDisplay"
 					menu.Visible -= 1
