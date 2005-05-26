@@ -291,8 +291,8 @@ class IniFile:
 		if not group:
 			group = self.defaultGroup
 
-		if locale == True and len(xdg.Locale) > 0:
-			key = key + "[" + xdg.Locale.lang[0] + "]"
+		if locale == True and len(xdg.Locale.langs) > 0:
+			key = key + "[" + xdg.Locale.langs[0] + "]"
 
 		try:
 			if isinstance(value, unicode):

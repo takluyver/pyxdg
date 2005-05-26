@@ -46,12 +46,13 @@ class MenuEditor:
 		entry = MenuEntry(filename)
 		entry = self.editEntry(entry, name, command, comment, icon, term)
 
-		# FIXME: Layout tag respecting after
-		parent.DeskEntries.append(entry)
-		sort(parent)
+		self.__addEntry(parent, entry, after)
 
 		xml_menu = self.__getXmlMenu(parent.getPath())
 		self.__addFilename(xml_menu, filename, 'Include')
+
+		if after:
+			self.__addLayout(xml_menu, parent.Layout)
 
 		return entry
 
@@ -63,22 +64,23 @@ class MenuEditor:
 		menuname = self.__getFixedName(name)
 		menu.Name = menuname
 
-		# FIXME: Layout tag respecting after
 		menu.Layout = parent.DefaultLayout
 		menu.DefaultLayout = parent.DefaultLayout
 
-		parent.addSubmenu(menu)
-		sort(menu)
+		self.__addEntry(parent, menu, after)
 
 		xml_menu = self.__getXmlMenu(menu.getPath())
 		self.__addTextElement(xml_menu, 'Directory', filename)
+
+		if after:
+			self.__addLayout(xml_menu, parent.Layout)
 
 		return menu
 
 	def moveEntry(self, entry, oldparent, newparent, after=None):
 		index = oldparent.DeskEntries.index(entry)
 		oldparent.DeskEntries.remove(index)
-		newparent.DeskEntries.append(entry)
+		sort(oldparent)
 
 		#name, tmp = os.path.splitext(entry.DesktopFileID)
 		#self.__getFileName(name)
@@ -86,9 +88,7 @@ class MenuEditor:
 		#new_entry.DesktopEntry.tainted = True
 		#newparent.DeskEntries.append(new_entry)
 
-		# FIXME: Layout tag respecting after
-		sort(oldparent)
-		sort(newparent)
+		self.__addEntry(newparent, entry, after)
 
 		# FIXME: Also pass AppDirs around
 		old_menu = self.__getXmlMenu(oldparent)
@@ -97,17 +97,27 @@ class MenuEditor:
 		self.__addFilename(new_menu, entry.DesktopFileID, "Include")
 		#self.__addFilename(new_menu, new_entry.DesktopFileID, "Include")
 
+		if after:
+			self.__addLayout(new_menu, newparent.Layout)
+
+		return entry
+
 	def moveMenu(self, menu, oldparent, newparent, after=None):
 		index = oldparent.Submenus.index(menu)
 		oldparent.Submenus.remove(index)
-		newparent.addSubmenu(menu)
-
-		# FIXME: Layout tag respecting after
 		sort(oldparent)
-		sort(newparent)
+
+		self.__addEntry(newparent, menu, after)
 
 		# FIXME: Also pass DirectoryDirs around
+		old_menu = self.__getXmlMenu(oldparent)
+		new_menu = self.__getXmlMenu(newparent)
 		self.__addMove(self.doc, os.path.join(oldparent.getPath(), menu.Name), os.path.join(newparent.getPath(), menu.Name))
+
+		if after:
+			self.__addLayout(new_menu, newparent.Layout)
+
+		return menu
 
 	def editEntry(self, entry, name=None, genericname=None, comment=None, command=None, icon=None, term=None, nodisplay=None):
 		# FIXME: Also pass AppDirs around
@@ -226,7 +236,11 @@ class MenuEditor:
 		while 1:
 			#filename = prefix + name + "-" + str(postfix) + extension
 			filename = name + "-" + str(postfix) + extension
-			if not os.path.isfile(os.path.join(xdg_data_dirs[0], filename)):
+			if extension == ".desktop":
+				dir = "applications"
+			elif extension == ".directory":
+				dir = "desktop-directories"
+			if not os.path.isfile(os.path.join(xdg_data_dirs[0], dir, filename)):
 				break
 			else:
 				postfix += 1
@@ -242,7 +256,7 @@ class MenuEditor:
 
 	def __getXmlMenu(self, path, element=None):
 		if not element:
-			element = self.doc.documentElement
+			element = self.doc
 
 		if "/" in path:
 			(name, path) = path.split("/", 1)
@@ -253,6 +267,9 @@ class MenuEditor:
 		found = False
 		for node in element.childNodes:
 			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
+				if path == "":
+					found = node
+					break
 				for subnode in node.childNodes:
 					if subnode.nodeType == xml.dom.Node.ELEMENT_NODE and subnode.nodeName == 'Name':
 						if subnode.childNodes[0].nodeValue == name:
@@ -293,3 +310,62 @@ class MenuEditor:
 		node.appendChild(self.__addTextElement(node, 'Old', old))
 		node.appendChild(self.__addTextElement(node, 'New', new))
 		return element.appendChild(node)
+
+	def __addLayout(self, element, layout):
+		# remove old layout
+		for node in element.childNodes:
+			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Layout':
+				element.removeChild(node)
+				break
+
+		# add new layout
+		node = self.doc.createElement("Layout")
+		for order in layout.order:
+			if order[0] == "Separator":
+				child = self.doc.createElement("Separator")
+				node.appendChild(child)
+			elif order[0] == "Filename":
+				child = self.__addTextElement(node, "Filename", order[1])
+			elif order[0] == "Menuname":
+				child = self.__addTextElement(node, "Menuname", order[1])
+			elif order[0] == "Merge":
+				child = self.doc.createElement("Merge")
+				child.setAttribute("type", order[1])
+				node.appendChild(child)
+		return element.appendChild(node)
+
+	def __addEntry(self, parent, entry, after):
+		if after:
+			index = parent.Entries.index(after) + 1
+			if index > len(parent.Entries):
+				parent.Entries.append(entry)
+			else:
+				parent.Entries.insert(index, entry)
+		else:
+			parent.Entries.append(entry)
+
+		if isinstance(entry, Menu):
+			parent.Submenus.add(entry)
+		elif isinstance(entry, MenuEntry):
+			parent.DeskEntries.append(entry)
+
+		if after:
+			layout = Layout()
+			layout.order = []
+			layout.show_empty = parent.Layout.show_empty
+			layout.inline = parent.Layout.inline
+			layout.inline_header = parent.Layout.inline_header
+			layout.inline_alias = parent.Layout.inline_alias
+			layout.inline_limit = parent.Layout.inline_limit
+			layout.order.append(["Merge", "menus"])
+			for entry in parent.Entries:
+				if isinstance(entry, Menu):
+					layout.parseMenuname(entry.Name)
+				elif isinstance(entry, MenuEntry):
+					layout.parseFilename(entry.DesktopFileID)
+				elif isinstance(entry, Separator):
+					layout.parseSeparator()
+			layout.order.append(["Merge", "files"])
+			parent.Layout = layout
+
+		sort(parent)
