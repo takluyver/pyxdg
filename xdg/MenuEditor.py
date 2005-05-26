@@ -222,9 +222,10 @@ class MenuEditor:
 		name = self.__getFixedName(name)
 
 		postfix = 0
-		prefix = "xdg-changed-"
+		#prefix = "xdg-changed-"
 		while 1:
-			filename = prefix + name + "-" + str(postfix) + extension
+			#filename = prefix + name + "-" + str(postfix) + extension
+			filename = name + "-" + str(postfix) + extension
 			if not os.path.isfile(os.path.join(xdg_data_dirs[0], filename)):
 				break
 			else:
