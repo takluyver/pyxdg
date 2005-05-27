@@ -9,8 +9,10 @@ import xml.dom.minidom
 import os
 
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
-# FIXME: unod/redo function / remove menu...
 # FIXME: More Layout stuff
+# FIXME: unod/redo function / remove menu...
+# FIXME: Advanced MenuEditing Stuff: LegacyDir/MergeFile
+#        Complex Rules/Deleted/OnlyAllocated/AppDirs/DirectoryDirs
 
 class MenuEditor:
 	def __init__(self, menu=None, filename=None):
@@ -474,4 +476,3 @@ class MenuEditor:
 				if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.nodeName == "Directory":
 					return True
 		return False
-
