@@ -320,7 +320,7 @@ class MenuEditor:
 		found = False
 		for node in element.childNodes:
 			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
-				if not "/" in path and element = self.doc:
+				if not "/" in path and element == self.doc:
 					found = node
 					break
 				for subnode in node.childNodes:
