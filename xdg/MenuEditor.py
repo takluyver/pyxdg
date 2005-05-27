@@ -48,11 +48,12 @@ class MenuEditor:
 		# create the entry
 		filename = self.__getFileName(name, ".desktop")
 		entry = MenuEntry(filename)
+		entry.Menus.append(parent)
 		entry = self.editEntry(entry, name, command, comment, icon, term)
 		self.__addEntry(parent, entry, after)
 
 		# create the xml
-		xml_menu = self.__getXmlMenu(parent.getPath())
+		xml_menu = self.__getXmlMenu(parent.getPath(True))
 		self.__addXmlFilename(xml_menu, filename, 'Include')
 
 		# layout stuff
@@ -79,7 +80,7 @@ class MenuEditor:
 		self.__addEntry(parent, menu, after)
 
 		# create the xml
-		xml_menu = self.__getXmlMenu(menu.getPath())
+		xml_menu = self.__getXmlMenu(menu.getPath(True))
 		self.__addXmlTextElement(xml_menu, 'Directory', filename)
 
 		# layout stuff
@@ -106,13 +107,13 @@ class MenuEditor:
 
 	def moveEntry(self, entry, oldparent, newparent, after=None):
 		# remove the entry
-		index = oldparent.DeskEntries.index(entry)
-		oldparent.DeskEntries.remove(index)
-		index = oldparent.Entries.index(entry)
-		oldparent.Entries.remove(index)
+		oldparent.DeskEntries.remove(entry)
+		oldparent.Entries.remove(entry)
+		entry.Menus.remove(oldparent)
 		sort(oldparent)
 
 		self.__addEntry(newparent, entry, after)
+		entry.Menus.append(newparent)
 		sort(newparent)
 
 		# create the xml
@@ -132,10 +133,8 @@ class MenuEditor:
 
 	def moveMenu(self, menu, oldparent, newparent, after=None):
 		# remove the entry
-		index = oldparent.Submenus.index(menu)
-		oldparent.Submenus.remove(index)
-		index = oldparent.Entries.index(menu)
-		oldparent.Entries.remove(index)
+		oldparent.Submenus.remove(entry)
+		oldparent.Entries.remove(entry)
 		sort(oldparent)
 
 		self.__addEntry(newparent, menu, after)
@@ -144,7 +143,7 @@ class MenuEditor:
 		# create the xml
 		old_menu = self.__getXmlMenu(oldparent)
 		new_menu = self.__getXmlMenu(newparent)
-		self.__addXmlMove(self.doc, os.path.join(oldparent.getPath(), menu.Name), os.path.join(newparent.getPath(), menu.Name))
+		self.__addXmlMove(self.doc, os.path.join(oldparent.getPath(True), menu.Name), os.path.join(newparent.getPath(True), menu.Name))
 
 		# layout stuff
 		if after:
@@ -231,17 +230,26 @@ class MenuEditor:
 		return menu
 
 	def hideEntry(self, entry):
-		return self.editEntry(entry, nodisplay=True)
+		entry = self.editEntry(entry, nodisplay=True)
+		for menu in entry.Menus:
+			sort(menu)
+		return entry
 
 	def unhideEntry(self, entry):
-		return self.editEntry(entry, nodisplay=False)
+		entry = self.editEntry(entry, nodisplay=False)
+		for menu in entry.Menus:
+			sort(menu)
+		return entry
 
 	def hideMenu(self, menu):
-		return self.editMenu(menu, nodisplay=True)
+		menu = self.editMenu(menu, nodisplay=True)
+		sort(menu.Parent)
+		return menu
 
 	def unhideMenu(self, menu):
-		return self.editMenu(menu, nodisplay=False)
-
+		menu = self.editMenu(menu, nodisplay=False)
+		sort(menu.Parent)
+		return menu
 
 	def deleteEntry(self, entry):
 		pass
@@ -269,7 +277,7 @@ class MenuEditor:
 		if not os.path.isdir(os.path.dirname(self.filename)):
 			os.makedirs(os.path.dirname(self.filename))
 		fd = open(self.filename, 'w')
-		fd.write(self.doc.toXml().replace('<?xml version="1.0" ?>\n', ''))
+		fd.write(self.doc.toxml().replace('<?xml version="1.0" ?>\n', ''))
 		fd.close()
 
 	def __getFileName(self, name, extension):

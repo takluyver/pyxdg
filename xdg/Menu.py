@@ -380,6 +380,7 @@ class MenuEntry:
 		self.Add = False
 		self.MatchedInclude = False
 		self.Filename = filename
+		self.Menus = []
 		# Can be one of System/User/Both
 		self.Type = ""
 		if xdg_data_home in self.DesktopEntry.filename \
@@ -803,6 +804,7 @@ def __genmenuNotOnlyAllocated(menu):
 			entries = rule.do(tmp["cache"].getEntries(menu.AppDirs), rule.Type, 1)
 		for entry in entries:
 		    if entry.Add == True:
+				entry.Menus.append(menu)
 				entry.Add = False
 				entry.Allocated = True
 				menu.DeskEntries.append(entry)
@@ -818,6 +820,7 @@ def __genmenuOnlyAllocated(menu):
 			entries = rule.do(tmp["cache"].getEntries(menu.AppDirs), rule.Type, 2)
 		for entry in entries:
 		    if entry.Add == True:
+				entry.Menus.append(menu)
 			#	entry.Add = False
 			#	entry.Allocated = True
 				menu.DeskEntries.append(entry)
