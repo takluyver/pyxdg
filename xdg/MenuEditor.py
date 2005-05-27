@@ -48,7 +48,7 @@ class MenuEditor:
 		# create the entry
 		filename = self.__getFileName(name, ".desktop")
 		entry = MenuEntry(filename)
-		entry.Menus.append(parent)
+		entry.Parents.append(parent)
 		entry = self.editEntry(entry, name, command, comment, icon, term)
 		self.__addEntry(parent, entry, after)
 
@@ -109,11 +109,11 @@ class MenuEditor:
 		# remove the entry
 		oldparent.DeskEntries.remove(entry)
 		oldparent.Entries.remove(entry)
-		entry.Menus.remove(oldparent)
+		entry.Parents.remove(oldparent)
 		sort(oldparent)
 
 		self.__addEntry(newparent, entry, after)
-		entry.Menus.append(newparent)
+		entry.Parents.append(newparent)
 		sort(newparent)
 
 		# create the xml
@@ -250,10 +250,11 @@ class MenuEditor:
 		return menu
 
 
+	# FIXME: remove xml / Include Filename / Menu
 	def deleteEntry(self, entry):
 		if entry.Type == "Both":
 			os.remove(entry.DesktopEntry.filename)
-			for parent in entry.Menus:
+			for parent in entry.Parents:
 				index = parent.Entries.index(entry)
 				parent.Entries[index] = entry.Original
 				index = parent.DeskEntries.index(entry)
@@ -269,13 +270,16 @@ class MenuEditor:
 		if menu.Directory.Type == "Both":
 			os.remove(menu.Directory.DesktopEntry.filename)
 			menu.Directory = menu.Directory.Original
+			sort(menu.Parent)
 		elif menu.Directory.Type == "User":
 			os.remove(menu.Directory.DesktopEntry.filename)
 			menu.Directory = None
 		return menu
 
 	def deleteSeparator(self, separator):
-		pass
+		separator.Parent.Entries.remove(separator)
+		self.__addLayout(parent)
+		return separator
 
 
 	""" Private Stuff """

@@ -382,7 +382,7 @@ class MenuEntry:
 		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
 		self.Show = True
 		self.Filename = filename
-		self.Menus = []
+		self.Parents = []
 
 		# Can be one of System/User/Both
 		self.Type = ""
@@ -391,7 +391,7 @@ class MenuEntry:
 			self.Type = "User"
 		else:
 			self.Type = "System"
-		self.Original = ""
+		self.Original = None
 
 		# Private Stuff
 		self.Allocated = False
@@ -416,6 +416,9 @@ class MenuEntry:
 				# set self.Type
 				if self.Type == "System":
 					self.Type = "Both"
+					self.Original = MenuEntry(self.DesktopEntry.filename)
+					self.Original.DesktopFileID = self.DesktopFileID
+					self.Original.filename = self.filename
 
 				if self.DesktopEntry.getType() == "Application":
 					path = os.path.join(xdg_data_dirs[0], "applications")
@@ -442,7 +445,8 @@ class MenuEntry:
 
 class Separator:
 	"Just a dummy class for Separators"
-	pass
+	def __init__(parent):
+		self.Parent = parent
 
 
 class Header:
@@ -860,7 +864,7 @@ def sort(menu):
 	
 	for order in menu.Layout.order:
 		if order[0] == "Separator":
-			menu.Entries.append(Separator())
+			menu.Entries.append(Separator(menu))
 		elif order[0] == "Filename":
 			entry = menu.getEntry(order[1])
 			if entry:
