@@ -100,7 +100,7 @@ class MenuEditor:
 		self.__addLayout(parent)
 
 		# create the xml and layout stuff
-		menu = self.__getXmlMenu(parent)
+		menu = self.__getXmlMenu(parent.getPath(True, True))
 		self.__addXmlLayout(menu, parent.Layout)
 
 		return separator
@@ -117,8 +117,8 @@ class MenuEditor:
 		sort(newparent)
 
 		# create the xml
-		old_menu = self.__getXmlMenu(oldparent)
-		new_menu = self.__getXmlMenu(newparent)
+		old_menu = self.__getXmlMenu(oldparent.getPath(True, True))
+		new_menu = self.__getXmlMenu(newparent.getPath(True, True))
 		self.__addXmlFilename(old_menu, entry.DesktopFileID, "Exclude")
 		self.__addXmlFilename(new_menu, entry.DesktopFileID, "Include")
 
@@ -141,8 +141,8 @@ class MenuEditor:
 		sort(newparent)
 
 		# create the xml
-		old_menu = self.__getXmlMenu(oldparent)
-		new_menu = self.__getXmlMenu(newparent)
+		old_menu = self.__getXmlMenu(oldparent.getPath(True, True))
+		new_menu = self.__getXmlMenu(newparent.getPath(True, True))
 		self.__addXmlMove(self.doc, os.path.join(oldparent.getPath(True), menu.Name), os.path.join(newparent.getPath(True), menu.Name))
 
 		# layout stuff
@@ -163,7 +163,7 @@ class MenuEditor:
 		self.__addEntry(parent, separator, after)
 
 		# create the xml and layout stuff
-		menu = self.__getXmlMenu(parent)
+		menu = self.__getXmlMenu(parent.getPath(True, True))
 		self.__addXmlLayout(menu, parent.Layout)
 
 		return separator
@@ -320,9 +320,6 @@ class MenuEditor:
 		found = False
 		for node in element.childNodes:
 			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
-				if not "/" in path and element == self.doc:
-					found = node
-					break
 				for subnode in node.childNodes:
 					if subnode.nodeType == xml.dom.Node.ELEMENT_NODE and subnode.nodeName == 'Name':
 						if subnode.childNodes[0].nodeValue == name:
