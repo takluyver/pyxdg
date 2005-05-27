@@ -418,7 +418,7 @@ class MenuEntry:
 					self.Type = "Both"
 					self.Original = MenuEntry(self.DesktopEntry.filename)
 					self.Original.DesktopFileID = self.DesktopFileID
-					self.Original.filename = self.filename
+					self.Original.Filename = self.Filename
 					self.Original.Dir = self.Dir
 
 				if self.DesktopEntry.getType() == "Application":

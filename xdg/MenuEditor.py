@@ -44,20 +44,20 @@ class MenuEditor:
 		self.__saveEntries(self.menu)
 		self.__saveMenu()
 
-	def createEntry(self, parent, name, command=None, comment=None, icon=None, term=None, after=None):
+	def createEntry(self, parent, name, command=None, comment=None, icon=None, term=None, after=None, before=None):
 		# create the entry
 		filename = self.__getFileName(name, ".desktop")
 		entry = MenuEntry(filename)
 		entry.Parents.append(parent)
 		entry = self.editEntry(entry, name, command, comment, icon, term)
-		self.__addEntry(parent, entry, after)
+		self.__addEntry(parent, entry, after, before)
 
 		# create the xml
 		xml_menu = self.__getXmlMenu(parent.getPath(True, True))
 		self.__addXmlFilename(xml_menu, filename, 'Include')
 
 		# layout stuff
-		if after:
+		if after or before:
 			self.__addLayout(parent)
 			self.__addXmlLayout(xml_menu, parent.Layout)
 
@@ -65,7 +65,7 @@ class MenuEditor:
 
 		return entry
 
-	def createMenu(self, parent, name, comment=None, icon=None, after=None):
+	def createMenu(self, parent, name, comment=None, icon=None, after=None, before=None):
 		# create the entry
 		filename = self.__getFileName(name, ".directory")
 		menu = Menu()
@@ -77,14 +77,14 @@ class MenuEditor:
 		menu.Layout = parent.DefaultLayout
 		menu.DefaultLayout = parent.DefaultLayout
 
-		self.__addEntry(parent, menu, after)
+		self.__addEntry(parent, menu, after, before)
 
 		# create the xml
 		xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 		self.__addXmlTextElement(xml_menu, 'Directory', filename)
 
 		# layout stuff
-		if after:
+		if after or before:
 			self.__addLayout(parent)
 			self.__addXmlLayout(xml_menu, parent.Layout)
 
@@ -92,11 +92,11 @@ class MenuEditor:
 
 		return menu
 
-	def createSeparator(self, parent, after=None):
+	def createSeparator(self, parent, after=None, before=None):
 		# create the separator
 		separator = Separator()
 
-		self.__addEntry(parent, separator, after)
+		self.__addEntry(parent, separator, after, before)
 		self.__addLayout(parent)
 
 		# create the xml and layout stuff
@@ -105,14 +105,14 @@ class MenuEditor:
 
 		return separator
 
-	def moveEntry(self, entry, oldparent, newparent, after=None):
+	def moveEntry(self, entry, oldparent, newparent, after=None, before=None):
 		# remove the entry
 		oldparent.DeskEntries.remove(entry)
 		oldparent.Entries.remove(entry)
 		entry.Parents.remove(oldparent)
 		sort(oldparent)
 
-		self.__addEntry(newparent, entry, after)
+		self.__addEntry(newparent, entry, after, before)
 		entry.Parents.append(newparent)
 		sort(newparent)
 
@@ -123,7 +123,7 @@ class MenuEditor:
 		self.__addXmlFilename(new_menu, entry.DesktopFileID, "Include")
 
 		# layout stuff
-		if after:
+		if after or before:
 			self.__addLayout(oldparent)
 			self.__addLayout(newparent)
 			self.__addXmlLayout(old_menu, oldparent.Layout)
@@ -131,13 +131,13 @@ class MenuEditor:
 
 		return entry
 
-	def moveMenu(self, menu, oldparent, newparent, after=None):
+	def moveMenu(self, menu, oldparent, newparent, after=None, before=None):
 		# remove the entry
 		oldparent.Submenus.remove(entry)
 		oldparent.Entries.remove(entry)
 		sort(oldparent)
 
-		self.__addEntry(newparent, menu, after)
+		self.__addEntry(newparent, menu, after, before)
 		sort(newparent)
 
 		# create the xml
@@ -146,7 +146,7 @@ class MenuEditor:
 		self.__addXmlMove(self.doc, os.path.join(oldparent.getPath(True), menu.Name), os.path.join(newparent.getPath(True), menu.Name))
 
 		# layout stuff
-		if after:
+		if after or before:
 			self.__addLayout(oldparent)
 			self.__addLayout(newparent)
 			self.__addXmlLayout(old_menu, oldparent.Layout)
@@ -154,13 +154,13 @@ class MenuEditor:
 
 		return menu
 
-	def moveSeparator(self, separator, parent, after=None):
+	def moveSeparator(self, separator, parent, after=None,before=None):
 		# move the entry
 		index = parent.Entries.index(separator)
 		parent.Entries.remove(index)
 
 		# add it again
-		self.__addEntry(parent, separator, after)
+		self.__addEntry(parent, separator, after, before)
 
 		# create the xml and layout stuff
 		menu = self.__getXmlMenu(parent.getPath(True, True))
@@ -410,12 +410,11 @@ class MenuEditor:
 		return element.appendChild(node)
 
 	def __addEntry(self, parent, entry, after):
-		if after:
-			index = parent.Entries.index(after) + 1
-			if index > len(parent.Entries):
-				parent.Entries.append(entry)
-			else:
-				parent.Entries.insert(index, entry)
+		if after or before:
+			index = parent.Entries.index(after)
+			if after:
+				index += 1
+			parent.Entries.insert(index, entry)
 		else:
 			parent.Entries.append(entry)
 
