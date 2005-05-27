@@ -9,7 +9,7 @@ import xml.dom.minidom
 import os
 
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
-# FIXME: delete functions
+# FIXME: unod/redo function
 
 class MenuEditor:
 	def __init__(self, menu=None, filename=None):
@@ -276,18 +276,24 @@ class MenuEditor:
 				sort(parent)
 		return entry
 
-	# FIXME: remove xml / Include Filename / Menu
 	def deleteMenu(self, menu):
-		if menu.Directory.Type == "User":
+		if self.__isUserMenu == True:
 			os.remove(menu.Directory.DesktopEntry.filename)
 			menu.Directory = None
+			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
+			xml_menu.parentNode.removeChild(xml_menu)
 		return menu
 
 	def revertMenu(self, menu):
-		if menu.Directory.Type == "Both":
+		if menu.Directory.Type == "Both" or self.__isUserMenu == True:
 			os.remove(menu.Directory.DesktopEntry.filename)
 			menu.Directory = menu.Directory.Original
 			sort(menu.Parent)
+			# revert whole Menu / Include / Exclude / Layout / Move?
+			#if type == "complete":
+			#	xml_menu = self.__getXmlMenu(menu.getPath(True, True))
+			#	xml_menu.parentNode.removeChild(xml_menu)
+			#	self.menu = parse(self.menu.Filename)
 		return menu
 
 	def deleteSeparator(self, separator):
@@ -340,7 +346,7 @@ class MenuEditor:
 				name = name.replace(char, "")
 		return name
 
-	def __getXmlMenu(self, path, element=None):
+	def __getXmlMenu(self, path, create=True, element=None):
 		if not element:
 			element = self.doc
 
@@ -350,20 +356,20 @@ class MenuEditor:
 			name = path
 			path = ""
 
-		found = False
+		found = None
 		for node in element.childNodes:
 			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
 				for subnode in node.childNodes:
 					if subnode.nodeType == xml.dom.Node.ELEMENT_NODE and subnode.nodeName == 'Name':
 						if subnode.childNodes[0].nodeValue == name:
 							if path:
-								found = self.__getXmlMenu(path, node)
+								found = self.__getXmlMenu(path, create, node)
 							else:
 								found = node
 							break
 			if found:
 				break
-		if not found:
+		if not found and create == True:
 			node = self.__addXmlMenuElement(element, name)
 			if path:
 				found = self.__getXmlMenu(path, node)
@@ -462,3 +468,14 @@ class MenuEditor:
 		parent.Layout = layout
 
 		return layout
+
+	def __isUserMenu(self, menu):
+		if menu.Directory.Type == "User":
+			xml_menu = self.__getXmlMenu(menu.getPath(True, True), False)
+			if not xml_menu:
+				return False
+			for	child in xml_menu.childNodes:
+				if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.nodeName == "Directory":
+					return True
+		return False
+
