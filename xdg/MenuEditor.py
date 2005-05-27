@@ -251,7 +251,7 @@ class MenuEditor:
 
 
 	def deleteEntry(self, entry):
-		if entry.Type == "User":
+		if entry.Type == "Both":
 			os.remove(entry.DesktopEntry.filename)
 			for parent in entry.Menus:
 				index = parent.Entries.index(entry)
@@ -259,10 +259,20 @@ class MenuEditor:
 				index = parent.DeskEntries.index(entry)
 				parent.DeskEntries[index] = entry.Original
 				sort(parent)
+		elif entry.Type == "User":
+			os.remove(entry.DesktopEntry.filename)
+			parent.Entries.remove(entry)
+			parent.DeskEntries.remove(entry)
 		return entry
 
 	def deleteMenu(self, menu):
-		pass
+		if menu.Directory.Type == "Both":
+			os.remove(menu.Directory.DesktopEntry.filename)
+			menu.Directory = menu.Directory.Original
+		elif menu.Directory.Type == "User":
+			os.remove(menu.Directory.DesktopEntry.filename)
+			menu.Directory = None
+		return menu
 
 	def deleteSeparator(self, separator):
 		pass
@@ -391,7 +401,6 @@ class MenuEditor:
 		return element.appendChild(node)
 
 	def __addEntry(self, parent, entry, after):
-
 		if after:
 			index = parent.Entries.index(after) + 1
 			if index > len(parent.Entries):
