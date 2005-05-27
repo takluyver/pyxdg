@@ -419,6 +419,7 @@ class MenuEntry:
 					self.Original = MenuEntry(self.DesktopEntry.filename)
 					self.Original.DesktopFileID = self.DesktopFileID
 					self.Original.filename = self.filename
+					self.Original.Dir = self.Dir
 
 				if self.DesktopEntry.getType() == "Application":
 					path = os.path.join(xdg_data_dirs[0], "applications")
@@ -429,6 +430,7 @@ class MenuEntry:
 					os.makedirs(os.path.dirname(os.path.join(path,self.Filename)))
 
 				self.DesktopEntry.write(os.path.join(path,self.Filename))
+				self.Dir = xdg_data_dirs[0]
 
 	def __cmp__(self, other):
 		return cmp(self.DesktopEntry.getName(), other.DesktopEntry.getName())
@@ -817,7 +819,7 @@ def __genmenuNotOnlyAllocated(menu):
 			entries = rule.do(tmp["cache"].getEntries(menu.AppDirs), rule.Type, 1)
 		for entry in entries:
 		    if entry.Add == True:
-				entry.Menus.append(menu)
+				entry.Parents.append(menu)
 				entry.Add = False
 				entry.Allocated = True
 				menu.DeskEntries.append(entry)
@@ -833,7 +835,7 @@ def __genmenuOnlyAllocated(menu):
 			entries = rule.do(tmp["cache"].getEntries(menu.AppDirs), rule.Type, 2)
 		for entry in entries:
 		    if entry.Add == True:
-				entry.Menus.append(menu)
+				entry.Parents.append(menu)
 			#	entry.Add = False
 			#	entry.Allocated = True
 				menu.DeskEntries.append(entry)

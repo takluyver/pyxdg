@@ -249,7 +249,6 @@ class MenuEditor:
 		sort(self.menu)
 		return menu
 
-
 	# FIXME: remove xml / Include Filename / Menu
 	def deleteEntry(self, entry):
 		if entry.Type == "Both":
@@ -262,8 +261,9 @@ class MenuEditor:
 				sort(parent)
 		elif entry.Type == "User":
 			os.remove(entry.DesktopEntry.filename)
-			parent.Entries.remove(entry)
-			parent.DeskEntries.remove(entry)
+			for parent in entry.Parents:
+				parent.Entries.remove(entry)
+				parent.DeskEntries.remove(entry)
 		return entry
 
 	def deleteMenu(self, menu):
@@ -280,7 +280,6 @@ class MenuEditor:
 		separator.Parent.Entries.remove(separator)
 		self.__addLayout(parent)
 		return separator
-
 
 	""" Private Stuff """
 	def __saveEntries(self, menu):
