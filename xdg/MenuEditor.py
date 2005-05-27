@@ -9,7 +9,8 @@ import xml.dom.minidom
 import os
 
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
-# FIXME: unod/redo function
+# FIXME: unod/redo function / remove menu...
+# FIXME: More Layout stuff
 
 class MenuEditor:
 	def __init__(self, menu=None, filename=None):
@@ -289,11 +290,6 @@ class MenuEditor:
 			os.remove(menu.Directory.DesktopEntry.filename)
 			menu.Directory = menu.Directory.Original
 			sort(menu.Parent)
-			# revert whole Menu / Include / Exclude / Layout / Move?
-			#if type == "complete":
-			#	xml_menu = self.__getXmlMenu(menu.getPath(True, True))
-			#	xml_menu.parentNode.removeChild(xml_menu)
-			#	self.menu = parse(self.menu.Filename)
 		return menu
 
 	def deleteSeparator(self, separator):

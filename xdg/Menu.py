@@ -551,9 +551,11 @@ def __parse(node, filename, parent=None):
 			elif child.tagName == 'Include' or child.tagName == 'Exclude':
 				parent.Rules.append(Rule(child.tagName, child))
 			elif child.tagName == 'MergeFile':
-				# FIXME: can a MergeFile be empty if it's got type="parent"??
 				try:
-					__parseMergeFile(child.childNodes[0].nodeValue, child, filename, parent)
+					if child.getAttribute("type") == "parent":
+						__parseMergeFile("applications.menu", child, filename, parent)
+					else:
+						__parseMergeFile(child.childNodes[0].nodeValue, child, filename, parent)
 				except IndexError:
 					raise ValidationError('MergeFile cannot be empty', filename)
 			elif child.tagName == 'MergeDir':
