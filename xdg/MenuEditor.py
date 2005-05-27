@@ -133,8 +133,8 @@ class MenuEditor:
 
 	def moveMenu(self, menu, oldparent, newparent, after=None, before=None):
 		# remove the entry
-		oldparent.Submenus.remove(entry)
-		oldparent.Entries.remove(entry)
+		oldparent.Submenus.remove(menu)
+		oldparent.Entries.remove(menu)
 		sort(oldparent)
 
 		self.__addEntry(newparent, menu, after, before)
