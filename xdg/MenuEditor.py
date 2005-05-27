@@ -231,24 +231,22 @@ class MenuEditor:
 
 	def hideEntry(self, entry):
 		entry = self.editEntry(entry, nodisplay=True)
-		for menu in entry.Menus:
-			sort(menu)
+		sort(self.menu)
 		return entry
 
 	def unhideEntry(self, entry):
 		entry = self.editEntry(entry, nodisplay=False)
-		for menu in entry.Menus:
-			sort(menu)
+		sort(self.menu)
 		return entry
 
 	def hideMenu(self, menu):
 		menu = self.editMenu(menu, nodisplay=True)
-		sort(menu.Parent)
+		sort(self.menu)
 		return menu
 
 	def unhideMenu(self, menu):
 		menu = self.editMenu(menu, nodisplay=False)
-		sort(menu.Parent)
+		sort(self.menu)
 		return menu
 
 
