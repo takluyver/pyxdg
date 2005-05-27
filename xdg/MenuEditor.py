@@ -251,6 +251,14 @@ class MenuEditor:
 
 	# FIXME: remove xml / Include Filename / Menu
 	def deleteEntry(self, entry):
+		if entry.Type == "User":
+			os.remove(entry.DesktopEntry.filename)
+			for parent in entry.Parents:
+				parent.Entries.remove(entry)
+				parent.DeskEntries.remove(entry)
+		return entry
+
+	def revertEntry(self, entry):
 		if entry.Type == "Both":
 			os.remove(entry.DesktopEntry.filename)
 			for parent in entry.Parents:
@@ -259,21 +267,19 @@ class MenuEditor:
 				index = parent.DeskEntries.index(entry)
 				parent.DeskEntries[index] = entry.Original
 				sort(parent)
-		elif entry.Type == "User":
-			os.remove(entry.DesktopEntry.filename)
-			for parent in entry.Parents:
-				parent.Entries.remove(entry)
-				parent.DeskEntries.remove(entry)
 		return entry
 
 	def deleteMenu(self, menu):
+		if menu.Directory.Type == "User":
+			os.remove(menu.Directory.DesktopEntry.filename)
+			menu.Directory = None
+		return menu
+
+	def revertMenu(self, menu):
 		if menu.Directory.Type == "Both":
 			os.remove(menu.Directory.DesktopEntry.filename)
 			menu.Directory = menu.Directory.Original
 			sort(menu.Parent)
-		elif menu.Directory.Type == "User":
-			os.remove(menu.Directory.DesktopEntry.filename)
-			menu.Directory = None
 		return menu
 
 	def deleteSeparator(self, separator):
