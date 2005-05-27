@@ -374,13 +374,16 @@ class MenuEntry:
 			self.DesktopFileID = filename.replace("/", "-")
 		if entry:
 			self.DesktopEntry = entry
+			self.Dir = self.DesktopEntry.filename.replace(filename, '')
 		else:
 			self.DesktopEntry = DesktopEntry(filename)
-		self.Allocated = False
-		self.Add = False
-		self.MatchedInclude = False
+			self.Dir = xdg_data_dirs[0]
+
+		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
+		self.Show = True
 		self.Filename = filename
 		self.Menus = []
+
 		# Can be one of System/User/Both
 		self.Type = ""
 		if xdg_data_home in self.DesktopEntry.filename \
@@ -388,8 +391,12 @@ class MenuEntry:
 			self.Type = "User"
 		else:
 			self.Type = "System"
-		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
-		self.Show = True
+
+		# Private Stuff
+		self.Allocated = False
+		self.Add = False
+		self.MatchedInclude = False
+
 		# Caching
 		self.Categories = ""
 		self.cache()
