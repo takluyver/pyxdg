@@ -94,7 +94,7 @@ class MenuEditor:
 
 	def createSeparator(self, parent, after=None, before=None):
 		# create the separator
-		separator = Separator()
+		separator = Separator(parent)
 
 		self.__addEntry(parent, separator, after, before)
 		self.__addLayout(parent)
@@ -255,13 +255,14 @@ class MenuEditor:
 		sort(self.menu)
 		return menu
 
-	# FIXME: remove xml / Include Filename / Menu
 	def deleteEntry(self, entry):
 		if entry.Type == "User":
 			os.remove(entry.DesktopEntry.filename)
 			for parent in entry.Parents:
 				parent.Entries.remove(entry)
 				parent.DeskEntries.remove(entry)
+				xml_menu = self.__getXmlMenu(parent.getPath(True, True))
+				self.__removeXmlFilename(xml_menu, entry.DesktopFileID)
 		return entry
 
 	def revertEntry(self, entry):
@@ -275,6 +276,7 @@ class MenuEditor:
 				sort(parent)
 		return entry
 
+	# FIXME: remove xml / Include Filename / Menu
 	def deleteMenu(self, menu):
 		if menu.Directory.Type == "User":
 			os.remove(menu.Directory.DesktopEntry.filename)
@@ -290,7 +292,7 @@ class MenuEditor:
 
 	def deleteSeparator(self, separator):
 		separator.Parent.Entries.remove(separator)
-		self.__addLayout(parent)
+		self.__addLayout(separator.Parent)
 		return separator
 
 	""" Private Stuff """
@@ -385,6 +387,12 @@ class MenuEditor:
 		node = self.doc.createElement(type)
 		node.appendChild(self.__addXmlTextElement(node, 'Filename', filename))
 		return element.appendChild(node)
+
+	def __removeXmlFilename(self, element, desktopfileid):
+		for node in element.childNodes:
+			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName in ["Include", "Exclude"]:
+				if node.childNodes[0].nodeName == "Filename" and node.childNodes[0].childNodes[0].nodeValue == desktopfileid:
+					element.removeChild(node)
 
 	def __addXmlMove(self, element, old, new):
 		node = self.doc.createElement("Move")
