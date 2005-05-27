@@ -215,7 +215,7 @@ class Layout:
 			self.show_empty = "false"
 			self.inline = "false"
 			self.inline_limit = 4
-			self.inline_headers = "true"
+			self.inline_header = "true"
 			self.inline_alias = "false"
 			self.order.append(["Merge", "menus"])
 			self.order.append(["Merge", "files"])
@@ -447,7 +447,7 @@ class MenuEntry:
 
 class Separator:
 	"Just a dummy class for Separators"
-	def __init__(parent):
+	def __init__(self, parent):
 		self.Parent = parent
 
 

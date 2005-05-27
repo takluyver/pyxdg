@@ -110,11 +110,9 @@ class MenuEditor:
 		oldparent.DeskEntries.remove(entry)
 		oldparent.Entries.remove(entry)
 		entry.Parents.remove(oldparent)
-		sort(oldparent)
 
 		self.__addEntry(newparent, entry, after, before)
 		entry.Parents.append(newparent)
-		sort(newparent)
 
 		# create the xml
 		old_menu = self.__getXmlMenu(oldparent.getPath(True, True))
@@ -129,21 +127,24 @@ class MenuEditor:
 			self.__addXmlLayout(old_menu, oldparent.Layout)
 			self.__addXmlLayout(new_menu, newparent.Layout)
 
+		sort(oldparent)
+		sort(newparent)
+
 		return entry
 
 	def moveMenu(self, menu, oldparent, newparent, after=None, before=None):
 		# remove the entry
 		oldparent.Submenus.remove(menu)
 		oldparent.Entries.remove(menu)
-		sort(oldparent)
 
 		self.__addEntry(newparent, menu, after, before)
-		sort(newparent)
 
 		# create the xml
 		old_menu = self.__getXmlMenu(oldparent.getPath(True, True))
 		new_menu = self.__getXmlMenu(newparent.getPath(True, True))
-		self.__addXmlMove(self.doc, os.path.join(oldparent.getPath(True), menu.Name), os.path.join(newparent.getPath(True), menu.Name))
+
+		if oldparent.getPath(True) != newparent.getPath(True):
+			self.__addXmlMove(self.doc, os.path.join(oldparent.getPath(True), menu.Name), os.path.join(newparent.getPath(True), menu.Name))
 
 		# layout stuff
 		if after or before:
@@ -151,6 +152,9 @@ class MenuEditor:
 			self.__addLayout(newparent)
 			self.__addXmlLayout(old_menu, oldparent.Layout)
 			self.__addXmlLayout(new_menu, newparent.Layout)
+
+		sort(oldparent)
+		sort(newparent)
 
 		return menu
 
@@ -411,15 +415,16 @@ class MenuEditor:
 
 	def __addEntry(self, parent, entry, after, before):
 		if after or before:
-			index = parent.Entries.index(after)
 			if after:
-				index += 1
+				index = parent.Entries.index(after) + 1
+			elif before:
+				index = parent.Entries.index(before)
 			parent.Entries.insert(index, entry)
 		else:
 			parent.Entries.append(entry)
 
 		if isinstance(entry, Menu):
-			parent.Submenus.add(entry)
+			parent.addSubmenu(entry)
 		elif isinstance(entry, MenuEntry):
 			parent.DeskEntries.append(entry)
 
