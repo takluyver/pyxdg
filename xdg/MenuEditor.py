@@ -117,8 +117,10 @@ class MenuEditor:
 		# create the xml
 		old_menu = self.__getXmlMenu(oldparent.getPath(True, True))
 		new_menu = self.__getXmlMenu(newparent.getPath(True, True))
-		self.__addXmlFilename(old_menu, entry.DesktopFileID, "Exclude")
-		self.__addXmlFilename(new_menu, entry.DesktopFileID, "Include")
+
+		if oldparent.getPath(True) != newparent.getPath(True):
+			self.__addXmlFilename(old_menu, entry.DesktopFileID, "Exclude")
+			self.__addXmlFilename(new_menu, entry.DesktopFileID, "Include")
 
 		# layout stuff
 		if after or before:
