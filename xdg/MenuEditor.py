@@ -251,7 +251,15 @@ class MenuEditor:
 
 
 	def deleteEntry(self, entry):
-		pass
+		if entry.Type == "User":
+			os.remove(entry.DesktopEntry.filename)
+			for parent in entry.Menus:
+				index = parent.Entries.index(entry)
+				parent.Entries[index] = entry.Original
+				index = parent.DeskEntries.index(entry)
+				parent.DeskEntries[index] = entry.Original
+				sort(parent)
+		return entry
 
 	def deleteMenu(self, menu):
 		pass

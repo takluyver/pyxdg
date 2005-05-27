@@ -391,6 +391,7 @@ class MenuEntry:
 			self.Type = "User"
 		else:
 			self.Type = "System"
+		self.Original = ""
 
 		# Private Stuff
 		self.Allocated = False
@@ -642,9 +643,10 @@ def __postparse(menu):
 				entry = MenuEntry(directory, entry = deskentry)
 				if not menu.Directory:
 					menu.Directory = entry
-				elif entry.Type != "User":
+				elif entry.Type == "System":
 					if menu.Directory.Type == "User":
 						menu.Directory.Type = "Both"
+						menu.Directory.Original = entry
 		if menu.Directory:
 			break
 
@@ -992,7 +994,8 @@ class DesktopEntryCache:
 				# FIXME: This is only 99% correct, but still...
 					i = list.index(entry)
 					e = list[i]
-					if e.Type == "User":
+					if e.Type == "System":
 						e.Type = "Both"
+						e.Original = entry
 		self.cache[key] = list
 		return list
