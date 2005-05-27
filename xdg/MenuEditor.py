@@ -53,7 +53,7 @@ class MenuEditor:
 		self.__addEntry(parent, entry, after)
 
 		# create the xml
-		xml_menu = self.__getXmlMenu(parent.getPath(True))
+		xml_menu = self.__getXmlMenu(parent.getPath(True, True))
 		self.__addXmlFilename(xml_menu, filename, 'Include')
 
 		# layout stuff
@@ -80,7 +80,7 @@ class MenuEditor:
 		self.__addEntry(parent, menu, after)
 
 		# create the xml
-		xml_menu = self.__getXmlMenu(menu.getPath(True))
+		xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 		self.__addXmlTextElement(xml_menu, 'Directory', filename)
 
 		# layout stuff
@@ -251,6 +251,7 @@ class MenuEditor:
 		sort(menu.Parent)
 		return menu
 
+
 	def deleteEntry(self, entry):
 		pass
 
@@ -319,7 +320,7 @@ class MenuEditor:
 		found = False
 		for node in element.childNodes:
 			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
-				if path == "":
+				if not "/" in path and element = self.doc:
 					found = node
 					break
 				for subnode in node.childNodes:
