@@ -409,7 +409,7 @@ class MenuEditor:
 				node.appendChild(child)
 		return element.appendChild(node)
 
-	def __addEntry(self, parent, entry, after):
+	def __addEntry(self, parent, entry, after, before):
 		if after or before:
 			index = parent.Entries.index(after)
 			if after:
