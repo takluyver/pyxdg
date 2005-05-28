@@ -311,6 +311,8 @@ class MenuEditor:
 	def deleteSeparator(self, separator):
 		separator.Parent.Entries.remove(separator)
 		self.__addLayout(separator.Parent)
+		menu = self.__getXmlMenu(separator.Parent.getPath(True, True))
+		self.__addXmlLayout(menu, separator.Parent.Layout)
 		return separator
 
 	""" Private Stuff """
