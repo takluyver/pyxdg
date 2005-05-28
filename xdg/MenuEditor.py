@@ -77,7 +77,7 @@ class MenuEditor:
 		menu = Menu()
 		menu = self.editMenu(menu, name, genericname, comment, icon)
 
-		menu.Name = self.__getFixedName(name)
+		menu.Name = name.replace("/", "")
 		menu.Layout = parent.DefaultLayout
 		menu.DefaultLayout = parent.DefaultLayout
 
@@ -335,8 +335,6 @@ class MenuEditor:
 		fd.close()
 
 	def __getFileName(self, name, extension):
-		name = self.__getFixedName(name)
-
 		postfix = 0
 		#prefix = "xdg-changed-"
 		while 1:
@@ -352,13 +350,6 @@ class MenuEditor:
 				postfix += 1
 
 		return filename
-
-	def __getFixedName(self, name):
-		chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456790"
-		for char in name:
-			if char not in chars:
-				name = name.replace(char, "")
-		return name
 
 	def __getXmlMenu(self, path, create=True, element=None):
 		if not element:
