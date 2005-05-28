@@ -146,9 +146,10 @@ class MenuEditor:
 		# create the xml
 		old_menu = self.__getXmlMenu(oldparent.getPath(True, True))
 		new_menu = self.__getXmlMenu(newparent.getPath(True, True))
+		root_menu = self.__getXmlMenu(self.menu.Name)
 
 		if oldparent.getPath(True) != newparent.getPath(True):
-			self.__addXmlMove(self.doc, os.path.join(oldparent.getPath(True), menu.Name), os.path.join(newparent.getPath(True), menu.Name))
+			self.__addXmlMove(root_menu, os.path.join(oldparent.getPath(True), menu.Name), os.path.join(newparent.getPath(True), menu.Name))
 
 		# layout stuff
 		if after or before:
