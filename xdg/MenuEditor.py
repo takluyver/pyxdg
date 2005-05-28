@@ -75,7 +75,7 @@ class MenuEditor:
 		menu = Menu()
 		menu = self.editMenu(menu, name, genericname, comment, icon)
 
-		menu.Name = name.replace("/", "")
+		menu.Name = self.__getFileName(name, ".directory").replace("/", "").replace(".directory", "")
 		menu.Layout = parent.DefaultLayout
 		menu.DefaultLayout = parent.DefaultLayout
 
@@ -364,7 +364,10 @@ class MenuEditor:
 		#prefix = "xdg-changed-"
 		while 1:
 			#filename = prefix + name + "-" + str(postfix) + extension
-			filename = name + "-" + str(postfix) + extension
+			if postfix == 0:
+				filename = name + "-" + str(postfix) + extension
+			else:
+				filename = name + extension
 			if extension == ".desktop":
 				dir = "applications"
 			elif extension == ".directory":
