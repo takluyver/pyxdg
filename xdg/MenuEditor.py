@@ -319,6 +319,28 @@ class MenuEditor:
 		return separator
 
 	""" Private Stuff """
+	def getTypes(self, entry):
+		if isinstance(entry, Menu):
+			if entry.Directory.Type == "Both":
+				return "revert"
+			elif entry.Directory.Type == "User":
+				xml_menu = self.__getXmlMenu(entry.getPath(True, True), False)
+				if not xml_menu:
+					return "revert"
+				else:
+					if len(self.__getXmlNodesByName("Directory", xml_menu)) > 0:
+						return ["delete", "revert"]
+					else:
+						return "delete"
+
+		elif isinstance(entry, MenuEntry):
+			if entry.Type == "Both":
+				return "revert"
+			elif entry.Ttype == "User":
+				return "delete"
+
+		return "none"
+
 	def __saveEntries(self, menu):
 		if not menu:
 			menu = self.menu
@@ -365,8 +387,8 @@ class MenuEditor:
 			path = ""
 
 		found = None
-		for node in self.__getNodesByName("Menu", element):
-			for child in self.__getNodesByName("Name", node):
+		for node in self.__getXmlNodesByName("Menu", element):
+			for child in self.__getXmlNodesByName("Name", node):
 				if child.childNodes[0].nodeValue == name:
 					if path:
 						found = self.__getXmlMenu(path, create, node)
@@ -401,7 +423,7 @@ class MenuEditor:
 		return element.appendChild(node)
 
 	def __removeXmlFilename(self, element, desktopfileid):
-		for node in self.__getNodesByName(["Include", "Exclude"], element):
+		for node in self.__getXmlNodesByName(["Include", "Exclude"], element):
 			if node.childNodes[0].nodeName == "Filename" and node.childNodes[0].childNodes[0].nodeValue == desktopfileid:
 				element.removeChild(node)
 
@@ -413,7 +435,7 @@ class MenuEditor:
 
 	def __addXmlLayout(self, element, layout):
 		# remove old layout
-		for node in self.__getNodesByName("Layout", element):
+		for node in self.__getXmlNodesByName("Layout", element):
 			element.removeChild(node)
 			break
 
@@ -432,6 +454,15 @@ class MenuEditor:
 				child.setAttribute("type", order[1])
 				node.appendChild(child)
 		return element.appendChild(node)
+
+	def __getXmlNodesByName(self, name, element):
+		if not element:
+			element = self.doc
+		nodes = []
+		for	child in element.childNodes:
+			if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.nodeName in name:
+				nodes.append(child)
+		return nodes
 
 	def __addEntry(self, parent, entry, after, before):
 		if after or before:
@@ -472,34 +503,3 @@ class MenuEditor:
 		parent.Layout = layout
 
 		return layout
-
-	def getTypes(self, entry):
-		if isinstance(entry, Menu):
-			if entry.Directory.Type == "Both":
-				return "revert"
-			elif entry.Directory.Type == "User":
-				xml_menu = self.__getXmlMenu(entry.getPath(True, True), False)
-				if not xml_menu:
-					return "revert"
-				else:
-					if len(self.__getNodesByName("Directory", xml_menu)) > 0:
-						return ["delete", "revert"]
-					else:
-						return "delete"
-
-		elif isinstance(entry, MenuEntry):
-			if entry.Type == "Both":
-				return "revert"
-			elif entry.Ttype == "User":
-				return "delete"
-
-		return "none"
-
-	def __getNodesByName(self, name, element):
-		if not element:
-			element = self.doc
-		nodes = []
-		for	child in element.childNodes:
-			if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.nodeName in name:
-				nodes.append(child)
-		return nodes
