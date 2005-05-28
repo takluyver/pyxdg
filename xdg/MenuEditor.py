@@ -386,7 +386,7 @@ class MenuEditor:
 		if not found and create == True:
 			node = self.__addXmlMenuElement(element, name)
 			if path:
-				found = self.__getXmlMenu(path, node)
+				found = self.__getXmlMenu(path, create, node)
 			else:
 				found = node
 
