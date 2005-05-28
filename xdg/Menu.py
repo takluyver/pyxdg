@@ -597,11 +597,16 @@ def __parsemove(menu):
 			move_to_menu = menu.getMenu(move.New)
 
 			if not move_to_menu:
-				path, name = move.New.rsplit("/",1)
+				if "/" in move.New:
+					path, name = move.New.rsplit("/",1)
+				else:
+					name = move.New
+				
 				if path:
 					parent = menu.getMenu(path)
 				else:
 					parent = menu
+
 				move_to_menu = Menu()
 				move_to_menu.Name = name
 				parent.addSubmenu(move_to_menu)
