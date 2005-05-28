@@ -294,7 +294,7 @@ class MenuEditor:
 		return entry
 
 	def deleteMenu(self, menu):
-		if self.__isUserMenu == True:
+		if self.__isUserMenu(menu) == True:
 			os.remove(menu.Directory.DesktopEntry.filename)
 			menu.Directory = None
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
@@ -302,7 +302,7 @@ class MenuEditor:
 		return menu
 
 	def revertMenu(self, menu):
-		if menu.Directory.Type == "Both" or self.__isUserMenu == True:
+		if menu.Directory.Type == "Both" or self.__isUserMenu(menu) == True:
 			os.remove(menu.Directory.DesktopEntry.filename)
 			menu.Directory = menu.Directory.Original
 			sort(menu.Parent)
