@@ -367,22 +367,16 @@ def do(entries, type, run):
 
 class MenuEntry:
 	"Wrapper for 'Menu Style' Desktop Entries"
-	def __init__(self, filename, prefix=None, entry=None):
+	def __init__(self, filename, prefix="", entry=None):
 		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
 		self.Show = True
-		self.Filename = filename
-		self.Parents = []
 
-		if prefix:
-			self.DesktopFileID = os.path.join(prefix,filename).replace("/", "-")
-		else:
-			self.DesktopFileID = filename.replace("/", "-")
 		if entry:
 			self.DesktopEntry = entry
-			self.Dir = self.DesktopEntry.filename.replace(filename, '')
 		else:
 			self.DesktopEntry = DesktopEntry(filename)
-			self.Dir = self.getDir()
+
+		self.setAttributes(filename, prefix)
 
 		# Can be one of System/User/Both
 		self.Type = ""
@@ -392,6 +386,7 @@ class MenuEntry:
 		else:
 			self.Type = "System"
 		self.Original = None
+		self.Parents = []
 
 		# Private Stuff
 		self.Allocated = False
@@ -401,6 +396,22 @@ class MenuEntry:
 		# Caching
 		self.Categories = ""
 		self.cache()
+
+	def setAttributes(self, filename, prefix=""):
+		self.Filename = filename
+		self.Prefix = prefix
+		self.DesktopFileID = os.path.join(prefix,filename).replace("/", "-")
+
+		if os.path.isabs(self.Filename):
+			self.Dir = self.DesktopEntry.filename.replace(self.Filename, '')
+		else:
+			self.Dir = self.getDir()
+
+	def getDir(self):
+		if self.DesktopEntry.getType() == "Application":
+			return os.path.join(xdg_data_dirs[0], "applications")
+		else:
+			return os.path.join(xdg_data_dirs[0], "desktop-directories")
 
 	def cache(self):
 		self.Categories = self.DesktopEntry.getCategories()
@@ -416,10 +427,7 @@ class MenuEntry:
 				# set self.Type
 				if self.Type == "System":
 					self.Type = "Both"
-					self.Original = MenuEntry(self.DesktopEntry.filename)
-					self.Original.DesktopFileID = self.DesktopFileID
-					self.Original.Filename = self.Filename
-					self.Original.Dir = self.Dir
+					self.Original = MenuEntry(self.DesktopEntry.filename, self.Prefix)
 
 				path = self.getDir()
 
@@ -428,13 +436,6 @@ class MenuEntry:
 
 				self.DesktopEntry.write(os.path.join(path,self.Filename))
 				self.Dir = path
-
-	def getDir(self):
-		if self.DesktopEntry.getType() == "Application":
-			path = os.path.join(xdg_data_dirs[0], "applications")
-		else:
-			path = os.path.join(xdg_data_dirs[0], "desktop-directories")
-		return path
 
 	def __cmp__(self, other):
 		return cmp(self.DesktopEntry.getName(), other.DesktopEntry.getName())
@@ -894,7 +895,6 @@ def sort(menu):
 						__parse_inline(submenu, menu)
 
 	# getHidden / NoDisplay / OnlyShowIn / NotOnlyShowIn / Deleted
-	hide = []
 	for entry in menu.Entries:
 		entry.Show = True
 		menu.Visible += 1
@@ -957,7 +957,7 @@ class DesktopEntryCache:
 		self.cacheEntries['legacy'] = []
 		self.cache = {}
 
-	def addEntries(self, dirs, prefix=None, legacy=False):
+	def addEntries(self, dirs, prefix="", legacy=False):
 		for dir in dirs:
 			if not self.cacheEntries.has_key(dir):
 				self.cacheEntries[dir] = []

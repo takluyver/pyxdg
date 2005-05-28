@@ -8,8 +8,6 @@ from xdg.DesktopEntry import *
 import xml.dom.minidom
 import os
 
-# CLEANUP: clean up MenuEntry class
-# CLEANUP: get child tags
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
 # FIXME: More Layout stuff
 # FIXME: unod/redo function / remove menu...
@@ -212,20 +210,13 @@ class MenuEditor:
 		return entry
 
 	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, nodisplay=None):
-		try:
-			filename = menu.Directory.Filename
-		except:
-			filename = ""
-		if isinstance(menu.Directory, MenuEntry) and not filename == ".directory":
-			pass
 		# Hack for legacy dirs
-		elif filename == ".directory":
+		if isinstance(menu.Directory, MenuEntry) and menu.Directory.Filename == ".directory":
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 			self.__addXmlTextElement(xml_menu, 'Directory', menu.Name + ".directory")
-			menu.Directory.Filename = menu.Name + ".directory"
-			menu.Directory.DesktopFileID = menu.Name + ".directory"
-			menu.Directory.Dir = menu.Directory.getDir()
-		else:
+			menu.Directory.setAttributes(menu.Name + ".directory")
+		# Hack for New Entries
+		elif not isinstance(menu.Directory, MenuEntry):
 			menu.Directory = MenuEntry(self.__getFileName(name, ".directory"))
 
 		deskentry = menu.Directory.DesktopEntry
@@ -362,16 +353,14 @@ class MenuEditor:
 			path = ""
 
 		found = None
-		for node in element.childNodes:
-			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Menu':
-				for subnode in node.childNodes:
-					if subnode.nodeType == xml.dom.Node.ELEMENT_NODE and subnode.nodeName == 'Name':
-						if subnode.childNodes[0].nodeValue == name:
-							if path:
-								found = self.__getXmlMenu(path, create, node)
-							else:
-								found = node
-							break
+		for node in self.__getNodesByName("Menu", element):
+			for child in self.__getNodesByName("Name", node):
+				if child.childNodes[0].nodeValue == name:
+					if path:
+						found = self.__getXmlMenu(path, create, node)
+					else:
+						found = node
+					break
 			if found:
 				break
 		if not found and create == True:
@@ -400,10 +389,9 @@ class MenuEditor:
 		return element.appendChild(node)
 
 	def __removeXmlFilename(self, element, desktopfileid):
-		for node in element.childNodes:
-			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName in ["Include", "Exclude"]:
-				if node.childNodes[0].nodeName == "Filename" and node.childNodes[0].childNodes[0].nodeValue == desktopfileid:
-					element.removeChild(node)
+		for node in self.__getNodesByName(["Include", "Exclude"], element):
+			if node.childNodes[0].nodeName == "Filename" and node.childNodes[0].childNodes[0].nodeValue == desktopfileid:
+				element.removeChild(node)
 
 	def __addXmlMove(self, element, old, new):
 		node = self.doc.createElement("Move")
@@ -413,10 +401,9 @@ class MenuEditor:
 
 	def __addXmlLayout(self, element, layout):
 		# remove old layout
-		for node in element.childNodes:
-			if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == 'Layout':
-				element.removeChild(node)
-				break
+		for node in self.__getNodesByName("Layout", element):
+			element.removeChild(node)
+			break
 
 		# add new layout
 		node = self.doc.createElement("Layout")
@@ -479,7 +466,15 @@ class MenuEditor:
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True), False)
 			if not xml_menu:
 				return False
-			for	node in xml_menu.childNodes:
-				if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == "Directory":
-					return True
+			if len(self.__getNodesByName("Directory", xml_menu)) > 0:
+				return True
 		return False
+
+	def __getNodesByName(self, name, element):
+		if not element:
+			element = self.doc
+		nodes = []
+		for	child in element.childNodes:
+			if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.nodeName in name:
+				nodes.append(child)
+		return nodes
