@@ -600,6 +600,7 @@ def __parsemove(menu):
 				if "/" in move.New:
 					path, name = move.New.rsplit("/",1)
 				else:
+					path = ""
 					name = move.New
 				
 				if path:
