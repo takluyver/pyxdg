@@ -292,7 +292,7 @@ class MenuEditor:
 	def deleteMenu(self, menu):
 		if self.__isUserMenu(menu) == True:
 			try:
-				os.remove(entry.Directory.DesktopEntry.filename)
+				os.remove(menu.Directory.DesktopEntry.filename)
 			except OSError:
 				pass
 			menu.Directory = None
@@ -303,7 +303,7 @@ class MenuEditor:
 	def revertMenu(self, menu):
 		if menu.Directory.Type == "Both" or self.__isUserMenu(menu) == True:
 			try:
-				os.remove(entry.Directory.DesktopEntry.filename)
+				os.remove(menu.Directory.DesktopEntry.filename)
 			except OSError:
 				pass
 			menu.Directory = menu.Directory.Original
