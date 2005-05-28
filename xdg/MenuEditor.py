@@ -48,12 +48,12 @@ class MenuEditor:
 		self.__saveEntries(self.menu)
 		self.__saveMenu()
 
-	def createEntry(self, parent, name, command=None, comment=None, icon=None, terminal=None, after=None, before=None):
+	def createEntry(self, parent, name, command=None, genericname=None, comment=None, icon=None, terminal=None, after=None, before=None):
 		# create the entry
 		filename = self.__getFileName(name, ".desktop")
 		entry = MenuEntry(filename)
 		entry.Parents.append(parent)
-		entry = self.editEntry(entry, name, command, comment, icon, terminal)
+		entry = self.editEntry(entry, name, genericname, comment, command, icon, terminal)
 		self.__addEntry(parent, entry, after, before)
 
 		# create the xml
@@ -69,11 +69,11 @@ class MenuEditor:
 
 		return entry
 
-	def createMenu(self, parent, name, comment=None, icon=None, after=None, before=None):
+	def createMenu(self, parent, name, genericname=None, comment=None, icon=None, after=None, before=None):
 		# create the entry
 		filename = self.__getFileName(name, ".directory")
 		menu = Menu()
-		menu = self.editMenu(menu, name, comment, icon)
+		menu = self.editMenu(menu, name, genericname, comment, icon)
 
 		menuname = self.__getFixedName(name)
 		menu.Name = menuname
