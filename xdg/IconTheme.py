@@ -222,6 +222,7 @@ icondirs.append(os.path.expanduser("~/.icons"))
 themes = []
 cache = dict()
 dache = dict()
+eache = dict()
 
 def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg", "xpm"]):
 	global themes
@@ -247,12 +248,21 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
 	except IndexError:
 		__addTheme(theme)
 
+	# more caching (icon looked up in the last 5 seconds?)
+	tmp = "".join([iconname, str(size), theme, "".join(extensions)])
+	if eache.has_key(tmp):
+		if int(time.time() - eache[tmp][0]) >= 5:
+			del eache[tmp]
+		else:
+			return eache[tmp][1]
+
 	for thme in themes:
 		icon = LookupIcon(iconname, size, thme, extensions)
 		if icon:
+			eache[tmp] = [time.time(), icon]
 			return icon
 
-	# cache stuff again
+	# cache stuff again (directories lookuped up in the last 5 seconds?)
 	for directory in icondirs:
 		if (not dache.has_key(directory) \
 			or (int(time.time()) - dache[directory][1] >=5 \
@@ -263,10 +273,12 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
 	for dir, values in dache.items():
 		for extension in extensions:
 			if iconname + "." + extension in values[0]:
+				eache[tmp] = [time.time(), icon]
 				return os.path.join(dir, iconname + "." + extension)
 
 	# we haven't found anything? "hicolor" is our fallback
 	if theme != "hicolor":
+		eache[tmp] = [time.time(), icon]
 		return getIconPath(iconname, size, "hicolor")
 
 def getIconData(path):
@@ -304,7 +316,9 @@ def LookupIcon(iconname, size, theme, extensions):
 		cache[theme.name].append(time.time() - 6) # [0] last time of lookup
 		cache[theme.name].append(0)               # [1] mtime
 		cache[theme.name].append(dict())          # [2] dir: [subdir, [items]]
-	if int(time.time()) - cache[theme.name][0] >=5:
+
+	# cache stuff (directory lookuped up the in the last 5 seconds?)
+	if int(time.time()) - cache[theme.name][0] >= 5:
 		cache[theme.name][0] = time.time()
 		for subdir in theme.getDirectories():
 			for directory in icondirs:
