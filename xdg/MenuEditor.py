@@ -65,7 +65,7 @@ class MenuEditor:
 			self.__addLayout(parent)
 			self.__addXmlLayout(xml_menu, parent.Layout)
 
-		sort(parent)
+		sort(self.menu)
 
 		return entry
 
@@ -90,7 +90,7 @@ class MenuEditor:
 			self.__addLayout(parent)
 			self.__addXmlLayout(xml_menu, parent.Layout)
 
-		sort(parent)
+		sort(self.menu)
 
 		return menu
 
