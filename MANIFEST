@@ -19,3 +19,4 @@ xdg/RecentFiles.py
 xdg/Locale.py
 xdg/Config.py
 xdg/__init__.py
+xdg/MenuEditor.py
