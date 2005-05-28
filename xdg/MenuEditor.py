@@ -8,9 +8,8 @@ from xdg.DesktopEntry import *
 import xml.dom.minidom
 import os
 
-# FIXME: clean up MenuEntry class
-# FIXME: create separators
-# FIXME: get child tags
+# CLEANUP: clean up MenuEntry class
+# CLEANUP: get child tags
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
 # FIXME: More Layout stuff
 # FIXME: unod/redo function / remove menu...
@@ -172,7 +171,9 @@ class MenuEditor:
 		# add it again
 		self.__addEntry(parent, separator, after, before)
 
+
 		# create the xml and layout stuff
+		self.__addLayout(parent)
 		menu = self.__getXmlMenu(parent.getPath(True, True))
 		self.__addXmlLayout(menu, parent.Layout)
 
