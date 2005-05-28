@@ -131,8 +131,7 @@ class MenuEditor:
 			self.__addXmlLayout(old_menu, oldparent.Layout)
 			self.__addXmlLayout(new_menu, newparent.Layout)
 
-		sort(oldparent)
-		sort(newparent)
+		sort(self.menu)
 
 		return entry
 
@@ -158,8 +157,7 @@ class MenuEditor:
 			self.__addXmlLayout(old_menu, oldparent.Layout)
 			self.__addXmlLayout(new_menu, newparent.Layout)
 
-		sort(oldparent)
-		sort(newparent)
+		sort(self.menu)
 
 		return menu
 
@@ -282,7 +280,7 @@ class MenuEditor:
 				parent.Entries[index] = entry.Original
 				index = parent.DeskEntries.index(entry)
 				parent.DeskEntries[index] = entry.Original
-				sort(parent)
+				sort(self.menu)
 		return entry
 
 	def deleteMenu(self, menu):
@@ -297,7 +295,7 @@ class MenuEditor:
 		if menu.Directory.Type == "Both" or self.__isUserMenu(menu) == True:
 			os.remove(menu.Directory.DesktopEntry.filename)
 			menu.Directory = menu.Directory.Original
-			sort(menu.Parent)
+			sort(self.menu)
 		return menu
 
 	def deleteSeparator(self, separator):
