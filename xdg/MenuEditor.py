@@ -211,19 +211,23 @@ class MenuEditor:
 		return entry
 
 	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, nodisplay=None):
-		if isinstance(menu.Directory, MenuEntry) and not menu.Directory.Filename == ".directory":
-			deskentry = menu.Directory.DesktopEntry
+		try:
+			filename = menu.Directory.Filename
+		except:
+			filename = ""
+		if isinstance(menu.Directory, MenuEntry) and not filename == ".directory":
+			pass
 		# Hack for legacy dirs
-		elif menu.Directory.Filename == ".directory":
+		elif filename == ".directory":
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 			self.__addXmlTextElement(xml_menu, 'Directory', menu.Name + ".directory")
 			menu.Directory.Filename = menu.Name + ".directory"
 			menu.Directory.DesktopFileID = menu.Name + ".directory"
 			menu.Directory.Dir = menu.Directory.getDir()
-			deskentry = menu.Directory.DesktopEntry
 		else:
-			deskentry = MenuEntry(self.__getFileName(name))
-			menu.Directory = deskentry
+			menu.Directory = MenuEntry(self.__getFileName(name, ".directory"))
+
+		deskentry = menu.Directory.DesktopEntry
 
 		if name:
 			if not deskentry.hasKey("Name"):
