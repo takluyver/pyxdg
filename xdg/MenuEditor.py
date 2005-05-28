@@ -263,7 +263,7 @@ class MenuEditor:
 		return menu
 
 	def deleteEntry(self, entry):
-		if entry.Type == "User":
+		if "delete" in self.getTypes(entry):
 			try:
 				os.remove(entry.DesktopEntry.filename)
 			except OSError:
@@ -276,7 +276,7 @@ class MenuEditor:
 		return entry
 
 	def revertEntry(self, entry):
-		if entry.Type == "Both":
+		if "revert" in self.getTypes(entry):
 			try:
 				os.remove(entry.DesktopEntry.filename)
 			except OSError:
@@ -290,18 +290,19 @@ class MenuEditor:
 		return entry
 
 	def deleteMenu(self, menu):
-		if self.__isUserMenu(menu) == True:
+		if "delete" in self.getTypes(menu):
 			try:
 				os.remove(menu.Directory.DesktopEntry.filename)
 			except OSError:
 				pass
-			menu.Directory = None
+			menu.Parent.Entries.remove(menu)
+			menu.Parent.Submenus.remove(menu)
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 			xml_menu.parentNode.removeChild(xml_menu)
 		return menu
 
 	def revertMenu(self, menu):
-		if menu.Directory.Type == "Both" or self.__isUserMenu(menu) == True:
+		if "revert" in self.getTypes(menu):
 			try:
 				os.remove(menu.Directory.DesktopEntry.filename)
 			except OSError:
@@ -472,14 +473,27 @@ class MenuEditor:
 
 		return layout
 
-	def __isUserMenu(self, menu):
-		if menu.Directory.Type == "User":
-			xml_menu = self.__getXmlMenu(menu.getPath(True, True), False)
-			if not xml_menu:
-				return False
-			if len(self.__getNodesByName("Directory", xml_menu)) > 0:
-				return True
-		return False
+	def getTypes(self, entry):
+		if isinstance(entry, Menu):
+			if entry.Directory.Type == "Both":
+				return "revert"
+			elif entry.Directory.Type == "User":
+				xml_menu = self.__getXmlMenu(entry.getPath(True, True), False)
+				if not xml_menu:
+					return "revert"
+				else:
+					if len(self.__getNodesByName("Directory", xml_menu)) > 0:
+						return ["delete", "revert"]
+					else:
+						return "delete"
+
+		elif isinstance(entry, MenuEntry):
+			if entry.Type == "Both":
+				return "revert"
+			elif entry.Ttype == "User":
+				return "delete"
+
+		return "none"
 
 	def __getNodesByName(self, name, element):
 		if not element:
