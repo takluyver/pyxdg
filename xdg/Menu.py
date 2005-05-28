@@ -368,6 +368,11 @@ def do(entries, type, run):
 class MenuEntry:
 	"Wrapper for 'Menu Style' Desktop Entries"
 	def __init__(self, filename, prefix=None, entry=None):
+		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
+		self.Show = True
+		self.Filename = filename
+		self.Parents = []
+
 		if prefix:
 			self.DesktopFileID = os.path.join(prefix,filename).replace("/", "-")
 		else:
@@ -377,12 +382,7 @@ class MenuEntry:
 			self.Dir = self.DesktopEntry.filename.replace(filename, '')
 		else:
 			self.DesktopEntry = DesktopEntry(filename)
-			self.Dir = xdg_data_dirs[0]
-
-		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
-		self.Show = True
-		self.Filename = filename
-		self.Parents = []
+			self.Dir = self.getDir()
 
 		# Can be one of System/User/Both
 		self.Type = ""
@@ -421,16 +421,20 @@ class MenuEntry:
 					self.Original.Filename = self.Filename
 					self.Original.Dir = self.Dir
 
-				if self.DesktopEntry.getType() == "Application":
-					path = os.path.join(xdg_data_dirs[0], "applications")
-				else:
-					path = os.path.join(xdg_data_dirs[0], "desktop-directories")
+				path = self.getDir()
 
 				if not os.path.isdir(os.path.dirname(os.path.join(path,self.Filename))):
 					os.makedirs(os.path.dirname(os.path.join(path,self.Filename)))
 
 				self.DesktopEntry.write(os.path.join(path,self.Filename))
-				self.Dir = xdg_data_dirs[0]
+				self.Dir = path
+
+	def getDir(self):
+		if self.DesktopEntry.getType() == "Application":
+			path = os.path.join(xdg_data_dirs[0], "applications")
+		else:
+			path = os.path.join(xdg_data_dirs[0], "desktop-directories")
+		return path
 
 	def __cmp__(self, other):
 		return cmp(self.DesktopEntry.getName(), other.DesktopEntry.getName())

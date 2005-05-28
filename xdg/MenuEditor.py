@@ -8,6 +8,7 @@ from xdg.DesktopEntry import *
 import xml.dom.minidom
 import os
 
+# FIXME: claen up MenuEntry class
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
 # FIXME: More Layout stuff
 # FIXME: unod/redo function / remove menu...
@@ -210,7 +211,15 @@ class MenuEditor:
 		return entry
 
 	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, nodisplay=None):
-		if isinstance(menu.Directory, MenuEntry):
+		if isinstance(menu.Directory, MenuEntry) and not menu.Directory.Filename == ".directory":
+			deskentry = menu.Directory.DesktopEntry
+		# Hack for legacy dirs
+		elif menu.Directory.Filename == ".directory":
+			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
+			self.__addXmlTextElement(xml_menu, 'Directory', menu.Name)
+			menu.Directory.Filename = menu.Name + ".directory"
+			menu.Directory.DesktopFileID = menu.Name + ".directory"
+			menu.Directory.Dir = menu.Directory.getDirh()
 			deskentry = menu.Directory.DesktopEntry
 		else:
 			deskentry = MenuEntry(self.__getFileName(name))
