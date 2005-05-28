@@ -47,12 +47,12 @@ class MenuEditor:
 		self.__saveEntries(self.menu)
 		self.__saveMenu()
 
-	def createEntry(self, parent, name, command=None, comment=None, icon=None, term=None, after=None, before=None):
+	def createEntry(self, parent, name, command=None, comment=None, icon=None, terminal=None, after=None, before=None):
 		# create the entry
 		filename = self.__getFileName(name, ".desktop")
 		entry = MenuEntry(filename)
 		entry.Parents.append(parent)
-		entry = self.editEntry(entry, name, command, comment, icon, term)
+		entry = self.editEntry(entry, name, command, comment, icon, terminal)
 		self.__addEntry(parent, entry, after, before)
 
 		# create the xml
@@ -177,7 +177,7 @@ class MenuEditor:
 
 		return separator
 
-	def editEntry(self, entry, name=None, genericname=None, comment=None, command=None, icon=None, term=None, nodisplay=None):
+	def editEntry(self, entry, name=None, genericname=None, comment=None, command=None, icon=None, terminal=None, nodisplay=None):
 		deskentry = entry.DesktopEntry
 
 		if name:
@@ -193,13 +193,13 @@ class MenuEditor:
 				deskentry.set("GenericName", genericname)
 			deskentry.set("GenericName", genericname, locale = True)
 		if command:
-			deskentry.set("Command", command)
+			deskentry.set("Exec", command)
 		if icon:
 			deskentry.set("Icon", icon)
 
-		if term == True:
+		if terminal == True:
 			deskentry.set("Terminal", "true")
-		elif term == False:
+		elif terminal == False:
 			deskentry.set("Terminal", "false")
 
 		if nodisplay == True:
