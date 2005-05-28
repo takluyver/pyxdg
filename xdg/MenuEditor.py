@@ -216,10 +216,10 @@ class MenuEditor:
 		# Hack for legacy dirs
 		elif menu.Directory.Filename == ".directory":
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
-			self.__addXmlTextElement(xml_menu, 'Directory', menu.Name)
+			self.__addXmlTextElement(xml_menu, 'Directory', menu.Name + ".directory")
 			menu.Directory.Filename = menu.Name + ".directory"
 			menu.Directory.DesktopFileID = menu.Name + ".directory"
-			menu.Directory.Dir = menu.Directory.getDirh()
+			menu.Directory.Dir = menu.Directory.getDir()
 			deskentry = menu.Directory.DesktopEntry
 		else:
 			deskentry = MenuEntry(self.__getFileName(name))
