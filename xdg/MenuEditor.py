@@ -264,7 +264,10 @@ class MenuEditor:
 
 	def deleteEntry(self, entry):
 		if entry.Type == "User":
-			os.remove(entry.DesktopEntry.filename)
+			try:
+				os.remove(entry.DesktopEntry.filename)
+			except OSError:
+				pass
 			for parent in entry.Parents:
 				parent.Entries.remove(entry)
 				parent.DeskEntries.remove(entry)
@@ -274,7 +277,10 @@ class MenuEditor:
 
 	def revertEntry(self, entry):
 		if entry.Type == "Both":
-			os.remove(entry.DesktopEntry.filename)
+			try:
+				os.remove(entry.DesktopEntry.filename)
+			except OSError:
+				pass
 			for parent in entry.Parents:
 				index = parent.Entries.index(entry)
 				parent.Entries[index] = entry.Original
@@ -285,7 +291,10 @@ class MenuEditor:
 
 	def deleteMenu(self, menu):
 		if self.__isUserMenu(menu) == True:
-			os.remove(menu.Directory.DesktopEntry.filename)
+			try:
+				os.remove(entry.Directory.DesktopEntry.filename)
+			except OSError:
+				pass
 			menu.Directory = None
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 			xml_menu.parentNode.removeChild(xml_menu)
@@ -293,7 +302,10 @@ class MenuEditor:
 
 	def revertMenu(self, menu):
 		if menu.Directory.Type == "Both" or self.__isUserMenu(menu) == True:
-			os.remove(menu.Directory.DesktopEntry.filename)
+			try:
+				os.remove(entry.Directory.DesktopEntry.filename)
+			except OSError:
+				pass
 			menu.Directory = menu.Directory.Original
 			sort(self.menu)
 		return menu
