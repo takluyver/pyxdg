@@ -251,7 +251,7 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
 	# more caching (icon looked up in the last 5 seconds?)
 	tmp = "".join([iconname, str(size), theme, "".join(extensions)])
 	if eache.has_key(tmp):
-		if int(time.time() - eache[tmp][0]) >= 5:
+		if int(time.time() - eache[tmp][0]) >= xdg.Config.cache_time:
 			del eache[tmp]
 		else:
 			return eache[tmp][1]
@@ -265,7 +265,7 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
 	# cache stuff again (directories lookuped up in the last 5 seconds?)
 	for directory in icondirs:
 		if (not dache.has_key(directory) \
-			or (int(time.time()) - dache[directory][1] >=5 \
+			or (int(time.time()) - dache[directory][1] >= xdg.Config.cache_time \
 			and dache[directory][2] < os.path.getmtime(directory))) \
 			and os.path.isdir(directory):
 			dache[directory] = [os.listdir(directory), time.time(), os.path.getmtime(directory)]
@@ -318,7 +318,7 @@ def LookupIcon(iconname, size, theme, extensions):
 		cache[theme.name].append(dict())          # [2] dir: [subdir, [items]]
 
 	# cache stuff (directory lookuped up the in the last 5 seconds?)
-	if int(time.time()) - cache[theme.name][0] >= 5:
+	if int(time.time()) - cache[theme.name][0] >= xdg.Config.cache_time:
 		cache[theme.name][0] = time.time()
 		for subdir in theme.getDirectories():
 			for directory in icondirs:

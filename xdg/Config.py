@@ -6,6 +6,7 @@ language = "C"
 windowmanager = None
 icon_theme = "highcolor"
 icon_size = 48
+cache_time = 5
 
 def setWindowManager(wm):
 	global windowmanager
@@ -20,6 +21,10 @@ def setIconTheme(theme):
 def setIconSize(size):
 	global icon_size
 	icon_size = size
+
+def setCacheTime(time):
+	global cache_time
+	cache_time = time
 
 def setLocale(lang):
 	import locale
