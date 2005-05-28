@@ -8,7 +8,9 @@ from xdg.DesktopEntry import *
 import xml.dom.minidom
 import os
 
-# FIXME: claen up MenuEntry class
+# FIXME: clean up MenuEntry class
+# FIXME: create separators
+# FIXME: get child tags
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
 # FIXME: More Layout stuff
 # FIXME: unod/redo function / remove menu...
@@ -52,8 +54,9 @@ class MenuEditor:
 		# create the entry
 		filename = self.__getFileName(name, ".desktop")
 		entry = MenuEntry(filename)
-		entry.Parents.append(parent)
 		entry = self.editEntry(entry, name, genericname, comment, command, icon, terminal)
+
+		entry.Parents.append(parent)
 		self.__addEntry(parent, entry, after, before)
 
 		# create the xml
@@ -75,9 +78,7 @@ class MenuEditor:
 		menu = Menu()
 		menu = self.editMenu(menu, name, genericname, comment, icon)
 
-		menuname = self.__getFixedName(name)
-		menu.Name = menuname
-
+		menu.Name = self.__getFixedName(name)
 		menu.Layout = parent.DefaultLayout
 		menu.DefaultLayout = parent.DefaultLayout
 
@@ -166,8 +167,7 @@ class MenuEditor:
 
 	def moveSeparator(self, separator, parent, after=None,before=None):
 		# move the entry
-		index = parent.Entries.index(separator)
-		parent.Entries.remove(index)
+		parent.Entries.remove(separator)
 
 		# add it again
 		self.__addEntry(parent, separator, after, before)
@@ -485,7 +485,7 @@ class MenuEditor:
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True), False)
 			if not xml_menu:
 				return False
-			for	child in xml_menu.childNodes:
-				if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.nodeName == "Directory":
+			for	node in xml_menu.childNodes:
+				if node.nodeType == xml.dom.Node.ELEMENT_NODE and node.nodeName == "Directory":
 					return True
 		return False
