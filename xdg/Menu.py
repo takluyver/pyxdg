@@ -929,7 +929,7 @@ def sort(menu):
 			menu.Entries[0].Show = False
 	if len(menu.Entries) > 1:
 		if isinstance(menu.Entries[-1], Separator):
-			menu.Entries[0].Show = False
+			menu.Entries[-1].Show = False
 
 	# show_empty tag
 	for entry in menu.Entries:
