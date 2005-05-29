@@ -8,6 +8,9 @@ from xdg.DesktopEntry import *
 import xml.dom.minidom
 import os
 
+# FIXME: copy functions
+# FIXME: fileExists functions: cleanup Excludes
+# FIXME: cleanup Moves
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
 # FIXME: More Layout stuff
 # FIXME: unod/redo function / remove menu...
@@ -456,4 +459,8 @@ class MenuEditor:
 		try:
 			os.remove(filename)
 		except OSError:
+			pass
+		try:
+			self.filenames.remove(filename)
+		except IndexError:
 			pass
