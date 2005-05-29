@@ -147,6 +147,10 @@ class MenuEditor:
 		elif nodisplay == False:
 			deskentry.set("NoDisplay", "false")
 
+		if entry.Type == "System":
+			entry.Type = "Both"
+			entry.Original = MenuEntry(entry.DesktopEntry.filename, entry.Prefix)
+
 		if len(entry.Parents) > 0:
 			sort(self.menu)
 
@@ -183,6 +187,10 @@ class MenuEditor:
 			deskentry.set("NoDisplay", "true")
 		elif nodisplay == False:
 			deskentry.set("NoDisplay", "false")
+
+		if entry.Type == "System":
+			entry.Type = "Both"
+			entry.Original = MenuEntry(entry.DesktopEntry.filename, entry.Prefix)
 
 		if isinstance(entry.Parent, Menu):
 			sort(self.menu)

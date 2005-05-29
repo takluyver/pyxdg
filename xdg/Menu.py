@@ -420,11 +420,6 @@ class MenuEntry:
 				self.DesktopEntry.write()
 			# save local one!
 			else:
-				# set self.Type
-				if self.Type == "System":
-					self.Type = "Both"
-					self.Original = MenuEntry(self.DesktopEntry.filename, self.Prefix)
-
 				path = self.__getDir()
 
 				if not os.path.isdir(os.path.dirname(os.path.join(path,self.Filename))):
