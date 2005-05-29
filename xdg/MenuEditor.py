@@ -263,7 +263,7 @@ class MenuEditor:
 		return menu
 
 	def deleteEntry(self, entry):
-		if "delete" in self.getTypes(entry):
+		if "delete" in self.getActions(entry):
 			try:
 				os.remove(entry.DesktopEntry.filename)
 			except OSError:
@@ -273,10 +273,11 @@ class MenuEditor:
 				parent.DeskEntries.remove(entry)
 				xml_menu = self.__getXmlMenu(parent.getPath(True, True))
 				self.__removeXmlFilename(xml_menu, entry.DesktopFileID)
+		sort(self.menu)
 		return entry
 
 	def revertEntry(self, entry):
-		if "revert" in self.getTypes(entry):
+		if "revert" in self.getActions(entry):
 			try:
 				os.remove(entry.DesktopEntry.filename)
 			except OSError:
@@ -290,7 +291,7 @@ class MenuEditor:
 		return entry
 
 	def deleteMenu(self, menu):
-		if "delete" in self.getTypes(menu):
+		if "delete" in self.getActions(menu):
 			try:
 				os.remove(menu.Directory.DesktopEntry.filename)
 			except OSError:
@@ -299,10 +300,11 @@ class MenuEditor:
 			menu.Parent.Submenus.remove(menu)
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 			xml_menu.parentNode.removeChild(xml_menu)
+		sort(self.menu)
 		return menu
 
 	def revertMenu(self, menu):
-		if "revert" in self.getTypes(menu):
+		if "revert" in self.getActions(menu):
 			try:
 				os.remove(menu.Directory.DesktopEntry.filename)
 			except OSError:
@@ -319,9 +321,11 @@ class MenuEditor:
 		return separator
 
 	""" Private Stuff """
-	def getTypes(self, entry):
+	def getActions(self, entry):
 		if isinstance(entry, Menu):
-			if entry.Directory.Type == "Both":
+			if not isinstance(entry.Directory, MenuEntry):
+				return "none"
+			elif entry.Directory.Type == "Both":
 				return "revert"
 			elif entry.Directory.Type == "User":
 				xml_menu = self.__getXmlMenu(entry.getPath(True, True), False)
@@ -336,7 +340,7 @@ class MenuEditor:
 		elif isinstance(entry, MenuEntry):
 			if entry.Type == "Both":
 				return "revert"
-			elif entry.Ttype == "User":
+			elif entry.Type == "User":
 				return "delete"
 
 		return "none"

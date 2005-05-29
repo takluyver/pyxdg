@@ -394,8 +394,7 @@ class MenuEntry:
 		self.MatchedInclude = False
 
 		# Caching
-		self.Categories = ""
-		self.cache()
+		self.Categories = self.DesktopEntry.getCategories()
 
 	def setAttributes(self, filename, prefix=""):
 		self.Filename = filename
@@ -405,16 +404,13 @@ class MenuEntry:
 		if os.path.isabs(self.Filename):
 			self.Dir = self.DesktopEntry.filename.replace(self.Filename, '')
 		else:
-			self.Dir = self.getDir()
+			self.Dir = self.__getDir()
 
-	def getDir(self):
+	def __getDir(self):
 		if self.DesktopEntry.getType() == "Application":
 			return os.path.join(xdg_data_dirs[0], "applications")
 		else:
 			return os.path.join(xdg_data_dirs[0], "desktop-directories")
-
-	def cache(self):
-		self.Categories = self.DesktopEntry.getCategories()
 
 	def save(self):
 		# save the entry
@@ -429,7 +425,7 @@ class MenuEntry:
 					self.Type = "Both"
 					self.Original = MenuEntry(self.DesktopEntry.filename, self.Prefix)
 
-				path = self.getDir()
+				path = self.__getDir()
 
 				if not os.path.isdir(os.path.dirname(os.path.join(path,self.Filename))):
 					os.makedirs(os.path.dirname(os.path.join(path,self.Filename)))
