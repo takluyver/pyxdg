@@ -21,6 +21,9 @@ class MenuEditor:
 		self.doc = None
 		self.parse(menu, filename)
 
+		# fix for creating two menus with the same name on the fly
+		self.filenames = []
+
 	def parse(self, menu=None, filename=None):
 		if isinstance(menu, Menu):
 			self.menu = menu
@@ -48,131 +51,67 @@ class MenuEditor:
 		self.__saveMenu()
 
 	def createEntry(self, parent, name, command=None, genericname=None, comment=None, icon=None, terminal=None, after=None, before=None):
-		# create the entry
-		filename = self.__getFileName(name, ".desktop")
-		entry = MenuEntry(filename)
+		entry = MenuEntry(self.__getFileName(name, ".desktop"))
 		entry = self.editEntry(entry, name, genericname, comment, command, icon, terminal)
 
-		entry.Parents.append(parent)
 		self.__addEntry(parent, entry, after, before)
-
-		# create the xml
-		xml_menu = self.__getXmlMenu(parent.getPath(True, True))
-		self.__addXmlFilename(xml_menu, filename, 'Include')
-
-		# layout stuff
-		if after or before:
-			self.__addLayout(parent)
-			self.__addXmlLayout(xml_menu, parent.Layout)
 
 		sort(self.menu)
 
 		return entry
 
 	def createMenu(self, parent, name, genericname=None, comment=None, icon=None, after=None, before=None):
-		# create the entry
-		filename = self.__getFileName(name, ".directory")
 		menu = Menu()
 		menu = self.editMenu(menu, name, genericname, comment, icon)
 
-		menu.Name = self.__getFileName(name, ".directory").replace("/", "").replace(".directory", "")
+		self.__addEntry(parent, menu, after, before)
+
+		menu.Name = menu.Directory.Filename.replace(".directory", "")
 		menu.Layout = parent.DefaultLayout
 		menu.DefaultLayout = parent.DefaultLayout
 
-		self.__addEntry(parent, menu, after, before)
 
-		# create the xml
 		xml_menu = self.__getXmlMenu(menu.getPath(True, True))
-		self.__addXmlTextElement(xml_menu, 'Directory', filename)
-
-		# layout stuff
-		if after or before:
-			self.__addLayout(parent)
-			self.__addXmlLayout(xml_menu, parent.Layout)
+		self.__addXmlTextElement(xml_menu, 'Directory', menu.Directory.Filename)
 
 		sort(self.menu)
 
 		return menu
 
 	def createSeparator(self, parent, after=None, before=None):
-		# create the separator
 		separator = Separator(parent)
 
 		self.__addEntry(parent, separator, after, before)
-		self.__addLayout(parent)
 
-		# create the xml and layout stuff
-		menu = self.__getXmlMenu(parent.getPath(True, True))
-		self.__addXmlLayout(menu, parent.Layout)
+		sort(self.menu)
 
 		return separator
 
 	def moveEntry(self, entry, oldparent, newparent, after=None, before=None):
-		# remove the entry
-		oldparent.DeskEntries.remove(entry)
-		oldparent.Entries.remove(entry)
-		entry.Parents.remove(oldparent)
-
+		self.__deleteEntry(oldparent, entry, after, before)
 		self.__addEntry(newparent, entry, after, before)
-		entry.Parents.append(newparent)
-
-		# create the xml
-		old_menu = self.__getXmlMenu(oldparent.getPath(True, True))
-		new_menu = self.__getXmlMenu(newparent.getPath(True, True))
-
-		if oldparent.getPath(True) != newparent.getPath(True):
-			self.__addXmlFilename(old_menu, entry.DesktopFileID, "Exclude")
-			self.__addXmlFilename(new_menu, entry.DesktopFileID, "Include")
-
-		# layout stuff
-		if after or before:
-			self.__addLayout(oldparent)
-			self.__addLayout(newparent)
-			self.__addXmlLayout(old_menu, oldparent.Layout)
-			self.__addXmlLayout(new_menu, newparent.Layout)
 
 		sort(self.menu)
 
 		return entry
 
 	def moveMenu(self, menu, oldparent, newparent, after=None, before=None):
-		# remove the entry
-		oldparent.Submenus.remove(menu)
-		oldparent.Entries.remove(menu)
-
+		self.__deleteEntry(oldparent, menu, after, before)
 		self.__addEntry(newparent, menu, after, before)
 
-		# create the xml
-		old_menu = self.__getXmlMenu(oldparent.getPath(True, True))
-		new_menu = self.__getXmlMenu(newparent.getPath(True, True))
 		root_menu = self.__getXmlMenu(self.menu.Name)
-
 		if oldparent.getPath(True) != newparent.getPath(True):
 			self.__addXmlMove(root_menu, os.path.join(oldparent.getPath(True), menu.Name), os.path.join(newparent.getPath(True), menu.Name))
-
-		# layout stuff
-		if after or before:
-			self.__addLayout(oldparent)
-			self.__addLayout(newparent)
-			self.__addXmlLayout(old_menu, oldparent.Layout)
-			self.__addXmlLayout(new_menu, newparent.Layout)
 
 		sort(self.menu)
 
 		return menu
 
-	def moveSeparator(self, separator, parent, after=None,before=None):
-		# move the entry
-		parent.Entries.remove(separator)
-
-		# add it again
+	def moveSeparator(self, separator, parent, after=None, before=None):
+		self.__deleteEntry(parent, separator, after, before)
 		self.__addEntry(parent, separator, after, before)
 
-
-		# create the xml and layout stuff
-		self.__addLayout(parent)
-		menu = self.__getXmlMenu(parent.getPath(True, True))
-		self.__addXmlLayout(menu, parent.Layout)
+		sort(self.menu)
 
 		return separator
 
@@ -216,7 +155,7 @@ class MenuEditor:
 			menu.Directory.setAttributes(menu.Name + ".directory")
 		# Hack for New Entries
 		elif not isinstance(menu.Directory, MenuEntry):
-			menu.Directory = MenuEntry(self.__getFileName(name, ".directory"))
+			menu.Directory = MenuEntry(self.__getFileName(name, ".directory").replace("/", ""))
 
 		deskentry = menu.Directory.DesktopEntry
 
@@ -264,60 +203,44 @@ class MenuEditor:
 
 	def deleteEntry(self, entry):
 		if "delete" in self.getActions(entry):
-			try:
-				os.remove(entry.DesktopEntry.filename)
-			except OSError:
-				pass
+			self.__deleteFile(entry.DesktopEntry.filename)
 			for parent in entry.Parents:
-				parent.Entries.remove(entry)
-				parent.DeskEntries.remove(entry)
-				xml_menu = self.__getXmlMenu(parent.getPath(True, True))
-				self.__removeXmlFilename(xml_menu, entry.DesktopFileID)
-		sort(self.menu)
+				self.__deleteEntry(parent, entry)
+			sort(self.menu)
 		return entry
 
 	def revertEntry(self, entry):
 		if "revert" in self.getActions(entry):
-			try:
-				os.remove(entry.DesktopEntry.filename)
-			except OSError:
-				pass
+			self.__deleteFile(entry.DesktopEntry.filename)
 			for parent in entry.Parents:
 				index = parent.Entries.index(entry)
 				parent.Entries[index] = entry.Original
 				index = parent.DeskEntries.index(entry)
 				parent.DeskEntries[index] = entry.Original
-				sort(self.menu)
+			sort(self.menu)
 		return entry
 
 	def deleteMenu(self, menu):
 		if "delete" in self.getActions(menu):
-			try:
-				os.remove(menu.Directory.DesktopEntry.filename)
-			except OSError:
-				pass
-			menu.Parent.Entries.remove(menu)
-			menu.Parent.Submenus.remove(menu)
+			self.__deleteFile(menu.Directory.DesktopEntry.filename)
+			self.__deleteEntry(menu.Parent, menu)
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 			xml_menu.parentNode.removeChild(xml_menu)
-		sort(self.menu)
+			sort(self.menu)
 		return menu
 
 	def revertMenu(self, menu):
 		if "revert" in self.getActions(menu):
-			try:
-				os.remove(menu.Directory.DesktopEntry.filename)
-			except OSError:
-				pass
+			self.__deleteFile(menu.Directory.DesktopEntry.filename)
 			menu.Directory = menu.Directory.Original
 			sort(self.menu)
 		return menu
 
 	def deleteSeparator(self, separator):
-		separator.Parent.Entries.remove(separator)
-		self.__addLayout(separator.Parent)
-		menu = self.__getXmlMenu(separator.Parent.getPath(True, True))
-		self.__addXmlLayout(menu, separator.Parent.Layout)
+		self.__deleteEntry(separator.Parent, separator)
+
+		sort(self.menu)
+
 		return separator
 
 	""" Private Stuff """
@@ -368,14 +291,16 @@ class MenuEditor:
 		while 1:
 			#filename = prefix + name + "-" + str(postfix) + extension
 			if postfix == 0:
-				filename = name + "-" + str(postfix) + extension
-			else:
 				filename = name + extension
+			else:
+				filename = name + "-" + str(postfix) + extension
 			if extension == ".desktop":
 				dir = "applications"
 			elif extension == ".directory":
 				dir = "desktop-directories"
-			if not os.path.isfile(os.path.join(xdg_data_dirs[0], dir, filename)):
+			if not filename in self.filenames and not \
+				os.path.isfile(os.path.join(xdg_data_dirs[0], dir, filename)):
+				self.filenames.append(filename)
 				break
 			else:
 				postfix += 1
@@ -424,14 +349,14 @@ class MenuEditor:
 		return element.appendChild(node)
 
 	def __addXmlFilename(self, element, filename, type = "Include"):
+		# remove old filenames
+		for node in self.__getXmlNodesByName(["Include", "Exclude"], element):
+			if node.childNodes[0].nodeName == "Filename" and node.childNodes[0].childNodes[0].nodeValue == filename:
+				element.removeChild(node)
+
 		node = self.doc.createElement(type)
 		node.appendChild(self.__addXmlTextElement(node, 'Filename', filename))
 		return element.appendChild(node)
-
-	def __removeXmlFilename(self, element, desktopfileid):
-		for node in self.__getXmlNodesByName(["Include", "Exclude"], element):
-			if node.childNodes[0].nodeName == "Filename" and node.childNodes[0].childNodes[0].nodeValue == desktopfileid:
-				element.removeChild(node)
 
 	def __addXmlMove(self, element, old, new):
 		node = self.doc.createElement("Move")
@@ -443,7 +368,6 @@ class MenuEditor:
 		# remove old layout
 		for node in self.__getXmlNodesByName("Layout", element):
 			element.removeChild(node)
-			break
 
 		# add new layout
 		node = self.doc.createElement("Layout")
@@ -465,23 +389,6 @@ class MenuEditor:
 		for	child in element.childNodes:
 			if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.nodeName in name:
 				yield child
-
-	def __addEntry(self, parent, entry, after, before):
-		if after or before:
-			if after:
-				index = parent.Entries.index(after) + 1
-			elif before:
-				index = parent.Entries.index(before)
-			parent.Entries.insert(index, entry)
-		else:
-			parent.Entries.append(entry)
-
-		if isinstance(entry, Menu):
-			parent.addSubmenu(entry)
-		elif isinstance(entry, MenuEntry):
-			parent.DeskEntries.append(entry)
-
-		return entry
 
 	def __addLayout(self, parent):
 		layout = Layout()
@@ -505,3 +412,48 @@ class MenuEditor:
 		parent.Layout = layout
 
 		return layout
+
+	def __addEntry(self, parent, entry, after=None, before=None):
+		if after or before:
+			if after:
+				index = parent.Entries.index(after) + 1
+			elif before:
+				index = parent.Entries.index(before)
+			parent.Entries.insert(index, entry)
+		else:
+			parent.Entries.append(entry)
+
+		xml_parent = self.__getXmlMenu(parent.getPath(True, True))
+
+		if isinstance(entry, MenuEntry):
+			parent.DeskEntries.append(entry)
+			entry.Parents.append(parent)
+			self.__addXmlFilename(xml_parent, entry.DesktopFileID, "Include")
+		elif isinstance(entry, Menu):
+			parent.addSubmenu(entry)
+
+		if after or before:
+			self.__addLayout(parent)
+			self.__addXmlLayout(xml_parent, parent.Layout)
+
+	def __deleteEntry(self, parent, entry, after=None, before=None):
+		parent.Entries.remove(entry)
+
+		xml_parent = self.__getXmlMenu(parent.getPath(True, True))
+
+		if isinstance(entry, MenuEntry):
+			entry.Parents.remove(parent)
+			parent.DeskEntries.remove(entry)
+			self.__addXmlFilename(xml_parent, entry.DesktopFileID, "Exclude")
+		elif isinstance(entry, Menu):
+			parent.Submenus.remove(entry)
+
+		if after or before:
+			self.__addLayout(parent)
+			self.__addXmlLayout(xml_parent, parent.Layout)
+
+	def __deleteFile(self, filename):
+		try:
+			os.remove(filename)
+		except OSError:
+			pass
