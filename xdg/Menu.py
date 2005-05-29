@@ -445,6 +445,7 @@ class Separator:
 	"Just a dummy class for Separators"
 	def __init__(self, parent):
 		self.Parent = parent
+		self.Show = True
 
 
 class Header:
@@ -857,14 +858,6 @@ def sort(menu):
 	for submenu in menu.Submenus:
 		sort(submenu)
 
-		# remove separators at the beginning and at the end
-		if len(submenu.Entries) > 0:
-			if isinstance(submenu.Entries[0], Separator):
-				submenu.Entries.pop(0)
-		if len(submenu.Entries) > 0:
-			if isinstance(submenu.Entries[-1], Separator):
-				submenu.Entries.pop(-1)
-
 	tmp_s = []
 	tmp_e = []
 
@@ -925,6 +918,16 @@ def sort(menu):
 					entry.Show = "NotShowIn"
 					menu.Visible -= 1
 		elif isinstance(entry,Separator):
+			menu.Visible -= 1
+
+	# remove separators at the beginning and at the end
+	if len(menu.Entries) > 0:
+		if isinstance(menu.Entries[0], Separator):
+			menu.Entries[0].Show = False
+			menu.Visible -= 1
+	if len(menu.Entries) > 1:
+		if isinstance(menu.Entries[-1], Separator):
+			menu.Entries[0].Show = False
 			menu.Visible -= 1
 
 	# show_empty tag
