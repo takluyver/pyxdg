@@ -8,9 +8,10 @@ from xdg.DesktopEntry import *
 import xml.dom.minidom
 import os
 
-# XML-Cleanups: Move / Exclude
-# FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
 # FIXME: copy functions
+# FIXME: fileExists functions: cleanup Excludes
+# FIXME: cleanup Moves
+# FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
 # FIXME: More Layout stuff
 # FIXME: unod/redo function / remove menu...
 # FIXME: Advanced MenuEditing Stuff: LegacyDir/MergeFile
@@ -72,6 +73,7 @@ class MenuEditor:
 		menu.Layout = parent.DefaultLayout
 		menu.DefaultLayout = parent.DefaultLayout
 
+
 		xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 		self.__addXmlTextElement(xml_menu, 'Directory', menu.Directory.Filename)
 
@@ -93,6 +95,7 @@ class MenuEditor:
 		self.__addEntry(newparent, entry, after, before)
 
 		sort(self.menu)
+		print oldparent.Show
 
 		return entry
 
@@ -146,9 +149,6 @@ class MenuEditor:
 		elif nodisplay == False:
 			deskentry.set("NoDisplay", "false")
 
-		if len(entry.Parents) > 0:
-			sort(self.menu)
-
 		return entry
 
 	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, nodisplay=None):
@@ -183,8 +183,27 @@ class MenuEditor:
 		elif nodisplay == False:
 			deskentry.set("NoDisplay", "false")
 
-		if isinstance(entry.Parent, Menu):
-			sort(self.menu)
+		return menu
+
+	def hideEntry(self, entry):
+		entry = self.editEntry(entry, nodisplay=True)
+		sort(self.menu)
+		return entry
+
+	def unhideEntry(self, entry):
+		entry = self.editEntry(entry, nodisplay=False)
+		sort(self.menu)
+		return entry
+
+	def hideMenu(self, menu):
+		menu = self.editMenu(menu, nodisplay=True)
+		sort(self.menu)
+		return menu
+
+	def unhideMenu(self, menu):
+		menu = self.editMenu(menu, nodisplay=False)
+		sort(self.menu)
+		return menu
 
 	def deleteEntry(self, entry):
 		if "delete" in self.getActions(entry):
@@ -444,5 +463,5 @@ class MenuEditor:
 			pass
 		try:
 			self.filenames.remove(filename)
-		except IndexError:
+		except ValueError:
 			pass
