@@ -332,10 +332,9 @@ class MenuEditor:
 				if not xml_menu:
 					return "revert"
 				else:
-					if len(self.__getXmlNodesByName("Directory", xml_menu)) > 0:
+					for node in self.__getXmlNodesByName("Directory", xml_menu):
 						return ["delete", "revert"]
-					else:
-						return "delete"
+					return "delete"
 
 		elif isinstance(entry, MenuEntry):
 			if entry.Type == "Both":
@@ -465,7 +464,7 @@ class MenuEditor:
 	def __getXmlNodesByName(self, name, element):
 		for	child in element.childNodes:
 			if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.nodeName in name:
-				yield node
+				yield child
 
 	def __addEntry(self, parent, entry, after, before):
 		if after or before:
