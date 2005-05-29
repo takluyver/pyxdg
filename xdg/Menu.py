@@ -828,7 +828,7 @@ def __genmenuNotOnlyAllocated(menu):
 		for rule in menu.Rules:
 			entries = rule.do(tmp["cache"].getEntries(menu.AppDirs), rule.Type, 1)
 		for entry in entries:
-		    if entry.Add == True:
+			if entry.Add == True:
 				entry.Parents.append(menu)
 				entry.Add = False
 				entry.Allocated = True
@@ -1009,11 +1009,11 @@ class DesktopEntryCache:
 				if entry.DesktopFileID not in ids:
 					ids.append(entry.DesktopFileID)
 					list.append(entry)
-				elif entry.Type != "User":
+				elif entry.Type == "System":
 				# FIXME: This is only 99% correct, but still...
 					i = list.index(entry)
 					e = list[i]
-					if e.Type == "System":
+					if e.Type == "User":
 						e.Type = "Both"
 						e.Original = entry
 		self.cache[key] = list

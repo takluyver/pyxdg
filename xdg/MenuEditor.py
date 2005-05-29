@@ -93,7 +93,6 @@ class MenuEditor:
 		self.__addEntry(newparent, entry, after, before)
 
 		sort(self.menu)
-		print oldparent.Show
 
 		return entry
 
