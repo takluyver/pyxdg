@@ -5,6 +5,8 @@ from xdg.BaseDirectory import *
 from xdg.Exceptions import *
 from xdg.DesktopEntry import *
 
+from __future__ import generators
+
 import xml.dom.minidom
 import os
 
@@ -463,13 +465,9 @@ class MenuEditor:
 		return element.appendChild(node)
 
 	def __getXmlNodesByName(self, name, element):
-		if not element:
-			element = self.doc
-		nodes = []
 		for	child in element.childNodes:
 			if child.nodeType == xml.dom.Node.ELEMENT_NODE and child.nodeName in name:
-				nodes.append(child)
-		return nodes
+				yield node
 
 	def __addEntry(self, parent, entry, after, before):
 		if after or before:
