@@ -32,12 +32,12 @@ class Menu:
 
 		# Private stuff, only needed for parsing
 		self.AppDirs = []
-		self.DefaultLayout = ""
+		self.DefaultLayout = None
 		self.Deleted = "notset"
 		self.DeskEntries = []
 		self.Directories = []
 		self.DirectoryDirs = []
-		self.Layout = ""
+		self.Layout = None
 		self.Moves = []
 		self.OnlyUnallocated = "notset"
 		self.Rules = []
@@ -53,14 +53,20 @@ class Menu:
 		for dir in other.DirectoryDirs:
 			self.DirectoryDirs.append(dir)
 
-		for entry in other.Directories:
-			self.Directories.append(entry)
+		for directory in other.Directories:
+			self.Directories.append(directory)
 
 		if other.Deleted != "notset":
 			self.Deleted = other.Deleted
 
 		if other.OnlyUnallocated != "notset":
 			self.OnlyUnallocated = other.OnlyUnallocated
+
+		if other.Layout:
+			self.Layout = other.Layout
+
+		if other.DefaultLayout:
+			self.DefaultLayout = other.DefaultLayout
 
 		for rule in other.Rules:
 			self.Rules.append(rule)
