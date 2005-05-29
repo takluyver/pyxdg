@@ -5,8 +5,6 @@ from xdg.BaseDirectory import *
 from xdg.Exceptions import *
 from xdg.DesktopEntry import *
 
-from __future__ import generators
-
 import xml.dom.minidom
 import os
 
