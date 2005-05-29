@@ -870,7 +870,7 @@ def sort(menu):
 	for order in menu.Layout.order:
 		if order[0] == "Separator":
 			separator = Separator(menu)
-			if len(menu.Entries) > 0 and isinstance(menu.Entries[-2], Separator):
+			if len(menu.Entries) > 0 and isinstance(menu.Entries[-1], Separator):
 				separator.Show = False
 			menu.Entries.append(separator)
 		elif order[0] == "Filename":
