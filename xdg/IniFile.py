@@ -52,7 +52,7 @@ class IniFile:
 						raise DuplicateKeyError(key, currentGroup, filename)
 					else:
 						content[currentGroup][key] = value
-				except IndexError, UnboundLocalError:
+				except (IndexError, UnboundLocalError):
 					raise ParsingError("[%s]-Header missing" % headers[0], filename)
 
 		self.filename = filename
