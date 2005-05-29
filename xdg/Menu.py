@@ -869,7 +869,10 @@ def sort(menu):
 	
 	for order in menu.Layout.order:
 		if order[0] == "Separator":
-			menu.Entries.append(Separator(menu))
+			separator = Separator(menu)
+			if len(menu.Entries) > 0 and isinstance(menu.Entries[-2], Separator):
+				separator.Show = False
+			menu.Entries.append(separator)
 		elif order[0] == "Filename":
 			entry = menu.getEntry(order[1])
 			if entry:
@@ -924,11 +927,9 @@ def sort(menu):
 	if len(menu.Entries) > 0:
 		if isinstance(menu.Entries[0], Separator):
 			menu.Entries[0].Show = False
-			menu.Visible -= 1
 	if len(menu.Entries) > 1:
 		if isinstance(menu.Entries[-1], Separator):
 			menu.Entries[0].Show = False
-			menu.Visible -= 1
 
 	# show_empty tag
 	for entry in menu.Entries:
