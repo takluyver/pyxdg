@@ -3,15 +3,15 @@ Implementation of the XDG Menu Specification Version 1.0.draft-1
 http://standards.freedesktop.org/menu-spec/
 """
 
+from __future__ import generators
+import os, xml.dom.minidom
+
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
 from xdg.Exceptions import *
 
 import xdg.Locale
 import xdg.Config
-
-import xml.dom.minidom
-import os
 
 ELEMENT_NODE = xml.dom.Node.ELEMENT_NODE
 
@@ -857,6 +857,7 @@ def __genmenuOnlyAllocated(menu):
 # And sorting ...
 def sort(menu):
 	menu.Entries = []
+	menu.Visible = 0
 
 	for submenu in menu.Submenus:
 		sort(submenu)
