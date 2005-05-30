@@ -283,9 +283,7 @@ class MenuEditor:
 
 	def __getFileName(self, name, extension):
 		postfix = 0
-		#prefix = "xdg-changed-"
 		while 1:
-			#filename = prefix + name + "-" + str(postfix) + extension
 			if postfix == 0:
 				filename = name + extension
 			else:
@@ -350,6 +348,7 @@ class MenuEditor:
 			if node.childNodes[0].nodeName == "Filename" and node.childNodes[0].childNodes[0].nodeValue == filename:
 				element.removeChild(node)
 
+		# add new filename
 		node = self.doc.createElement(type)
 		node.appendChild(self.__addXmlTextElement(node, 'Filename', filename))
 		return element.appendChild(node)
