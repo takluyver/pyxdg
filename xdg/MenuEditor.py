@@ -232,7 +232,7 @@ class MenuEditor:
 		return menu
 
 	def deleteSeparator(self, separator):
-		self.__deleteEntry(separator.Parent, separator)
+		self.__deleteEntry(separator.Parent, separator, after=True)
 
 		sort(self.menu)
 
