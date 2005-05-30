@@ -187,9 +187,9 @@ class MenuEditor:
 		elif nodisplay == False:
 			deskentry.set("NoDisplay", "false")
 
-		if entry.Type == "System":
-			entry.Type = "Both"
-			entry.Original = MenuEntry(entry.DesktopEntry.filename, entry.Prefix)
+		if menu.Directory.Type == "System":
+			menu.Directory.Type = "Both"
+			menu.Directory.Original = MenuEntry(entry.DesktopEntry.filename, entry.Prefix)
 
 		if isinstance(entry.Parent, Menu):
 			sort(self.menu)
