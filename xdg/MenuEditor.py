@@ -198,7 +198,7 @@ class MenuEditor:
 		return menu
 
 	def deleteMenuEntry(self, menuentry):
-		if self.getActions(menuentry) == "delete":
+		if self.getAction(menuentry) == "delete":
 			self.__deleteFile(menuentry.DesktopEntry.filename)
 			for parent in menuentry.Parents:
 				self.__deleteEntry(parent, menuentry)
