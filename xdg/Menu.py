@@ -740,8 +740,7 @@ def __parseMergeFile(value, child, filename, parent):
 def __parseMergeDir(value, child, filename, parent):
 	value = __check(value, filename, "dir")
 	if value:
-		items = os.listdir(value)
-		for item in items:
+		for item in os.listdir(value):
 			if os.path.splitext(item)[1] == ".menu":
 				__mergeFile(os.path.join(value, item), child, parent)
 
@@ -980,8 +979,7 @@ class MenuEntryCache:
 				self.__addFiles(dir, "", prefix, legacy)
 
 	def __addFiles(self, dir, subdir, prefix, legacy):
-		items = os.listdir(os.path.join(dir,subdir))
-		for item in items:
+		for item in os.listdir(os.path.join(dir,subdir)):
 			if os.path.splitext(item)[1] == ".desktop":
 				try:
 					deskentry = DesktopEntry()
