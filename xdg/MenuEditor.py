@@ -45,7 +45,7 @@ class MenuEditor:
 		try:
 			self.doc = xml.dom.minidom.parse(self.filename)
 		except IOError:
-			self.doc = xml.dom.minidom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">' + xdg_config_dirs[1] + '/menus/applications.menu</MergeFile></Menu>')
+			self.doc = xml.dom.minidom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">'+self.filename+'</MergeFile></Menu>')
 		except xml.parsers.expat.ExpatError:
 			raise ParsingError('Not a valid .menu file', self.filename)
 
