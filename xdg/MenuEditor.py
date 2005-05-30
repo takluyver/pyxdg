@@ -191,7 +191,7 @@ class MenuEditor:
 			menu.Directory.Type = "Both"
 			menu.Directory.Original = MenuEntry(entry.DesktopEntry.filename, entry.Prefix)
 
-		if isinstance(entry.Parent, Menu):
+		if isinstance(menu.Parent, Menu):
 			sort(self.menu)
 
 		return menu

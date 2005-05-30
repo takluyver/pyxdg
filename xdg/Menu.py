@@ -24,7 +24,7 @@ class Menu:
 		self.Doc = ""
 		self.Filename = ""
 		self.Depth = 0
-#		self.Parent = ""
+		self.Parent = None
 
 		# Can be one of Deleted/NoDisplay/Hidden/Empty/NotShowIn or True
 		self.Show = True
@@ -126,9 +126,9 @@ class Menu:
 				names.append(parent.Name)
 			else:
 				names.append(parent.getName())
-			try:
+			if parent.Depth > 0:
 				parent = parent.Parent
-			except AttributeError:
+			else:
 				break
 		names.reverse()
 		path = ""
