@@ -67,11 +67,11 @@ class MenuEditor:
 		menu = Menu()
 		menu = self.editMenu(menu, name, genericname, comment, icon)
 
-		self.__addEntry(parent, menu, after, before)
-
 		menu.Name = menu.Directory.Filename.replace(".directory", "")
 		menu.Layout = parent.DefaultLayout
 		menu.DefaultLayout = parent.DefaultLayout
+
+		self.__addEntry(parent, menu, after, before)
 
 		xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 		self.__addXmlTextElement(xml_menu, 'Directory', menu.Directory.Filename)
