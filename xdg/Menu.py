@@ -814,8 +814,11 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
 def __parseKDELegacyDirs(filename, parent):
 	f=os.popen3("kde-config --path apps")
 	output = f[1].readlines()
-	for dir in output[0].split(":"):
-		__parseLegacyDir(dir,"kde", filename, parent)
+	try:
+		for dir in output[0].split(":"):
+			__parseLegacyDir(dir,"kde", filename, parent)
+	except IndexError:
+		pass
 
 # remove duplicate entries from a list
 def __removeDuplicates(list):
