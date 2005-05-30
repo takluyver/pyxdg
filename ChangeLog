@@ -1,4 +1,6 @@
-2005-05-28 Heinrich Wendel <h_wendel@cojobo.net>
+Version 0.12
+
+2005-05-30 Heinrich Wendel <h_wendel@cojobo.net>
 	* MenuEditor.py: New in this release, use to edit Menus thx to Travis
 	Watkins <alleykat@gmail.com> and Matt Kynaston <mattkyn@gmail.com> for
 	their help
