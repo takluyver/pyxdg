@@ -230,13 +230,16 @@ class Layout:
 		for child in node.childNodes:
 			if child.nodeType == ELEMENT_NODE:
 				if child.tagName == "Menuname":
-					self.parseMenuname(
-						child.childNodes[0].nodeValue,
-						child.getAttribute("show_empty") or "false",
-						child.getAttribute("inline") or "false",
-						child.getAttribute("inline_limit") or 4,
-						child.getAttribute("inline_header") or "true",
-						child.getAttribute("inline_alias") or "false" )
+					try:
+						self.parseMenuname(
+							child.childNodes[0].nodeValue,
+							child.getAttribute("show_empty") or "false",
+							child.getAttribute("inline") or "false",
+							child.getAttribute("inline_limit") or 4,
+							child.getAttribute("inline_header") or "true",
+							child.getAttribute("inline_alias") or "false" )
+					except IndexError:
+						raise ValidationError('Menuname cannot be empty', "")
 				elif child.tagName == "Separator":
 					self.parseSeparator()
 				elif child.tagName == "Filename":
