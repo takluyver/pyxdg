@@ -101,22 +101,22 @@ class Menu:
 	# search for name/comment/genericname/desktopfileide
 	# return multiple items
 
-	def getEntry(self, desktopfileid, deep = False):
-		for entry in self.MenuEntries:
-			if entry.DesktopFileID == desktopfileid:
-				return entry
+	def getMenuEntry(self, desktopfileid, deep = False):
+		for menuentry in self.MenuEntries:
+			if menuentry.DesktopFileID == desktopfileid:
+				return menuentry
 		if deep == True:
-			for menu in self.Submenus:
-				menu.getEntry(desktopfileid, deep)
+			for submenu in self.Submenus:
+				submenu.getMenuEntry(desktopfileid, deep)
 
 	def getMenu(self, path):
 		array = path.split("/", 1)
-		for entry in self.Submenus:
-			if entry.Name == array[0]:
+		for submenu in self.Submenus:
+			if submenu.Name == array[0]:
 				if len(array) > 1:
-					return entry.getMenu(array[1])
+					return submenu.getMenu(array[1])
 				else:
-					return entry
+					return submenu
 
 	def getPath(self, org=False, toplevel=False):
 		parent = self
@@ -287,18 +287,18 @@ class Rule:
 
 	def compile(self):
 		exec("""
-def do(entries, type, run):
-    for entry in entries:
-		if run == 2 and ( entry.MatchedInclude == True \
-		or entry.Allocated == True ):
+def do(menuentries, type, run):
+    for menuentry in menuentries:
+		if run == 2 and ( menuentry.MatchedInclude == True \
+		or menuentry.Allocated == True ):
 			continue
 		elif %s:
 		    if type == "Include":
-				entry.Add = True
-				entry.MatchedInclude = True
+				menuentry.Add = True
+				menuentry.MatchedInclude = True
 		    else:
-				entry.Add = False
-    return entries
+				menuentry.Add = False
+    return menuentries
 """ % self.Rule) in self.__dict__
 
 	def parseNode(self, node):
@@ -333,11 +333,11 @@ def do(entries, type, run):
 
 	def parseFilename(self, value):
 		self.parseNew()
-		self.Rule += "entry.DesktopFileID == '%s'" % value.strip()
+		self.Rule += "menuentry.DesktopFileID == '%s'" % value.strip()
 
 	def parseCategory(self, value):
 		self.parseNew()
-		self.Rule += "'%s' in entry.Categories" % value.strip()
+		self.Rule += "'%s' in menuentry.Categories" % value.strip()
 
 	def parseAll(self):
 		self.parseNew()
@@ -376,12 +376,12 @@ def do(entries, type, run):
 
 class MenuEntry:
 	"Wrapper for 'Menu Style' Desktop Entries"
-	def __init__(self, filename, prefix="", entry=None):
+	def __init__(self, filename, prefix="", desktopentry=None):
 		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
 		self.Show = True
 
-		if entry:
-			self.DesktopEntry = entry
+		if desktopentry:
+			self.DesktopEntry = desktopentry
 		else:
 			self.DesktopEntry = DesktopEntry(filename)
 
@@ -498,7 +498,7 @@ def parse(filename=None):
 	tmp["Root"] = ""
 	tmp["mergeFiles"] = []
 	tmp["DirectoryDirs"] = []
-	tmp["cache"] = DesktopEntryCache()
+	tmp["cache"] = MenuEntryCache()
 
 	__parse(doc, filename, tmp["Root"])
 	__parsemove(tmp["Root"])
@@ -665,13 +665,13 @@ def __postparse(menu):
 		for dir in menu.DirectoryDirs:
 			if os.path.isfile(os.path.join(dir, directory)):
 				deskentry = DesktopEntry(os.path.join(dir, directory))
-				entry = MenuEntry(directory, entry = deskentry)
+				menuentry = MenuEntry(directory, desktopentry = deskentry)
 				if not menu.Directory:
-					menu.Directory = entry
-				elif entry.Type == "System":
+					menu.Directory = menuentry
+				elif menuentry.Type == "System":
 					if menu.Directory.Type == "User":
 						menu.Directory.Type = "Both"
-						menu.Directory.Original = entry
+						menu.Directory.Original = menuentry
 		if menu.Directory:
 			break
 
@@ -790,25 +790,25 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
 		m.DirectoryDirs.append(dir)
 		m.Name = os.path.basename(dir)
 
-		for entry in os.listdir(dir):
-			if entry == ".directory":
-				m.Directories.append(entry)
-			elif os.path.isdir(os.path.join(dir,entry)):
-				m.addSubmenu(__mergeLegacyDir(os.path.join(dir,entry), prefix, filename, parent))
+		for item in os.listdir(dir):
+			if item == ".directory":
+				m.Directories.append(item)
+			elif os.path.isdir(os.path.join(dir,item)):
+				m.addSubmenu(__mergeLegacyDir(os.path.join(dir,item), prefix, filename, parent))
 
-		tmp["cache"].addEntries([dir],prefix, True)
-		entries = tmp["cache"].getEntries([dir], False)
+		tmp["cache"].addMenuEntries([dir],prefix, True)
+		menuentries = tmp["cache"].getMenuEntries([dir], False)
 
-		for entry in entries:
-			categories = entry.Categories
+		for menuentry in menuentries:
+			categories = menuentry.Categories
 			if len(categories) == 0:
 				r = Rule("Include")
-				r.parseFilename(entry.DesktopFileID)
+				r.parseFilename(menuentry.DesktopFileID)
 				r.compile()
 				m.Rules.append(r)
 			if not dir in parent.AppDirs:
 				categories.append("Legacy")
-				entry.Categories = categories
+				menuentry.Categories = categories
 
 		return m
 
@@ -832,32 +832,32 @@ def __genmenuNotOnlyAllocated(menu):
 		__genmenuNotOnlyAllocated(submenu)
 
 	if menu.OnlyUnallocated == False:
-		tmp["cache"].addEntries(menu.AppDirs)
-		entries = []
+		tmp["cache"].addMenuEntries(menu.AppDirs)
+		menuentries = []
 		for rule in menu.Rules:
-			entries = rule.do(tmp["cache"].getEntries(menu.AppDirs), rule.Type, 1)
-		for entry in entries:
-			if entry.Add == True:
-				entry.Parents.append(menu)
-				entry.Add = False
-				entry.Allocated = True
-				menu.MenuEntries.append(entry)
+			menuentries = rule.do(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 1)
+		for menuentry in menuentries:
+			if menuentry.Add == True:
+				menuentry.Parents.append(menu)
+				menuentry.Add = False
+				menuentry.Allocated = True
+				menu.MenuEntries.append(menuentry)
 
 def __genmenuOnlyAllocated(menu):
 	for submenu in menu.Submenus:
 		__genmenuOnlyAllocated(submenu)
 
 	if menu.OnlyUnallocated == True:
-		tmp["cache"].addEntries(menu.AppDirs)
-		entries = []
+		tmp["cache"].addMenuEntries(menu.AppDirs)
+		menuentries = []
 		for rule in menu.Rules:
-			entries = rule.do(tmp["cache"].getEntries(menu.AppDirs), rule.Type, 2)
-		for entry in entries:
-		    if entry.Add == True:
-				entry.Parents.append(menu)
-			#	entry.Add = False
-			#	entry.Allocated = True
-				menu.MenuEntries.append(entry)
+			entries = rule.do(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 2)
+		for menuentry in menuentries:
+		    if menuentry.Add == True:
+				menuentry.Parents.append(menu)
+			#	menuentry.Add = False
+			#	menuentry.Allocated = True
+				menu.MenuEntries.append(menuentry)
 
 # And sorting ...
 def sort(menu):
@@ -883,9 +883,9 @@ def sort(menu):
 				separator.Show = False
 			menu.Entries.append(separator)
 		elif order[0] == "Filename":
-			entry = menu.getEntry(order[1])
-			if entry:
-				menu.Entries.append(entry)
+			menuentry = menu.getMenuEntry(order[1])
+			if menuentry:
+				menu.Entries.append(menuentry)
 		elif order[0] == "Menuname":
 			submenu = menu.getMenu(order[1])
 			if submenu:
@@ -893,9 +893,9 @@ def sort(menu):
 		elif order[0] == "Merge":
 			if order[1] == "files" or order[1] == "all":
 				menu.MenuEntries.sort()
-				for entry in menu.MenuEntries:
-					if entry not in tmp_e:
-						menu.Entries.append(entry)
+				for menuentry in menu.MenuEntries:
+					if menuentry not in tmp_e:
+						menu.Entries.append(menuentry)
 			elif order[1] == "menus" or order[1] == "all":
 				menu.Submenus.sort()
 				for submenu in menu.Submenus:
@@ -950,30 +950,30 @@ def sort(menu):
 def __parse_inline(submenu, menu):
 	if submenu.Layout.inline == "true":
 		if len(submenu.Entries) == 1 and submenu.Layout.inline_alias == "true":
-			entry = submenu.Entries[0]
-			entry.DesktopEntry.set("Name", submenu.getName(), locale = True)
-			entry.DesktopEntry.set("GenericName", submenu.getGenericName(), locale = True)
-			entry.DesktopEntry.set("Comment", submenu.getComment(), locale = True)
-			menu.Entries.append(entry)
+			menuentry = submenu.Entries[0]
+			menuentry.DesktopEntry.set("Name", submenu.getName(), locale = True)
+			menuentry.DesktopEntry.set("GenericName", submenu.getGenericName(), locale = True)
+			menuentry.DesktopEntry.set("Comment", submenu.getComment(), locale = True)
+			menu.Entries.append(menuentry)
 		elif len(submenu.Entries) <= submenu.Layout.inline_limit or submenu.Layout.inline_limit == 0:
 			if submenu.Layout.inline_header == "true":
 				header = Header(submenu.getName(), submenu.getGenericName(), submenu.getComment())
 				menu.Entries.append(header)
-			for entry in submenu.getEntries():
+			for entry in submenu.Entries:
 				menu.Entries.append(entry)
 		else:
 			menu.Entries.append(submenu)
 	else:
 		menu.Entries.append(submenu)
 
-class DesktopEntryCache:
+class MenuEntryCache:
 	"Class to cache Desktop Entries"
 	def __init__(self):
 		self.cacheEntries = {}
 		self.cacheEntries['legacy'] = []
 		self.cache = {}
 
-	def addEntries(self, dirs, prefix="", legacy=False):
+	def addMenuEntries(self, dirs, prefix="", legacy=False):
 		for dir in dirs:
 			if not self.cacheEntries.has_key(dir):
 				self.cacheEntries[dir] = []
@@ -989,18 +989,18 @@ class DesktopEntryCache:
 				except ParsingError:
 					continue
 
-				entry = MenuEntry(os.path.join(subdir,item), prefix, deskentry)
+				menuentry = MenuEntry(os.path.join(subdir,item), prefix, deskentry)
 				if xdg_data_home in dir:
-					entry.Type = "User"
+					menuentry.Type = "User"
 				else:
-					entry.Type = "System"
-				self.cacheEntries[dir].append(entry)
+					menuentry.Type = "System"
+				self.cacheEntries[dir].append(menuentry)
 				if legacy == True:
-					self.cacheEntries['legacy'].append(entry)
+					self.cacheEntries['legacy'].append(menuentry)
 			elif os.path.isdir(os.path.join(dir,subdir,item)) and legacy == False:
 				self.__addFiles(dir, os.path.join(subdir,item), prefix, legacy)
 
-	def getEntries(self, dirs, legacy=True):
+	def getMenuEntries(self, dirs, legacy=True):
 		list = []
 		ids = []
 		# handle legacy items
@@ -1014,16 +1014,16 @@ class DesktopEntryCache:
 		except KeyError:
 			pass
 		for dir in appdirs:
-			for entry in self.cacheEntries[dir]:
-				if entry.DesktopFileID not in ids:
-					ids.append(entry.DesktopFileID)
-					list.append(entry)
-				elif entry.Type == "System":
+			for menuentry in self.cacheEntries[dir]:
+				if menuentry.DesktopFileID not in ids:
+					ids.append(menuentry.DesktopFileID)
+					list.append(menuentry)
+				elif menuentry.Type == "System":
 				# FIXME: This is only 99% correct, but still...
-					i = list.index(entry)
+					i = list.index(menuentry)
 					e = list[i]
 					if e.Type == "User":
 						e.Type = "Both"
-						e.Original = entry
+						e.Original = menuentry
 		self.cache[key] = list
 		return list
