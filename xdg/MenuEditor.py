@@ -207,8 +207,8 @@ class MenuEditor:
 
 	def revertMenuEntry(self, menuentry):
 		if "revert" in self.getActions(menuentry):
-			self.__deleteFile(entry.DesktopEntry.filename)
-			for parent in entry.Parents:
+			self.__deleteFile(menuentry.DesktopEntry.filename)
+			for parent in menuentry.Parents:
 				index = parent.Entries.index(menuentry)
 				parent.Entries[index] = menuentry.Original
 				index = parent.MenuEntries.index(menuentry)
