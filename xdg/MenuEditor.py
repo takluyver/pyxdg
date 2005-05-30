@@ -149,7 +149,7 @@ class MenuEditor:
 
 		if menuentry.Type == "System":
 			menuentry.Type = "Both"
-			menuentry.Original = MenuEntry(menuentry.DesktopEntry.filename, entry.Prefix)
+			menuentry.Original = MenuEntry(menuentry.DesktopEntry.filename, menuentry.Prefix)
 
 		if len(menuentry.Parents) > 0:
 			sort(self.menu)
@@ -190,7 +190,7 @@ class MenuEditor:
 
 		if menu.Directory.Type == "System":
 			menu.Directory.Type = "Both"
-			menu.Directory.Original = MenuEntry(entry.DesktopEntry.filename, entry.Prefix)
+			menu.Directory.Original = MenuEntry(menu.Directory.DesktopEntry.filename, menu.Directory.Prefix)
 
 		if isinstance(menu.Parent, Menu):
 			sort(self.menu)
