@@ -850,7 +850,7 @@ def __genmenuOnlyAllocated(menu):
 		tmp["cache"].addMenuEntries(menu.AppDirs)
 		menuentries = []
 		for rule in menu.Rules:
-			entries = rule.do(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 2)
+			menuentries = rule.do(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 2)
 		for menuentry in menuentries:
 		    if menuentry.Add == True:
 				menuentry.Parents.append(menu)
