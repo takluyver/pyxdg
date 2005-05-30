@@ -10,6 +10,7 @@ import os
 
 # XML-Cleanups: Move / Exclude
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
+# FIXME: catch Exceptions
 # FIXME: copy functions
 # FIXME: More Layout stuff
 # FIXME: unod/redo function / remove menu...
@@ -52,15 +53,15 @@ class MenuEditor:
 		self.__saveEntries(self.menu)
 		self.__saveMenu()
 
-	def createEntry(self, parent, name, command=None, genericname=None, comment=None, icon=None, terminal=None, after=None, before=None):
-		entry = MenuEntry(self.__getFileName(name, ".desktop"))
-		entry = self.editEntry(entry, name, genericname, comment, command, icon, terminal)
+	def createMenuEntry(self, parent, name, command=None, genericname=None, comment=None, icon=None, terminal=None, after=None, before=None):
+		menuentry = MenuEntry(self.__getFileName(name, ".desktop"))
+		menuentry = self.editMenuEntry(menuentry, name, genericname, comment, command, icon, terminal)
 
-		self.__addEntry(parent, entry, after, before)
+		self.__addEntry(parent, menuentry, after, before)
 
 		sort(self.menu)
 
-		return entry
+		return menuentry
 
 	def createMenu(self, parent, name, genericname=None, comment=None, icon=None, after=None, before=None):
 		menu = Menu()
@@ -88,13 +89,13 @@ class MenuEditor:
 
 		return separator
 
-	def moveEntry(self, entry, oldparent, newparent, after=None, before=None):
-		self.__deleteEntry(oldparent, entry, after, before)
-		self.__addEntry(newparent, entry, after, before)
+	def moveMenuEntry(self, menuentry, oldparent, newparent, after=None, before=None):
+		self.__deleteEntry(oldparent, menuentry, after, before)
+		self.__addEntry(newparent, menuentry, after, before)
 
 		sort(self.menu)
 
-		return entry
+		return menuentry
 
 	def moveMenu(self, menu, oldparent, newparent, after=None, before=None):
 		self.__deleteEntry(oldparent, menu, after, before)
@@ -116,8 +117,8 @@ class MenuEditor:
 
 		return separator
 
-	def editEntry(self, entry, name=None, genericname=None, comment=None, command=None, icon=None, terminal=None, nodisplay=None):
-		deskentry = entry.DesktopEntry
+	def editMenuEntry(self, menuentry, name=None, genericname=None, comment=None, command=None, icon=None, terminal=None, nodisplay=None):
+		deskentry = menuentry.DesktopEntry
 
 		if name:
 			if not deskentry.hasKey("Name"):
@@ -146,14 +147,14 @@ class MenuEditor:
 		elif nodisplay == False:
 			deskentry.set("NoDisplay", "false")
 
-		if entry.Type == "System":
-			entry.Type = "Both"
-			entry.Original = MenuEntry(entry.DesktopEntry.filename, entry.Prefix)
+		if menuentry.Type == "System":
+			menuentry.Type = "Both"
+			menuentry.Original = MenuEntry(menuentry.DesktopEntry.filename, entry.Prefix)
 
-		if len(entry.Parents) > 0:
+		if len(menuentry.Parents) > 0:
 			sort(self.menu)
 
-		return entry
+		return menuentry
 
 	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, nodisplay=None):
 		# Hack for legacy dirs
@@ -196,24 +197,24 @@ class MenuEditor:
 
 		return menu
 
-	def deleteEntry(self, entry):
-		if "delete" in self.getActions(entry):
-			self.__deleteFile(entry.DesktopEntry.filename)
-			for parent in entry.Parents:
-				self.__deleteEntry(parent, entry)
+	def deleteMenuEntry(self, menuentry):
+		if "delete" in self.getActions(menuentry):
+			self.__deleteFile(menuentry.DesktopEntry.filename)
+			for parent in menuentry.Parents:
+				self.__deleteEntry(parent, menuentry)
 			sort(self.menu)
-		return entry
+		return menuentry
 
-	def revertEntry(self, entry):
-		if "revert" in self.getActions(entry):
+	def revertMenuEntry(self, menuentry):
+		if "revert" in self.getActions(menuentry):
 			self.__deleteFile(entry.DesktopEntry.filename)
 			for parent in entry.Parents:
-				index = parent.Entries.index(entry)
-				parent.Entries[index] = entry.Original
-				index = parent.DeskEntries.index(entry)
-				parent.DeskEntries[index] = entry.Original
+				index = parent.Entries.index(menuentry)
+				parent.Entries[index] = menuentry.Original
+				index = parent.MenuEntries.index(menuentry)
+				parent.MenuEntries[index] = menuentry.Original
 			sort(self.menu)
-		return entry
+		return menuentry
 
 	def deleteMenu(self, menu):
 		if "delete" in self.getActions(menu):
@@ -421,7 +422,7 @@ class MenuEditor:
 		xml_parent = self.__getXmlMenu(parent.getPath(True, True))
 
 		if isinstance(entry, MenuEntry):
-			parent.DeskEntries.append(entry)
+			parent.MenuEntries.append(entry)
 			entry.Parents.append(parent)
 			self.__addXmlFilename(xml_parent, entry.DesktopFileID, "Include")
 		elif isinstance(entry, Menu):
@@ -438,7 +439,7 @@ class MenuEditor:
 
 		if isinstance(entry, MenuEntry):
 			entry.Parents.remove(parent)
-			parent.DeskEntries.remove(entry)
+			parent.MenuEntries.remove(entry)
 			self.__addXmlFilename(xml_parent, entry.DesktopFileID, "Exclude")
 		elif isinstance(entry, Menu):
 			parent.Submenus.remove(entry)

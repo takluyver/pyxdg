@@ -34,10 +34,10 @@ class Menu:
 		self.AppDirs = []
 		self.DefaultLayout = None
 		self.Deleted = "notset"
-		self.DeskEntries = []
 		self.Directories = []
 		self.DirectoryDirs = []
 		self.Layout = None
+		self.MenuEntries = []
 		self.Moves = []
 		self.OnlyUnallocated = "notset"
 		self.Rules = []
@@ -102,7 +102,7 @@ class Menu:
 	# return multiple items
 
 	def getEntry(self, desktopfileid, deep = False):
-		for entry in self.DeskEntries:
+		for entry in self.MenuEntries:
 			if entry.DesktopFileID == desktopfileid:
 				return entry
 		if deep == True:
@@ -841,7 +841,7 @@ def __genmenuNotOnlyAllocated(menu):
 				entry.Parents.append(menu)
 				entry.Add = False
 				entry.Allocated = True
-				menu.DeskEntries.append(entry)
+				menu.MenuEntries.append(entry)
 
 def __genmenuOnlyAllocated(menu):
 	for submenu in menu.Submenus:
@@ -857,7 +857,7 @@ def __genmenuOnlyAllocated(menu):
 				entry.Parents.append(menu)
 			#	entry.Add = False
 			#	entry.Allocated = True
-				menu.DeskEntries.append(entry)
+				menu.MenuEntries.append(entry)
 
 # And sorting ...
 def sort(menu):
@@ -892,8 +892,8 @@ def sort(menu):
 				__parse_inline(submenu, menu)
 		elif order[0] == "Merge":
 			if order[1] == "files" or order[1] == "all":
-				menu.DeskEntries.sort()
-				for entry in menu.DeskEntries:
+				menu.MenuEntries.sort()
+				for entry in menu.MenuEntries:
 					if entry not in tmp_e:
 						menu.Entries.append(entry)
 			elif order[1] == "menus" or order[1] == "all":
