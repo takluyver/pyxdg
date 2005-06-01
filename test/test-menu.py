@@ -20,5 +20,5 @@ def show_menu(menu, depth = 0):
 #			print depth*"-" + "\x1b[01m" + entry.Name + "\x1b[0m"
 #	depth -= 1
 
-#show_menu(xdg.Menu.parse())
-xdg.Menu.parse()
+show_menu(xdg.Menu.parse())
+#xdg.Menu.parse()
