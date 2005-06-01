@@ -25,6 +25,7 @@ class Menu:
 		self.Filename = ""
 		self.Depth = 0
 		self.Parent = None
+		self.NotInXML = False
 
 		# Can be one of Deleted/NoDisplay/Hidden/Empty/NotShowIn or True
 		self.Show = True
@@ -376,24 +377,15 @@ def do(menuentries, type, run):
 
 class MenuEntry:
 	"Wrapper for 'Menu Style' Desktop Entries"
-	def __init__(self, filename, prefix="", desktopentry=None):
+	def __init__(self, filename, dir="", prefix=""):
+		# Create entry
+		self.DesktopEntry = DesktopEntry(os.path.join(dir,filename))
+		self.setAttributes(filename, dir, prefix)
+
 		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
 		self.Show = True
 
-		if desktopentry:
-			self.DesktopEntry = desktopentry
-		else:
-			self.DesktopEntry = DesktopEntry(filename)
-
-		self.setAttributes(filename, prefix)
-
-		# Can be one of System/User/Both
-		self.Type = ""
-		if xdg_data_home in self.DesktopEntry.filename \
-			or not os.path.isabs(self.DesktopEntry.filename):
-			self.Type = "User"
-		else:
-			self.Type = "System"
+		# Semi-Private
 		self.Original = None
 		self.Parents = []
 
@@ -405,37 +397,40 @@ class MenuEntry:
 		# Caching
 		self.Categories = self.DesktopEntry.getCategories()
 
-	def setAttributes(self, filename, prefix=""):
+	def save(self):
+		if self.DesktopEntry.tainted == True:
+			self.DesktopEntry.write()
+
+	def getDir(self):
+		return self.DesktopEntry.filename.replace(self.Filename, '')
+
+	def setAttributes(self, filename, dir="", prefix=""):
 		self.Filename = filename
 		self.Prefix = prefix
 		self.DesktopFileID = os.path.join(prefix,filename).replace("/", "-")
 
-		if os.path.isabs(self.Filename):
-			self.Dir = self.DesktopEntry.filename.replace(self.Filename, '')
-		else:
-			self.Dir = self.__getDir()
+		if not os.path.isabs(self.DesktopEntry.filename):
+			self.__setFilename()
 
-	def __getDir(self):
+		# Can be one of System/User/Both
+		if xdg_data_dirs[0] in self.DesktopEntry.filename:
+			self.Type = "User"
+		else:
+			self.Type = "System"
+
+	def updateAttributes(self):
+		if self.Type == "System":
+			self.Type = "Both"
+			self.Original = MenuEntry(self.Filename, self.getDir(), self.Prefix)
+			self.__setFilename()
+
+	def __setFilename(self):
 		if self.DesktopEntry.getType() == "Application":
-			return os.path.join(xdg_data_dirs[0], "applications")
+			dir = os.path.join(xdg_data_dirs[0], "applications")
 		else:
-			return os.path.join(xdg_data_dirs[0], "desktop-directories")
+			dir = os.path.join(xdg_data_dirs[0], "desktop-directories")
 
-	def save(self):
-		# save the entry
-		if self.DesktopEntry.tainted == True:
-			# save global one?
-			if os.path.isabs(self.DesktopEntry.filename) and os.access(self.DesktopEntry.filename, os.W_OK):
-				self.DesktopEntry.write()
-			# save local one!
-			else:
-				path = self.__getDir()
-
-				if not os.path.isdir(os.path.dirname(os.path.join(path,self.Filename))):
-					os.makedirs(os.path.dirname(os.path.join(path,self.Filename)))
-
-				self.DesktopEntry.write(os.path.join(path,self.Filename))
-				self.Dir = path
+		self.DesktopEntry.filename = os.path.join(dir, self.Filename)
 
 	def __cmp__(self, other):
 		return cmp(self.DesktopEntry.getName(), other.DesktopEntry.getName())
@@ -597,25 +592,23 @@ def __parsemove(menu):
 		if move_from_menu:
 			move_to_menu = menu.getMenu(move.New)
 
-			if not move_to_menu:
-				if "/" in move.New:
-					path, name = move.New.rsplit("/",1)
-				else:
-					path = ""
-					name = move.New
-				
-				if path:
-					parent = menu.getMenu(path)
-				else:
-					parent = menu
+			menus = move.New.split("/")
+			oldparent = None
+			while len(menus) > 0:
+				if not oldparent:
+					oldparent = menu
+				newmenu = oldparent.getMenu(menus[0])
+				if not newmenu:
+					newmenu = Menu()
+					newmenu.Name = menus[0]
+					if len(menus) > 1:
+						newmenu.NotInXml = True
+					oldparent.addSubmenu(newmenu)
+				oldparent = newmenu
+				menus.pop(0)
 
-				move_to_menu = Menu()
-				move_to_menu.Name = name
-				parent.addSubmenu(move_to_menu)
-
-			move_to_menu += move_from_menu
+			newmenu += move_from_menu
 			move_from_menu.Parent.Submenus.remove(move_from_menu)
-
 
 def __postparse(menu):
 	# unallocated / deleted
@@ -664,8 +657,7 @@ def __postparse(menu):
 	for directory in menu.Directories:
 		for dir in menu.DirectoryDirs:
 			if os.path.isfile(os.path.join(dir, directory)):
-				deskentry = DesktopEntry(os.path.join(dir, directory))
-				menuentry = MenuEntry(directory, desktopentry = deskentry)
+				menuentry = MenuEntry(directory, dir)
 				if not menu.Directory:
 					menu.Directory = menuentry
 				elif menuentry.Type == "System":
@@ -985,16 +977,10 @@ class MenuEntryCache:
 		for item in os.listdir(os.path.join(dir,subdir)):
 			if os.path.splitext(item)[1] == ".desktop":
 				try:
-					deskentry = DesktopEntry()
-					deskentry.parse(os.path.join(dir, subdir, item))
+					menuentry = MenuEntry(os.path.join(subdir,item), dir, prefix)
 				except ParsingError:
 					continue
 
-				menuentry = MenuEntry(os.path.join(subdir,item), prefix, deskentry)
-				if xdg_data_home in dir:
-					menuentry.Type = "User"
-				else:
-					menuentry.Type = "System"
 				self.cacheEntries[dir].append(menuentry)
 				if legacy == True:
 					self.cacheEntries['legacy'].append(menuentry)

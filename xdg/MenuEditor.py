@@ -8,6 +8,8 @@ from xdg.DesktopEntry import *
 import xml.dom.minidom
 import os
 
+# Bugs: reverte/delete
+# create menu -> move a menu to it -> delete menu -> restart smeg
 # XML-Cleanups: Move / Exclude
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
 # FIXME: catch Exceptions
@@ -147,9 +149,7 @@ class MenuEditor:
 		elif nodisplay == False:
 			deskentry.set("NoDisplay", "false")
 
-		if menuentry.Type == "System":
-			menuentry.Type = "Both"
-			menuentry.Original = MenuEntry(menuentry.DesktopEntry.filename, menuentry.Prefix)
+		menuentry.updateAttributes()
 
 		if len(menuentry.Parents) > 0:
 			sort(self.menu)
@@ -188,9 +188,7 @@ class MenuEditor:
 		elif nodisplay == False:
 			deskentry.set("NoDisplay", "false")
 
-		if menu.Directory.Type == "System":
-			menu.Directory.Type = "Both"
-			menu.Directory.Original = MenuEntry(menu.Directory.DesktopEntry.filename, menu.Directory.Prefix)
+		menu.Directory.updateAttributes()
 
 		if isinstance(menu.Parent, Menu):
 			sort(self.menu)

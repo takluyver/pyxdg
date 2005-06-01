@@ -268,10 +268,15 @@ class IniFile:
 	def write(self, filename=None):
 		if not filename and not self.filename:
 			raise ParsingError("File not found", "")
+
 		if filename:
 			self.filename = filename
 		else:
 			filename = self.filename
+
+		if not os.path.isdir(os.path.dirname(filename)):
+			os.makedirs(os.path.dirname(filename))
+
 		fp = codecs.open(filename, 'w')
 		if self.defaultGroup:
 			fp.write("[%s]\n" % self.defaultGroup)
