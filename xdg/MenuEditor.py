@@ -42,7 +42,7 @@ class MenuEditor:
 		elif os.access(self.menu.Filename, os.W_OK):
 			self.filename = self.menu.Filename
 		else:
-			self.filename = os.path.join(xdg_config_dirs[0], "menus", "applications.menu")
+			self.filename = os.path.join(xdg_config_dirs[0], "menus", os.path.split(self.menu.Filename)[1])
 
 		try:
 			self.doc = xml.dom.minidom.parse(self.filename)
@@ -67,16 +67,15 @@ class MenuEditor:
 
 	def createMenu(self, parent, name, genericname=None, comment=None, icon=None, after=None, before=None):
 		menu = Menu()
-		menu = self.editMenu(menu, name, genericname, comment, icon)
 
-		menu.Name = menu.Directory.Filename.replace(".directory", "")
+		menu.Parent = parent
+		menu.Depth = parent.Depth + 1
 		menu.Layout = parent.DefaultLayout
 		menu.DefaultLayout = parent.DefaultLayout
 
-		self.__addEntry(parent, menu, after, before)
+		menu = self.editMenu(menu, name, genericname, comment, icon)
 
-		xml_menu = self.__getXmlMenu(menu.getPath(True, True))
-		self.__addXmlTextElement(xml_menu, 'Directory', menu.Directory.Filename)
+		self.__addEntry(parent, menu, after, before)
 
 		sort(self.menu)
 
@@ -157,14 +156,17 @@ class MenuEditor:
 		return menuentry
 
 	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, nodisplay=None):
-		xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 		# Hack for legacy dirs
 		if isinstance(menu.Directory, MenuEntry) and menu.Directory.Filename == ".directory":
+			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 			self.__addXmlTextElement(xml_menu, 'Directory', menu.Name + ".directory")
 			menu.Directory.setAttributes(menu.Name + ".directory")
 		# Hack for New Entries
 		elif not isinstance(menu.Directory, MenuEntry):
 			filename = self.__getFileName(name, ".directory").replace("/", "")
+			if not menu.Name:
+				menu.Name = filename.replace(".directory", "")
+			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 			self.__addXmlTextElement(xml_menu, 'Directory', filename)
 			menu.Directory = MenuEntry(filename)
 
@@ -248,14 +250,9 @@ class MenuEditor:
 				return "none"
 			elif entry.Directory.Type == "Both":
 				return "revert"
-			elif entry.Directory.Type == "User":
-				xml_menu = self.__getXmlMenu(entry.getPath(True, True), False)
-				if not xml_menu:
-					return "revert"
-				else:
-					for node in self.__getXmlNodesByName("Directory", xml_menu):
-						return "delete"
-					return "revert"
+			elif entry.Directory.Type == "User" \
+			and (len(entry.Submenus) + len(entry.MenuEntries)) == 0:
+				return "delete"
 
 		elif isinstance(entry, MenuEntry):
 			if entry.Type == "Both":
