@@ -7,6 +7,7 @@ windowmanager = None
 icon_theme = "highcolor"
 icon_size = 48
 cache_time = 5
+root_mode = False
 
 def setWindowManager(wm):
 	global windowmanager
@@ -32,3 +33,6 @@ def setLocale(lang):
 	locale.setlocale(locale.LC_ALL, lang)
 	import xdg.Locale
 	xdg.Locale.update(lang)
+
+def setRootMode(boolean):
+	self.root_mode = boolean

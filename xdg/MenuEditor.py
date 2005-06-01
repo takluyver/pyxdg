@@ -4,6 +4,7 @@ from xdg.Menu import *
 from xdg.BaseDirectory import *
 from xdg.Exceptions import *
 from xdg.DesktopEntry import *
+from xdg.Config import *
 
 import xml.dom.minidom
 import os
@@ -32,14 +33,15 @@ class MenuEditor:
 		if isinstance(menu, Menu):
 			self.menu = menu
 		elif isinstance(menu, unicode):
-			self.menu = parse(filename, root)
+			self.menu = parse(parse_path, root)
 		else:
 			self.menu = parse(root)
 
+		if root == True:
+			self.filename = self.menu.Filename
+			setRootMode(True)
 		if filename:
 			self.filename = save_path
-		elif root == True:
-			self.filename = self.menu.Filename
 		else:
 			self.filename = os.path.join(xdg_config_dirs[0], "menus", os.path.split(self.menu.Filename)[1])
 
@@ -247,17 +249,19 @@ class MenuEditor:
 		if isinstance(entry, Menu):
 			if not isinstance(entry.Directory, MenuEntry):
 				return "none"
-			elif entry.Directory.Type == "Both":
+			elif entry.Directory.getType() == "Both":
 				return "revert"
-			elif entry.Directory.Type == "User" \
+			elif entry.Directory.getType() == "User" \
 			and (len(entry.Submenus) + len(entry.MenuEntries)) == 0:
 				return "delete"
 
 		elif isinstance(entry, MenuEntry):
-			if entry.Type == "Both":
+			if entry.getType() == "Both":
 				return "revert"
-			elif entry.Type == "User":
+			elif entry.getType() == "User":
 				return "delete"
+			else:
+				return "none"
 
 		return "none"
 

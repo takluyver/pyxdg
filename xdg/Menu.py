@@ -404,6 +404,18 @@ class MenuEntry:
 	def getDir(self):
 		return self.DesktopEntry.filename.replace(self.Filename, '')
 
+	def getType(self):
+		# Can be one of System/User/Both
+		if xdg.Config.root_mode == False:
+			if self.Original:
+				return "Both"
+			elif xdg_data_dirs[0] in self.DesktopEntry.filename:
+				return "User"
+			else:
+				return "System"
+		else:
+			return "User"
+
 	def setAttributes(self, filename, dir="", prefix=""):
 		self.Filename = filename
 		self.Prefix = prefix
@@ -412,23 +424,13 @@ class MenuEntry:
 		if not os.path.isabs(self.DesktopEntry.filename):
 			self.__setFilename()
 
-		# Can be one of System/User/Both
-		if tmp["root"] == False:
-			if xdg_data_dirs[0] in self.DesktopEntry.filename:
-				self.Type = "User"
-			else:
-				self.Type = "System"
-		else:
-			self.Type = "User"
-
 	def updateAttributes(self):
-		if self.Type == "System":
-			self.Type = "Both"
+		if self.getType() == "System":
 			self.Original = MenuEntry(self.Filename, self.getDir(), self.Prefix)
 			self.__setFilename()
 
 	def __setFilename(self):
-		if tmp["root"] == False:
+		if xdg.Config.root_mode == False:
 			path = xdg_data_dirs[0]
 		else:
 			path= xdg_data_dirs[1]
@@ -473,7 +475,7 @@ class Header:
 
 tmp = {}
 
-def parse(filename=None, root=False):
+def parse(filename=None):
 	# if no file given, try default files
 	if not filename:
 		for dir in xdg_config_dirs:
@@ -502,7 +504,6 @@ def parse(filename=None, root=False):
 	tmp["mergeFiles"] = []
 	tmp["DirectoryDirs"] = []
 	tmp["cache"] = MenuEntryCache()
-	tmp["root"] = root
 
 	__parse(doc, filename, tmp["Root"])
 	__parsemove(tmp["Root"])
@@ -669,9 +670,8 @@ def __postparse(menu):
 				menuentry = MenuEntry(directory, dir)
 				if not menu.Directory:
 					menu.Directory = menuentry
-				elif menuentry.Type == "System":
-					if menu.Directory.Type == "User":
-						menu.Directory.Type = "Both"
+				elif menuentry.getType() == "System":
+					if menu.Directory.getType() == "User":
 						menu.Directory.Original = menuentry
 		if menu.Directory:
 			break
@@ -1014,12 +1014,11 @@ class MenuEntryCache:
 				if menuentry.DesktopFileID not in ids:
 					ids.append(menuentry.DesktopFileID)
 					list.append(menuentry)
-				elif menuentry.Type == "System":
+				elif menuentry.getType() == "System":
 				# FIXME: This is only 99% correct, but still...
 					i = list.index(menuentry)
 					e = list[i]
-					if e.Type == "User":
-						e.Type = "Both"
+					if e.getType() == "User":
 						e.Original = menuentry
 		self.cache[key] = list
 		return list
