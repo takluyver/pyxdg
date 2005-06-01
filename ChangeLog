@@ -1,3 +1,9 @@
+version 0.13
+
+2005-06-01 Heinrich Wendel <h_wendel@cojobo.net>
+	* Menu.py, MenuEditor.py: Bugfixes...
+	* Config.py: Add root_mode
+
 Version 0.12
 
 2005-05-30 Heinrich Wendel <h_wendel@cojobo.net>
