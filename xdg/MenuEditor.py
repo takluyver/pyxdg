@@ -157,14 +157,16 @@ class MenuEditor:
 		return menuentry
 
 	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, nodisplay=None):
+		xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 		# Hack for legacy dirs
 		if isinstance(menu.Directory, MenuEntry) and menu.Directory.Filename == ".directory":
-			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
 			self.__addXmlTextElement(xml_menu, 'Directory', menu.Name + ".directory")
 			menu.Directory.setAttributes(menu.Name + ".directory")
 		# Hack for New Entries
 		elif not isinstance(menu.Directory, MenuEntry):
-			menu.Directory = MenuEntry(self.__getFileName(name, ".directory").replace("/", ""))
+			filename = self.__getFileName(name, ".directory").replace("/", "")
+			self.__addXmlTextElement(xml_menu, 'Directory', filename)
+			menu.Directory = MenuEntry(filename)
 
 		deskentry = menu.Directory.DesktopEntry
 
