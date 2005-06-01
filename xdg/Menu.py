@@ -428,10 +428,15 @@ class MenuEntry:
 			self.__setFilename()
 
 	def __setFilename(self):
-		if self.DesktopEntry.getType() == "Application":
-			dir = os.path.join(xdg_data_dirs[0], "applications")
+		if tmp["root"] == False:
+			path = xdg_data_dirs[0]
 		else:
-			dir = os.path.join(xdg_data_dirs[0], "desktop-directories")
+			path= xdg_data_dirs[1]
+
+		if self.DesktopEntry.getType() == "Application":
+			dir = os.path.join(path, "applications")
+		else:
+			dir = os.path.join(path, "desktop-directories")
 
 		self.DesktopEntry.filename = os.path.join(dir, self.Filename)
 
