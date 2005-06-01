@@ -33,14 +33,14 @@ class MenuEditor:
 		if isinstance(menu, Menu):
 			self.menu = menu
 		elif isinstance(menu, unicode):
-			self.menu = parse(parse_path, root)
+			self.menu = parse(menu)
 		else:
-			self.menu = parse(root)
+			self.menu = parse()
 
 		if root == True:
 			self.filename = self.menu.Filename
 			setRootMode(True)
-		if filename:
+		elif filename:
 			self.filename = save_path
 		else:
 			self.filename = os.path.join(xdg_config_dirs[0], "menus", os.path.split(self.menu.Filename)[1])
@@ -164,6 +164,8 @@ class MenuEditor:
 			menu.Directory.setAttributes(menu.Name + ".directory")
 		# Hack for New Entries
 		elif not isinstance(menu.Directory, MenuEntry):
+			if not name:
+				name = menu.Name
 			filename = self.__getFileName(name, ".directory").replace("/", "")
 			if not menu.Name:
 				menu.Name = filename.replace(".directory", "")

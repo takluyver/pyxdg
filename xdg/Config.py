@@ -35,4 +35,5 @@ def setLocale(lang):
 	xdg.Locale.update(lang)
 
 def setRootMode(boolean):
-	self.root_mode = boolean
+	global root_mode
+	root_mode = boolean
