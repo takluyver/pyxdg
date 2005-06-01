@@ -8,9 +8,8 @@ from xdg.DesktopEntry import *
 import xml.dom.minidom
 import os
 
-# Bugs: reverte/delete
-# create menu -> move a menu to it -> delete menu -> restart smeg
 # XML-Cleanups: Move / Exclude
+# FIXME: proper reverte/delete
 # FIXME: pass AppDirs/DirectoryDirs around in the edit/move functions
 # FIXME: catch Exceptions
 # FIXME: copy functions
