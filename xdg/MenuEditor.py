@@ -19,11 +19,11 @@ import os
 #        Complex Rules/Deleted/OnlyAllocated/AppDirs/DirectoryDirs
 
 class MenuEditor:
-	def __init__(self, menu=None, filename=None):
+	def __init__(self, menu=None, filename=None, root=False):
 		self.menu = None
 		self.filename = None
 		self.doc = None
-		self.parse(menu, filename)
+		self.parse(menu, filename, root)
 
 		# fix for creating two menus with the same name on the fly
 		self.filenames = []
