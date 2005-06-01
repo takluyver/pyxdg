@@ -28,17 +28,17 @@ class MenuEditor:
 		# fix for creating two menus with the same name on the fly
 		self.filenames = []
 
-	def parse(self, menu=None, filename=None):
+	def parse(self, menu=None, filename=None, root=False):
 		if isinstance(menu, Menu):
 			self.menu = menu
 		elif isinstance(menu, unicode):
-			self.menu = parse(menu)
+			self.menu = parse(parse_path, root)
 		else:
-			self.menu = parse()
+			self.menu = parse(root)
 
 		if filename:
-			self.filename = filename
-		elif os.access(self.menu.Filename, os.W_OK):
+			self.filename = save_path
+		elif root == True:
 			self.filename = self.menu.Filename
 		else:
 			self.filename = os.path.join(xdg_config_dirs[0], "menus", os.path.split(self.menu.Filename)[1])

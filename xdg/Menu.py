@@ -413,10 +413,13 @@ class MenuEntry:
 			self.__setFilename()
 
 		# Can be one of System/User/Both
-		if xdg_data_dirs[0] in self.DesktopEntry.filename:
-			self.Type = "User"
+		if tmp["root"] == False:
+			if xdg_data_dirs[0] in self.DesktopEntry.filename:
+				self.Type = "User"
+			else:
+				self.Type = "System"
 		else:
-			self.Type = "System"
+			self.Type = "User"
 
 	def updateAttributes(self):
 		if self.Type == "System":
@@ -465,7 +468,7 @@ class Header:
 
 tmp = {}
 
-def parse(filename=None):
+def parse(filename=None, root=False):
 	# if no file given, try default files
 	if not filename:
 		for dir in xdg_config_dirs:
@@ -494,6 +497,7 @@ def parse(filename=None):
 	tmp["mergeFiles"] = []
 	tmp["DirectoryDirs"] = []
 	tmp["cache"] = MenuEntryCache()
+	tmp["root"] = root
 
 	__parse(doc, filename, tmp["Root"])
 	__parsemove(tmp["Root"])
