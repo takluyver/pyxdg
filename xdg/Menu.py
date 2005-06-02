@@ -475,17 +475,23 @@ class Header:
 
 tmp = {}
 
-def parse(filename=None):
-	# if no file given, try default files
-	if not filename:
-		for dir in xdg_config_dirs:
-			filename = os.path.join (dir, "menus" , "applications.menu")
-			if os.path.isdir(dir) and os.path.isfile(filename):
-				break
+def __getFileName(filename):
+	for dir in xdg_config_dirs:
+		menuname = os.path.join (dir, "menus" , filename)
+		if os.path.isdir(dir) and os.path.isfile(menuname):
+			return menuname
 
-	# convert to absolute path
-	if not os.path.isabs(filename):
-		filename = os.path.abspath(filename)
+def parse(filename=None):
+	# conver to absolute path
+	if filename and not os.path.isabs(filename):
+		filename = __getFileName(filename)
+
+	# use default if no filename given
+	if not filename:
+		filename = __getFileName("applications.menu")
+
+	if not filename:
+		raise ParsingError('File not found', "/etc/xdg/menus/applications.menu")
 
 	# check if it is a .menu file
 	if not os.path.splitext(filename)[1] == ".menu":
@@ -494,8 +500,6 @@ def parse(filename=None):
 	# create xml parser
 	try:
 		doc = xml.dom.minidom.parse(filename)
-	except IOError:
-		raise ParsingError('File not found', filename)
 	except xml.parsers.expat.ExpatError:
 		raise ParsingError('Not a valid .menu file', filename)
 

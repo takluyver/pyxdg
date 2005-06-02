@@ -32,7 +32,7 @@ class MenuEditor:
 	def parse(self, menu=None, filename=None, root=False):
 		if isinstance(menu, Menu):
 			self.menu = menu
-		elif isinstance(menu, unicode):
+		elif menu:
 			self.menu = parse(menu)
 		else:
 			self.menu = parse()
