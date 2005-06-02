@@ -30,6 +30,9 @@ class MenuEditor:
 		self.filenames = []
 
 	def parse(self, menu=None, filename=None, root=False):
+		if root == True:
+			setRootMode(True)
+
 		if isinstance(menu, Menu):
 			self.menu = menu
 		elif menu:
@@ -39,9 +42,8 @@ class MenuEditor:
 
 		if root == True:
 			self.filename = self.menu.Filename
-			setRootMode(True)
 		elif filename:
-			self.filename = save_path
+			self.filename = filename
 		else:
 			self.filename = os.path.join(xdg_config_dirs[0], "menus", os.path.split(self.menu.Filename)[1])
 

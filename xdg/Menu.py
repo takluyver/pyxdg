@@ -476,7 +476,11 @@ class Header:
 tmp = {}
 
 def __getFileName(filename):
-	for dir in xdg_config_dirs:
+	dirs = xdg_config_dirs[:]
+	if xdg.Config.root_mode == True:
+		dirs.pop(0)
+
+	for dir in dirs:
 		menuname = os.path.join (dir, "menus" , filename)
 		if os.path.isdir(dir) and os.path.isfile(menuname):
 			return menuname
