@@ -25,7 +25,7 @@ class Menu:
 		self.Filename = ""
 		self.Depth = 0
 		self.Parent = None
-		self.NotInXML = False
+		self.NotInXml = False
 
 		# Can be one of Deleted/NoDisplay/Hidden/Empty/NotShowIn or True
 		self.Show = True
