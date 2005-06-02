@@ -789,6 +789,7 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
 		m.AppDirs.append(dir)
 		m.DirectoryDirs.append(dir)
 		m.Name = os.path.basename(dir)
+		m.NotInXml = True
 
 		for item in os.listdir(dir):
 			if item == ".directory":
@@ -946,8 +947,11 @@ def sort(menu):
 	# show_empty tag
 	for entry in menu.Entries:
 		if isinstance(entry,Menu) and entry.Layout.show_empty == "false" and entry.Visible == 0:
-			entry.Show = "Empty"
-			menu.Visible -= 1
+			if entry.NotInXml == True:
+				entry.Show = "Empty"
+				menu.Visible -= 1
+			else:
+				menu.Entries.remove(entry)
 
 # inline tags
 def __parse_inline(submenu, menu):
