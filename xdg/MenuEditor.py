@@ -228,8 +228,8 @@ class MenuEditor:
 
 	def unhideMenu(self, menu):
 		self.editMenu(menu, nodisplay = False, hidden = False)
-		xml_menu = self.getXmlMenu(menu.getPath(True,True), False)
-		for node in self.getXmlNodesByName(["Deleted", "NotDeleted"]):
+		xml_menu = self.__getXmlMenu(menu.getPath(True,True), False)
+		for node in self.__getXmlNodesByName(["Deleted", "NotDeleted"], xml_menu):
 			node.parentNode.removeChild(node)
 
 	def deleteMenuEntry(self, menuentry):
@@ -491,7 +491,7 @@ class MenuEditor:
 		except ValueError:
 			pass
 
-	def __remove_whilespace_nodes(node):
+	def __remove_whilespace_nodes(self, node):
 		remove_list = []
 		for child in node.childNodes:
 			if child.nodeType == xml.dom.minidom.Node.TEXT_NODE:
@@ -499,6 +499,6 @@ class MenuEditor:
 				if not child.data.strip():
 					remove_list.append(child)
 			elif child.hasChildNodes():
-				remove_whilespace_nodes(child)
+				self.__remove_whilespace_nodes(child)
 		for node in remove_list:
 			node.parentNode.removeChild(node)
