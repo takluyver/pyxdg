@@ -8,6 +8,7 @@ from xdg.Config import *
 
 import xml.dom.minidom
 import os
+import re
 
 # XML-Cleanups: Move / Exclude
 # FIXME: proper reverte/delete
@@ -53,6 +54,8 @@ class MenuEditor:
 			self.doc = xml.dom.minidom.parseString('<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd"><Menu><Name>Applications</Name><MergeFile type="parent">'+self.menu.Filename+'</MergeFile></Menu>')
 		except xml.parsers.expat.ExpatError:
 			raise ParsingError('Not a valid .menu file', self.filename)
+
+		self.__remove_whilespace_nodes(self.doc)
 
 	def save(self):
 		self.__saveEntries(self.menu)
@@ -121,7 +124,7 @@ class MenuEditor:
 
 		return separator
 
-	def editMenuEntry(self, menuentry, name=None, genericname=None, comment=None, command=None, icon=None, terminal=None, nodisplay=None):
+	def editMenuEntry(self, menuentry, name=None, genericname=None, comment=None, command=None, icon=None, terminal=None, nodisplay=None, hidden=None):
 		deskentry = menuentry.DesktopEntry
 
 		if name:
@@ -151,6 +154,11 @@ class MenuEditor:
 		elif nodisplay == False:
 			deskentry.set("NoDisplay", "false")
 
+		if hidden == True:
+			deskentry.set("Hidden", "true")
+		elif hidden == False:
+			deskentry.set("Hidden", "false")
+
 		menuentry.updateAttributes()
 
 		if len(menuentry.Parents) > 0:
@@ -158,7 +166,7 @@ class MenuEditor:
 
 		return menuentry
 
-	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, nodisplay=None):
+	def editMenu(self, menu, name=None, genericname=None, comment=None, icon=None, nodisplay=None, hidden=None):
 		# Hack for legacy dirs
 		if isinstance(menu.Directory, MenuEntry) and menu.Directory.Filename == ".directory":
 			xml_menu = self.__getXmlMenu(menu.getPath(True, True))
@@ -197,12 +205,32 @@ class MenuEditor:
 		elif nodisplay == False:
 			deskentry.set("NoDisplay", "false")
 
+		if hidden == True:
+			deskentry.set("Hidden", "true")
+		elif hidden == False:
+			deskentry.set("Hidden", "false")
+
 		menu.Directory.updateAttributes()
 
 		if isinstance(menu.Parent, Menu):
 			sort(self.menu)
 
 		return menu
+
+	def hideMenuEntry(self, menuentry):
+		self.editMenuEntry(menuentry, nodisplay = True)
+
+	def unhideMenuEntry(self, menuentry):
+		self.editMenuEntry(menuentry, nodisplay = False, hidden = False)
+
+	def hideMenu(self, menu):
+		self.editMenu(menu, nodisplay = True)
+
+	def unhideMenu(self, menu):
+		self.editMenu(menu, nodisplay = False, hidden = False)
+		xml_menu = self.getXmlMenu(menu.getPath(True,True), False)
+		for node in self.getXmlNodesByName(["Deleted", "NotDeleted"]):
+			node.parentNode.removeChild(node)
 
 	def deleteMenuEntry(self, menuentry):
 		if self.getAction(menuentry) == "delete":
@@ -284,7 +312,7 @@ class MenuEditor:
 		if not os.path.isdir(os.path.dirname(self.filename)):
 			os.makedirs(os.path.dirname(self.filename))
 		fd = open(self.filename, 'w')
-		fd.write(self.doc.toxml().replace('<?xml version="1.0" ?>\n', ''))
+		fd.write(re.sub("\n[\s]*([^\n<]*)\n[\s]*</", "\\1</", self.doc.toprettyxml().replace('<?xml version="1.0" ?>\n', '')))
 		fd.close()
 
 	def __getFileName(self, name, extension):
@@ -462,3 +490,15 @@ class MenuEditor:
 			self.filenames.remove(filename)
 		except ValueError:
 			pass
+
+	def __remove_whilespace_nodes(node):
+		remove_list = []
+		for child in node.childNodes:
+			if child.nodeType == xml.dom.minidom.Node.TEXT_NODE:
+				child.data = child.data.strip()
+				if not child.data.strip():
+					remove_list.append(child)
+			elif child.hasChildNodes():
+				remove_whilespace_nodes(child)
+		for node in remove_list:
+			node.parentNode.removeChild(node)
