@@ -124,6 +124,13 @@ class MenuEditor:
 
 		return separator
 
+	def copyMenuEntry(self, menuentry, oldparent, newparent, after=None, before=None):
+		self.__addEntry(newparent, menuentry, after, before)
+
+		sort(self.menu)
+
+		return menuentry
+
 	def editMenuEntry(self, menuentry, name=None, genericname=None, comment=None, command=None, icon=None, terminal=None, nodisplay=None, hidden=None):
 		deskentry = menuentry.DesktopEntry
 
