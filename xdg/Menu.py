@@ -334,7 +334,7 @@ def do(menuentries, type, run):
 
 	def parseFilename(self, value):
 		self.parseNew()
-		self.Rule += "menuentry.DesktopFileID == '%s'" % value.strip()
+		self.Rule += "menuentry.DesktopFileID == '%s'" % value.strip().replace("'", r"\'")
 
 	def parseCategory(self, value):
 		self.parseNew()
