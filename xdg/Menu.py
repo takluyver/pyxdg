@@ -4,7 +4,7 @@ http://standards.freedesktop.org/menu-spec/
 """
 
 from __future__ import generators
-import os, xml.dom.minidom
+import locale, os, xml.dom.minidom
 
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
@@ -82,7 +82,7 @@ class Menu:
 
 	# FIXME: Performance: cache getName()
 	def __cmp__(self, other):
-		return cmp(self.getName(), other.getName())
+		return locale.strcoll(self.getName(), other.getName())
 
 	def __eq__(self, other):
 		if self.Name == str(other):
@@ -443,7 +443,7 @@ class MenuEntry:
 		self.DesktopEntry.filename = os.path.join(dir, self.Filename)
 
 	def __cmp__(self, other):
-		return cmp(self.DesktopEntry.getName(), other.DesktopEntry.getName())
+		return locale.strcoll(self.DesktopEntry.getName(), other.DesktopEntry.getName())
 
 	def __eq__(self,other):
 		if self.DesktopFileID == str(other):

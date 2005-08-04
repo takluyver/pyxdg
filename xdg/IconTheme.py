@@ -237,8 +237,8 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
 		return iconname
 
 	# check if it has an extension and strip it
-	if re.match("(.*)\.([^.]*)", iconname):
-		iconname = re.sub("(.*)\.([^.]*)", "\\1", iconname)
+	if os.path.splitext(iconname)[1] in extensions:
+		iconname = os.path.splitext(iconname)[0]
 
 	# parse theme files
 	try:
