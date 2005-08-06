@@ -751,7 +751,7 @@ def __parseMergeDir(value, child, filename, parent):
 	if value:
 		for item in os.listdir(value):
 			try:
-				item.decode(locale.getdefaultencoding()[1]).encode('utf-8')
+				item.decode(locale.getpreferredencoding()).encode('utf-8')
 			except:
 				continue
 
@@ -806,7 +806,7 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
 
 		for item in os.listdir(dir):
 			try:
-				item.decode(locale.getdefaultencoding()[1]).encode('utf-8')
+				item.decode(locale.getpreferredencoding()).encode('utf-8')
 			except:
 				continue
 
@@ -1006,7 +1006,7 @@ class MenuEntryCache:
 	def __addFiles(self, dir, subdir, prefix, legacy):
 		for item in os.listdir(os.path.join(dir,subdir)):
 			try:
-				item.decode(locale.getdefaultencoding()[1]).encode('utf-8')
+				item.decode(locale.getpreferredencoding()).encode('utf-8')
 			except:
 				continue
 
