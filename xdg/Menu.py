@@ -995,6 +995,10 @@ class MenuEntryCache:
 
 	def __addFiles(self, dir, subdir, prefix, legacy):
 		for item in os.listdir(os.path.join(dir,subdir)):
+			try:
+				item.decode(locale.getdefaultencoding()[1]).encode('utf-8')
+			except:
+				pass
 			if os.path.splitext(item)[1] == ".desktop":
 				try:
 					menuentry = MenuEntry(os.path.join(subdir,item), dir, prefix)
