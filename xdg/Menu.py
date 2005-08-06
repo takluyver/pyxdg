@@ -998,7 +998,7 @@ class MenuEntryCache:
 			try:
 				item.decode(locale.getdefaultencoding()[1]).encode('utf-8')
 			except:
-				pass
+				continue
 			if os.path.splitext(item)[1] == ".desktop":
 				try:
 					menuentry = MenuEntry(os.path.join(subdir,item), dir, prefix)
