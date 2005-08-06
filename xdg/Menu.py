@@ -750,6 +750,11 @@ def __parseMergeDir(value, child, filename, parent):
 	value = __check(value, filename, "dir")
 	if value:
 		for item in os.listdir(value):
+			try:
+				item.decode(locale.getdefaultencoding()[1]).encode('utf-8')
+			except:
+				continue
+
 			if os.path.splitext(item)[1] == ".menu":
 				__mergeFile(os.path.join(value, item), child, parent)
 
@@ -800,6 +805,11 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
 		m.NotInXml = True
 
 		for item in os.listdir(dir):
+			try:
+				item.decode(locale.getdefaultencoding()[1]).encode('utf-8')
+			except:
+				continue
+
 			if item == ".directory":
 				m.Directories.append(item)
 			elif os.path.isdir(os.path.join(dir,item)):
@@ -999,6 +1009,7 @@ class MenuEntryCache:
 				item.decode(locale.getdefaultencoding()[1]).encode('utf-8')
 			except:
 				continue
+
 			if os.path.splitext(item)[1] == ".desktop":
 				try:
 					menuentry = MenuEntry(os.path.join(subdir,item), dir, prefix)
