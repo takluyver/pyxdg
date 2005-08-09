@@ -1,5 +1,12 @@
+Version 0.15
+
+2005-08-09 Heinrich Wendel <h_wendel@cojobo.net>
+	* Menu.py: Unicode bug fixed!
+	* IconTheme.py: small speedup
+
 2005-08-04 Heinrich Wendel <h_wendel@cojobo.net>
 	* Menu.py, IconTheme.py: Bugfixes...
+	* MenuEditor.py: Make xml nice; add hide/unhide functions
 
 Versinon 0.14
 
