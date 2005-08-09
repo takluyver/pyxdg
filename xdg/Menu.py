@@ -751,12 +751,10 @@ def __parseMergeDir(value, child, filename, parent):
 	if value:
 		for item in os.listdir(value):
 			try:
-				item.decode(locale.getpreferredencoding()).encode('utf-8')
-			except:
+				if os.path.splitext(item)[1] == ".menu":
+					__mergeFile(os.path.join(value, item), child, parent)
+			except UnicodeDecodeError:
 				continue
-
-			if os.path.splitext(item)[1] == ".menu":
-				__mergeFile(os.path.join(value, item), child, parent)
 
 def __parseDefaultMergeDirs(child, filename, parent):
 	basename = os.path.splitext(os.path.basename(filename))[0]
@@ -806,14 +804,12 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
 
 		for item in os.listdir(dir):
 			try:
-				item.decode(locale.getpreferredencoding()).encode('utf-8')
-			except:
+				if item == ".directory":
+					m.Directories.append(item)
+				elif os.path.isdir(os.path.join(dir,item)):
+					m.addSubmenu(__mergeLegacyDir(os.path.join(dir,item), prefix, filename, parent))
+			except UnicodeDecodeError:
 				continue
-
-			if item == ".directory":
-				m.Directories.append(item)
-			elif os.path.isdir(os.path.join(dir,item)):
-				m.addSubmenu(__mergeLegacyDir(os.path.join(dir,item), prefix, filename, parent))
 
 		tmp["cache"].addMenuEntries([dir],prefix, True)
 		menuentries = tmp["cache"].getMenuEntries([dir], False)
@@ -1005,11 +1001,6 @@ class MenuEntryCache:
 
 	def __addFiles(self, dir, subdir, prefix, legacy):
 		for item in os.listdir(os.path.join(dir,subdir)):
-			try:
-				item.decode(locale.getpreferredencoding()).encode('utf-8')
-			except:
-				continue
-
 			if os.path.splitext(item)[1] == ".desktop":
 				try:
 					menuentry = MenuEntry(os.path.join(subdir,item), dir, prefix)
@@ -1037,14 +1028,17 @@ class MenuEntryCache:
 			pass
 		for dir in appdirs:
 			for menuentry in self.cacheEntries[dir]:
-				if menuentry.DesktopFileID not in ids:
-					ids.append(menuentry.DesktopFileID)
-					list.append(menuentry)
-				elif menuentry.getType() == "System":
-				# FIXME: This is only 99% correct, but still...
-					i = list.index(menuentry)
-					e = list[i]
-					if e.getType() == "User":
-						e.Original = menuentry
+				try:
+					if menuentry.DesktopFileID not in ids:
+						ids.append(menuentry.DesktopFileID)
+						list.append(menuentry)
+					elif menuentry.getType() == "System":
+					# FIXME: This is only 99% correct, but still...
+						i = list.index(menuentry)
+						e = list[i]
+						if e.getType() == "User":
+							e.Original = menuentry
+				except UnicodeDecodeError:
+					continue
 		self.cache[key] = list
 		return list
