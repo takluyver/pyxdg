@@ -978,7 +978,7 @@ def __try_exec(executable):
 				if os.access(f, os.X_OK):
 					return True
 	else:
-		if os.access(f, os.X_OK):
+		if os.access(executable, os.X_OK):
 			return True
 	return False
 
