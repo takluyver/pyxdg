@@ -942,7 +942,7 @@ def sort(menu):
 			elif entry.DesktopEntry.getHidden() == True:
 				entry.Show = "Hidden"
 				menu.Visible -= 1
-			elif entry.DesktopEntry.getTryExec() and not __find_executable(entry.DesktopEntry.getTryExec()):
+			elif entry.DesktopEntry.getTryExec() and not __try_exec(entry.DesktopEntry.getTryExec()):
 				entry.Show = "NoExec"
 				menu.Visible -= 1
 			elif xdg.Config.windowmanager:
@@ -969,18 +969,18 @@ def sort(menu):
 			if entry.NotInXml == True:
 				menu.Entries.remove(entry)
 
-def __find_executable(executable):
+def __try_exec(executable):
 	paths = os.environ['PATH'].split(os.pathsep)
 	if not os.path.isfile(executable):
 		for p in paths:
 			f = os.path.join(p, executable)
 			if os.path.isfile(f):
 				if os.access(f, os.X_OK):
-					return f
+					return True
 	else:
 		if os.access(f, os.X_OK):
-			return executable
-	return None
+			return True
+	return False
 
 # inline tags
 def __parse_inline(submenu, menu):
