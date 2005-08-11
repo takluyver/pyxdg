@@ -1,6 +1,8 @@
 """
 Implementation of the XDG Menu Specification Version 1.0.draft-1
 http://standards.freedesktop.org/menu-spec/
+
+TODO: TryExec / NoExec
 """
 
 from __future__ import generators
@@ -382,7 +384,7 @@ class MenuEntry:
 		self.DesktopEntry = DesktopEntry(os.path.join(dir,filename))
 		self.setAttributes(filename, dir, prefix)
 
-		# Can be one of Deleted/Hidden/Empty/NotShowIn or True
+		# Can be one of Deleted/Hidden/Empty/NotShowIn/NoExec or True
 		self.Show = True
 
 		# Semi-Private
@@ -920,7 +922,7 @@ def sort(menu):
 					if submenu.Name not in tmp_s:
 						__parse_inline(submenu, menu)
 
-	# getHidden / NoDisplay / OnlyShowIn / NotOnlyShowIn / Deleted
+	# getHidden / NoDisplay / OnlyShowIn / NotOnlyShowIn / Deleted / NoExec
 	for entry in menu.Entries:
 		entry.Show = True
 		menu.Visible += 1
@@ -941,6 +943,9 @@ def sort(menu):
 				menu.Visible -= 1
 			elif entry.DesktopEntry.getHidden() == True:
 				entry.Show = "Hidden"
+				menu.Visible -= 1
+			elif entry.DesktopEntry.getTryExec() and not __find_executable(entry.DesktopEntry.getTryExec()):
+				entry.Show = "NoExec"
 				menu.Visible -= 1
 			elif xdg.Config.windowmanager:
 				if ( entry.DesktopEntry.getOnlyShowIn() != [] and xdg.Config.windowmanager not in entry.DesktopEntry.getOnlyShowIn() ) \
@@ -965,6 +970,17 @@ def sort(menu):
 			menu.Visible -= 1
 			if entry.NotInXml == True:
 				menu.Entries.remove(entry)
+
+def __find_executable(executable):
+    paths = string.split(os.environ['PATH'], os.pathsep)
+    if not os.path.isfile(executable):
+        for p in paths:
+            f = os.path.join(p, executable)
+            if os.path.isfile(f):
+                return f
+        return None
+    else:
+        return executable
 
 # inline tags
 def __parse_inline(submenu, menu):
