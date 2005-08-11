@@ -1,5 +1,8 @@
 Version 0.15
 
+2005-08-10 Heinrich Wendel <h_wendel@cojoob.net>
+	* Menu.py: Add support for TryExec
+
 2005-08-09 Heinrich Wendel <h_wendel@cojobo.net>
 	* Menu.py: Unicode bug fixed!
 	* IconTheme.py: small speedup

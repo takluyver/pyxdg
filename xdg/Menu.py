@@ -1,8 +1,6 @@
 """
 Implementation of the XDG Menu Specification Version 1.0.draft-1
 http://standards.freedesktop.org/menu-spec/
-
-TODO: TryExec / NoExec
 """
 
 from __future__ import generators
@@ -972,15 +970,17 @@ def sort(menu):
 				menu.Entries.remove(entry)
 
 def __find_executable(executable):
-    paths = os.environ['PATH'].split(os.pathsep)
-    if not os.path.isfile(executable):
-        for p in paths:
-            f = os.path.join(p, executable)
-            if os.path.isfile(f):
-                return f
-        return None
-    else:
-        return executable
+	paths = os.environ['PATH'].split(os.pathsep)
+	if not os.path.isfile(executable):
+		for p in paths:
+			f = os.path.join(p, executable)
+			if os.path.isfile(f):
+				if os.access(f, os.X_OK):
+					return f
+	else:
+		if os.access(f, os.X_OK):
+			return executable
+	return None
 
 # inline tags
 def __parse_inline(submenu, menu):
