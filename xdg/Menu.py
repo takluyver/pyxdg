@@ -972,7 +972,7 @@ def sort(menu):
 				menu.Entries.remove(entry)
 
 def __find_executable(executable):
-    paths = string.split(os.environ['PATH'], os.pathsep)
+    paths = os.environ['PATH'].split(os.pathsep)
     if not os.path.isfile(executable):
         for p in paths:
             f = os.path.join(p, executable)
