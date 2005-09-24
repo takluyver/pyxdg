@@ -775,9 +775,15 @@ def __mergeFile(filename, child, parent):
 	try:
 		doc = xml.dom.minidom.parse(filename)
 	except IOError:
-		raise ParsingError('File not found', filename)
+		if debug:
+			raise ParsingError('File not found', filename)
+		else:
+			return
 	except xml.parsers.expat.ExpatError:
-		raise ParsingError('Not a valid .menu file', filename)
+		if debug:
+			raise ParsingError('Not a valid .menu file', filename)
+		else:
+			return
 
 	# append file
 	for child in doc.childNodes:
