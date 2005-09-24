@@ -21,6 +21,5 @@ def show_menu(menu, depth = 0):
 #	depth -= 1
 
 menu = xdg.Menu.parse()
-print "hallo"
 show_menu(menu)
 #xdg.Menu.parse()
