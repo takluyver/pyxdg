@@ -21,6 +21,9 @@ class IniFile:
 		if filename:
 			self.parse(filename)
 
+	def __cmp__(self, other):
+		return cmp(self.content, other.content)
+
 	def parse(self, filename, headers):
 		# for performance reasons
 		content = self.content
@@ -276,7 +279,7 @@ class IniFile:
 		else:
 			filename = self.filename
 
-		if not os.path.isdir(os.path.dirname(filename)):
+		if os.path.dirname(filename) and not os.path.isdir(os.path.dirname(filename)):
 			os.makedirs(os.path.dirname(filename))
 
 		fp = codecs.open(filename, 'w')

@@ -1,3 +1,11 @@
+Version 0.16
+
+2008-03-02 Heinrich Wendel <h_wendel@cojobo.net>
+    * IniFile.py: Fix saving of relative filenames
+	* IniFile.py: Fix __cmp__ method
+
+
+
 Version 0.15
 
 2005-08-10 Heinrich Wendel <h_wendel@cojoob.net>

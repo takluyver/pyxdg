@@ -29,9 +29,6 @@ class DesktopEntry(IniFile):
 	def __str__(self):
 		return self.getName()
 
-	def __cmp__(self, other):
-		return cmp(self, other)
-
 	def parse(self, file):
 		IniFile.parse(self, file, ["Desktop Entry", "KDE Desktop Entry"])
 
