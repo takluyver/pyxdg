@@ -31,8 +31,16 @@ class IniFile:
         if not os.path.isfile(filename):
             raise ParsingError("File not found", filename)
 
+        try:
+            fd = file(filename, 'r')
+        except IOError, e:
+            if debug:
+                raise e
+            else:
+                return
+
         # parse file
-        for line in file(filename,'r'):
+        for line in fd:
             line = line.strip()
             # empty line
             if not line:
@@ -59,6 +67,8 @@ class IniFile:
                         content[currentGroup][key] = value
                 except (IndexError, UnboundLocalError):
                     raise ParsingError("[%s]-Header missing" % headers[0], filename)
+
+        fd.close()
 
         self.filename = filename
         self.tainted = False

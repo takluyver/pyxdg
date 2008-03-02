@@ -272,10 +272,16 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
 
     for dir, values in dache.items():
         for extension in extensions:
-            if iconname + "." + extension in values[0]:
-                icon = os.path.join(dir, iconname + "." + extension)
-                eache[tmp] = [time.time(), icon]
-                return icon
+            try:
+                if iconname + "." + extension in values[0]:
+                    icon = os.path.join(dir, iconname + "." + extension)
+                    eache[tmp] = [time.time(), icon]
+                    return icon
+            except UnicodeDecodeError, e:
+                if debug:
+                    raise e
+                else:
+                    pass
 
     # we haven't found anything? "hicolor" is our fallback
     if theme != "hicolor":
