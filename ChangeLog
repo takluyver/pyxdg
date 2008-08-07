@@ -1,5 +1,8 @@
 Version 0.16
 
+2008-08-07 Heinrich Wendel <h_wendel@cojobo.net>
+	* IconTheme.py: Add more directories to the pixmap path
+
 2008-03-02 Heinrich Wendel <h_wendel@cojobo.net>
     * IniFile.py: Fix saving of relative filenames
     * IniFile.py, DesktopEntry.py: Fix __cmp__ method
