@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 from xdg.IconTheme import *
 
 print getIconPath("opera")

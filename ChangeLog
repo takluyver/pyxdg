@@ -2,9 +2,8 @@ Version 0.16
 
 2008-03-02 Heinrich Wendel <h_wendel@cojobo.net>
     * IniFile.py: Fix saving of relative filenames
-    * IniFile.py: Fix __cmp__ method
-
-
+    * IniFile.py, DesktopEntry.py: Fix __cmp__ method
+	* IniFile.py, IconTheme.py: Better error handling
 
 Version 0.15
 

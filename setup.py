@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 from distutils.core import setup
 
@@ -10,3 +10,4 @@ setup( name = "pyxdg",
        url = "http://cvs.freedesktop.org/cgi-bin/viewcvs.cgi/pyxdg/",
        packages = ['xdg'],
        license = "LGPL-2")
+
