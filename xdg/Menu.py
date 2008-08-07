@@ -445,7 +445,7 @@ class MenuEntry:
     def __cmp__(self, other):
         return locale.strcoll(self.DesktopEntry.getName(), other.DesktopEntry.getName())
 
-    def __eq__(self,other):
+    def __eq__(self, other):
         if self.DesktopFileID == str(other):
             return True
         else:

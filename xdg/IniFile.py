@@ -1,7 +1,5 @@
 """
 Base Class for DesktopEntry, IconTheme and IconData
-
-TODO: parse string
 """
 
 import re, os.path, codecs

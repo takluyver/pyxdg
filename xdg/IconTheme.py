@@ -215,7 +215,7 @@ class IconData(IniFile):
 icondirs = []
 for basedir in xdg_data_dirs:
     icondirs.append(os.path.join(basedir, "icons"))
-icondirs.append("/usr/share/pixmaps")
+    icondirs.append(os.path.join(basedir, "pixmaps"))
 icondirs.append(os.path.expanduser("~/.icons"))
 
 # just cache variables, they give a 10x speed improvement
