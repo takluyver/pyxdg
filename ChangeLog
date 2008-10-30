@@ -1,4 +1,7 @@
-Versino 0.18
+Version 0.17
+
+2008-10-30 Heinrich Wendel <h_wendel@cojobo.net>
+    * Menu.py: Python <= 2.3 compatibility fix
     * DesktopEntry.py: Fix wrong indention
 
 Version 0.16

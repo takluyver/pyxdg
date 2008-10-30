@@ -15,6 +15,13 @@ import xdg.Config
 
 ELEMENT_NODE = xml.dom.Node.ELEMENT_NODE
 
+# for python <= 2.3
+try:
+    reversed = reversed
+except NameError:
+    def reversed(x):
+        return x[::-1]
+
 class Menu:
     def __init__(self):
         # Public stuff
