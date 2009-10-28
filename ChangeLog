@@ -1,3 +1,7 @@
+Version 0.18
+
+    * Mime.py: Add get_type_by_contents()
+
 Version 0.17
 
 2008-10-30 Heinrich Wendel <h_wendel@cojobo.net>

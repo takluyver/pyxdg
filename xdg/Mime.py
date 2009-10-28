@@ -274,24 +274,28 @@ class MagicDB:
             if not c:
                 break
 
+    def match_data(self, data, max_pri=100, min_pri=0):
+        pris=self.types.keys()
+        pris.sort(lambda a, b: -cmp(a, b))
+        for pri in pris:
+            #print pri, max_pri, min_pri
+            if pri>max_pri:
+                continue
+            if pri<min_pri:
+                break
+            for type in self.types[pri]:
+                m=type.match(buf)
+                if m:
+                    return m
+        
+
     def match(self, path, max_pri=100, min_pri=0):
         try:
             buf=file(path, 'r').read(self.maxlen)
-            pris=self.types.keys()
-            pris.sort(lambda a, b: -cmp(a, b))
-            for pri in pris:
-                #print pri, max_pri, min_pri
-                if pri>max_pri:
-                    continue
-                if pri<min_pri:
-                    break
-                for type in self.types[pri]:
-                    m=type.match(buf)
-                    if m:
-                        return m
+            return self.match_data(buf, max_pri, min_pri)
         except:
             pass
-        
+
         return None
     
     def __repr__(self):
@@ -388,6 +392,13 @@ def get_type_by_contents(path, max_pri=100, min_pri=0):
         _cache_database()
 
     return magic.match(path, max_pri, min_pri)
+
+def get_type_by_data(data, max_pri=100, min_pri=0):
+    """Returns type of the data"""
+    if not _cache_uptodate:
+        _cache_database()
+
+    return magic.match_data(data, max_pri, min_pri)
 
 def get_type(path, follow=1, name_pri=100):
     """Returns type of file indicated by path.
