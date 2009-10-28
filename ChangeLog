@@ -1,5 +1,8 @@
 Version 0.18
 
+    * DesktopEntry.py: Add getMimeTypes() method, correctly returning strings
+    * DesktopEntry.py: Deprecated getMimeType() returning list of regex
+    * Menu.py: Add support for XDG_MENU_PREFIX
     * Mime.py: Add get_type_by_contents()
 
 Version 0.17

@@ -498,11 +498,12 @@ def parse(filename=None):
         filename = __getFileName(filename)
 
     # use default if no filename given
+    if not filename: 
+        candidate = os.environ.get('XDG_MENU_PREFIX', '') + "applications.menu"
+        filename = __getFileName(candidate)
+        
     if not filename:
-        filename = __getFileName("applications.menu")
-
-    if not filename:
-        raise ParsingError('File not found', "/etc/xdg/menus/applications.menu")
+        raise ParsingError('File not found', "/etc/xdg/menus/%s" % candidate)
 
     # check if it is a .menu file
     if not os.path.splitext(filename)[1] == ".menu":

@@ -16,7 +16,7 @@ def checkfiles(path):
             print e
             return
 
-        entry.setLocale("C")
+        #entry.setLocale("C")
         entry.getName()
 
         try:

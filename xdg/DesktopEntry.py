@@ -67,8 +67,11 @@ class DesktopEntry(IniFile):
         return self.get('SwallowExec')
     def getActions(self):
         return self.get('Actions', list=True)
+    """ @deprecated, use getMimeTypes instead """
     def getMimeType(self):
         return self.get('MimeType', list=True, type="regex")
+    def getMimeTypes(self):
+        return self.get('MimeType', list=True)
     def getSortOrder(self): 
         return self.get('SortOrder', list=True)
     def getDev(self):
@@ -362,7 +365,7 @@ class DesktopEntry(IniFile):
             self.errors.append("Invalid key: %s" % key)
 
     def checkType(self, key, type):
-        if not self.type == type:
+        if not self.getType() == type:
             self.errors.append("Key '%s' only allowed in Type=%s" % (key, type))
 
     def checkOnlyShowIn(self, value):

@@ -1,19 +1,20 @@
 The XDG Package contains:
 
 	- Implementation of the XDG-Base-Directory Standard
-	  http://www.freedesktop.org/standards/basedir-spec
+      http://standards.freedesktop.org/basedir-spec/
 
 	- Implementation of the XDG-Desktop Standard
-	  http://www.freedesktop.org/standards/desktop-entry-spec
+      http://standards.freedesktop.org/basedir-spec/
 
 	- Implementation of the XDG-Menu Standard
-	  http://www.freedesktop.org/standards/menu-spec
+      http://standards.freedesktop.org/basedir-spec/
 
 	- Implementation of the XDG-Icon-Theme Standard
-	  http://www.freedesktop.org/standards/icon-theme-spec
+      http://standards.freedesktop.org/basedir-spec/
 
 	- Implementation of the XDG-Shared MIME-info Database
-	  http://www.freedesktop.org/standards/shared-mime-info
+      http://standards.freedesktop.org/basedir-spec/
 
 	- Implementation of the XDG-Recent File Storage Specification
-	  http://www.freedesktop.org/standards/recent-file-spec
+    http://standards.freedesktop.org/basedir-spec/
+
