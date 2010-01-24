@@ -1,3 +1,10 @@
+Version 0.19
+    * IniFile.py: add support for trusted desktop files (thanks to karl mikaelsson)
+    * DesktopEntry.py: Support spec version 1.0, Debian bug #563660
+    * MimeType.py: Fix parsing of in memory data, Debian bug #563718
+    * DesktopEntry.py: Fix constructor, Debian bug #551297, #562951, #562952
+
+
 Version 0.18
 
     * DesktopEntry.py: Add getMimeTypes() method, correctly returning strings

@@ -2,7 +2,7 @@
 Base Class for DesktopEntry, IconTheme and IconData
 """
 
-import re, os.path, codecs
+import re, os, stat, codecs
 from Exceptions import *
 import xdg.Locale
 
@@ -22,7 +22,7 @@ class IniFile:
     def __cmp__(self, other):
         return cmp(self.content, other.content)
 
-    def parse(self, filename, headers):
+    def parse(self, filename, headers=None):
         # for performance reasons
         content = self.content
 
@@ -64,7 +64,7 @@ class IniFile:
                     else:
                         content[currentGroup][key] = value
                 except (IndexError, UnboundLocalError):
-                    raise ParsingError("[%s]-Header missing" % headers[0], filename)
+                    raise ParsingError("Parsing error on key, group missing", filename)
 
         fd.close()
 
@@ -72,12 +72,13 @@ class IniFile:
         self.tainted = False
 
         # check header
-        for header in headers:
-            if content.has_key(header):
-                self.defaultGroup = header
-                break
-        else:
-            raise ParsingError("[%s]-Header missing" % headers[0], filename)
+        if headers:
+            for header in headers:
+                if content.has_key(header):
+                    self.defaultGroup = header
+                    break
+            else:
+                raise ParsingError("[%s]-Header missing" % headers[0], filename)
 
     # start stuff to access the keys
     def get(self, key, group=None, locale=False, type="string", list=False):
@@ -224,7 +225,7 @@ class IniFile:
                 code = self.checkString(value)
             elif type == "boolean":
                 code = self.checkBoolean(value)
-            elif type == "number":
+            elif type == "numeric":
                 code = self.checkNumber(value)
             elif type == "integer":
                 code = self.checkInteger(value)
@@ -278,7 +279,7 @@ class IniFile:
             return 1
 
     # write support
-    def write(self, filename=None):
+    def write(self, filename=None, trusted=False):
         if not filename and not self.filename:
             raise ParsingError("File not found", "")
 
@@ -291,6 +292,14 @@ class IniFile:
             os.makedirs(os.path.dirname(filename))
 
         fp = codecs.open(filename, 'w')
+
+        # An executable bit signifies that the desktop file is
+        # trusted, but then the file can be executed. Add hashbang to
+        # make sure that the file is opened by something that
+        # understands desktop files.
+        if trusted:
+            fp.write("#!/usr/bin/env xdg-open\n")
+
         if self.defaultGroup:
             fp.write("[%s]\n" % self.defaultGroup)
             for (key, value) in self.content[self.defaultGroup].items():
@@ -302,6 +311,13 @@ class IniFile:
                 for (key, value) in group.items():
                     fp.write("%s=%s\n" % (key, value))
                 fp.write("\n")
+
+        # Add executable bits to the file to show that it's trusted.
+        if trusted:
+            oldmode = os.stat(filename).st_mode
+            mode = oldmode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+            os.chmod(filename, mode)
+
         self.tainted = False
 
     def set(self, key, value, group=None, locale=False):

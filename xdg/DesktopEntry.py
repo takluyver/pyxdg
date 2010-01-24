@@ -35,24 +35,27 @@ class DesktopEntry(IniFile):
     # start standard keys
     def getType(self):
         return self.get('Type')
+    """ @deprecated, use getVersionString instead """
     def getVersion(self):
         return self.get('Version', type="numeric")
-    def getEncoding(self):
-        return self.get('Encoding')
+    def getVersionString(self):
+        return self.get('Version')
     def getName(self):
         return self.get('Name', locale=True)
     def getGenericName(self):
         return self.get('GenericName', locale=True)
-    def getComment(self):
-        return self.get('Comment', locale=True)
     def getNoDisplay(self):
         return self.get('NoDisplay', type="boolean")
+    def getComment(self):
+        return self.get('Comment', locale=True)
     def getIcon(self):
         return self.get('Icon', locale=True)
     def getHidden(self):
         return self.get('Hidden', type="boolean")
-    def getFilePattern(self):
-        return self.get('FilePattern', type="regex")
+    def getOnlyShowIn(self):
+        return self.get('OnlyShowIn', list=True)
+    def getNotShowIn(self):
+        return self.get('NotShowIn', list=True)
     def getTryExec(self):
         return self.get('TryExec')
     def getExec(self):
@@ -61,41 +64,19 @@ class DesktopEntry(IniFile):
         return self.get('Path')
     def getTerminal(self):
         return self.get('Terminal', type="boolean")
-    def getSwallowTitle(self):
-        return self.get('SwallowTitle', locale=True)
-    def getSwallowExec(self):
-        return self.get('SwallowExec')
-    def getActions(self):
-        return self.get('Actions', list=True)
     """ @deprecated, use getMimeTypes instead """
     def getMimeType(self):
         return self.get('MimeType', list=True, type="regex")
     def getMimeTypes(self):
         return self.get('MimeType', list=True)
-    def getSortOrder(self): 
-        return self.get('SortOrder', list=True)
-    def getDev(self):
-        return self.get('Dev')
-    def getFSType(self):
-        return self.get('FSType')
-    def getMountPoint(self):
-        return self.get('MountPoint')
-    def getReadonly(self):
-        return self.get('ReadOnly', type="boolean")
-    def getUnmountIcon(self):
-        return self.get('UnmountIcon', locale=True)
-    def getURL(self):
-        return self.get('URL')
     def getCategories(self):
         return self.get('Categories', list=True)
-    def getOnlyShowIn(self):
-        return self.get('OnlyShowIn', list=True)
-    def getNotShowIn(self):
-        return self.get('NotShowIn', list=True)
     def getStartupNotify(self):
         return self.get('StartupNotify', type="boolean")
     def getStartupWMClass(self):
         return self.get('StartupWMClass')
+    def getURL(self):
+        return self.get('URL')
     # end standard keys
 
     # start kde keys
@@ -107,6 +88,16 @@ class DesktopEntry(IniFile):
         return self.get('Keywords', list=True, locale=True)
     def getInitialPreference(self):
         return self.get('InitialPreference')
+    def getDev(self):
+        return self.get('Dev')
+    def getFSType(self):
+        return self.get('FSType')
+    def getMountPoint(self):
+        return self.get('MountPoint')
+    def getReadonly(self):
+        return self.get('ReadOnly', type="boolean")
+    def getUnmountIcon(self):
+        return self.get('UnmountIcon', locale=True)
     # end kde keys
 
     # start deprecated keys
@@ -124,6 +115,18 @@ class DesktopEntry(IniFile):
         return self.get('BinaryPattern')
     def getMapNotify(self):
         return self.get('MapNotify')
+    def getEncoding(self):
+        return self.get('Encoding')
+    def getSwallowTitle(self):
+        return self.get('SwallowTitle', locale=True)
+    def getSwallowExec(self):
+        return self.get('SwallowExec')
+    def getSortOrder(self): 
+        return self.get('SortOrder', list=True)
+    def getFilePattern(self):
+        return self.get('FilePattern', type="regex")
+    def getActions(self):
+        return self.get('Actions', list=True)
     # end deprecated keys
 
     # desktop entry edit stuff
@@ -132,9 +135,11 @@ class DesktopEntry(IniFile):
             type = "Application"
         elif os.path.splitext(filename)[1] == ".directory":
             type = "Directory"
+        else:
+            raise ParsingError("Unknown extension", filename)
+
         self.content = dict()
         self.addGroup(self.defaultGroup)
-        self.set("Encoding", "UTF-8")
         self.set("Type", type)
         self.filename = filename
     # end desktop entry edit stuff
@@ -157,18 +162,6 @@ class DesktopEntry(IniFile):
         except KeyError:
             self.errors.append("Key 'Type' is missing")
 
-        # Encoding
-        try:
-            self.encoding = self.content[self.defaultGroup]["Encoding"]
-        except KeyError:
-            self.errors.append("Key 'Encoding' is missing")
-
-        # Version
-        try:
-            self.version = self.content[self.defaultGroup]["Version"]
-        except KeyError:
-            self.warnings.append("Key 'Version' is missing")
-
         # Name
         try:
             self.name = self.content[self.defaultGroup]["Name"]
@@ -189,26 +182,27 @@ class DesktopEntry(IniFile):
     def checkKey(self, key, value, group):
         # standard keys     
         if key == "Type":
-            if value == "ServiceType" or value == "Service":
+            if value == "ServiceType" or value == "Service" or value == "FSDevice":
                 self.warnings.append("Type=%s is a KDE extension" % key)
             elif value == "MimeType":
                 self.warnings.append("Type=MimeType is deprecated")
-            elif not (value == "Application" or value == "Link" or value == "FSDevice" or value == "Directory"):
-                self.errors.append("Value of key 'Type' must be Application, Link, FSDevice or Directory, but is '%s'" % value)
+            elif not (value == "Application" or value == "Link" or value == "Directory"):
+                self.errors.append("Value of key 'Type' must be Application, Link or Directory, but is '%s'" % value)
 
             if self.fileExtension == ".directory" and not value == "Directory":
                 self.warnings.append("File extension is .directory, but Type is '%s'" % value)
             elif self.fileExtension == ".desktop" and value == "Directory":
                 self.warnings.append("Files with Type=Directory should have the extension .directory")
 
-        elif key == "Version":
-            self.checkValue(key, value, type="number")
+            if value == "Application":
+                if not self.content[group].has_key("Exec"):
+                    self.warnings.append("Type=Application needs 'Exec' key")
+            if value == "Link":
+                if not self.content[group].has_key("URL"):
+                    self.warnings.append("Type=Application needs 'Exec' key")
 
-        elif key == "Encoding":
-            if value == "Legacy-Mixed":
-                self.errors.append("Encoding=Legacy-Mixed is deprecated and not supported by this parser")
-            elif not value == "UTF-8":
-                self.errors.append("Value of key 'Encoding' must be UTF-8")
+        elif key == "Version":
+            self.checkValue(key, value)
 
         elif re.match("^Name"+xdg.Locale.regex+"$", key):
             pass # locale string
@@ -216,18 +210,25 @@ class DesktopEntry(IniFile):
         elif re.match("^GenericName"+xdg.Locale.regex+"$", key):
             pass # locale string
 
+        elif key == "NoDisplay":
+            self.checkValue(key, value, type="boolean")
+
         elif re.match("^Comment"+xdg.Locale.regex+"$", key):
             pass # locale string
 
-        elif key == "NoDisplay":
-            self.checkValue(key, value, type="boolean")
+        elif re.match("^Icon"+xdg.Locale.regex+"$", key):
+            self.checkValue(key, value)
 
         elif key == "Hidden":
             self.checkValue(key, value, type="boolean")
 
-        elif key == "Terminal":
-            self.checkValue(key, value, type="boolean")
-            self.checkType(key, "Application")
+        elif key == "OnlyShowIn":
+            self.checkValue(key, value, list=True)
+            self.checkOnlyShowIn(value)
+
+        elif key == "NotShowIn":
+            self.checkValue(key, value, list=True)
+            self.checkOnlyShowIn(value)
 
         elif key == "TryExec":
             self.checkValue(key, value)
@@ -241,40 +242,18 @@ class DesktopEntry(IniFile):
             self.checkValue(key, value)
             self.checkType(key, "Application")
 
-        elif re.match("^Icon"+xdg.Locale.regex+"$", key):
-            self.checkValue(key, value)
-
-        elif re.match("^SwallowTitle"+xdg.Locale.regex+"$", key):
-            self.checkType(key, "Application")
-
-        elif key == "SwallowExec":
-            self.checkValue(key, value)
-            self.checkType(key, "Application")
-
-        elif key == "FilePatterns":
-            self.checkValue(key, value, type="regex", list=True)
-            self.checkType(key, "Application")
-
-        elif key == "Actions":
-            self.checkValue(key, value, list=True)
+        elif key == "Terminal":
+            self.checkValue(key, value, type="boolean")
             self.checkType(key, "Application")
 
         elif key == "MimeType":
-            self.checkValue(key, value, type="regex", list=True)
+            self.checkValue(key, value, list=True)
             self.checkType(key, "Application")
 
         elif key == "Categories":
             self.checkValue(key, value)
             self.checkType(key, "Application")
             self.checkCategorie(value)
-
-        elif key == "OnlyShowIn":
-            self.checkValue(key, value, list=True)
-            self.checkOnlyShowIn(value)
-
-        elif key == "NotShowIn":
-            self.checkValue(key, value, list=True)
-            self.checkOnlyShowIn(value)
 
         elif key == "StartupNotify":
             self.checkValue(key, value, type="boolean")
@@ -283,33 +262,9 @@ class DesktopEntry(IniFile):
         elif key == "StartupWMClass":
             self.checkType(key, "Application")
 
-        elif key == "SortOrder":
-            self.checkValue(key, value, list=True)
-            self.checkType(key, "Directory")
-
         elif key == "URL":
             self.checkValue(key, value)
             self.checkType(key, "URL")
-
-        elif key == "Dev":
-            self.checkValue(key, value)
-            self.checkType(key, "FSDevice")
-
-        elif key == "FSType":
-            self.checkValue(key, value)
-            self.checkType(key, "FSDevice")
-
-        elif key == "MountPoint":
-            self.checkValue(key, value)
-            self.checkType(key, "FSDevice")
-
-        elif re.match("^UnmountIcon"+xdg.Locale.regex+"$", key):
-            self.checkValue(key, value)
-            self.checkType(key, "FSDevice")
-
-        elif key == "ReadOnly":
-            self.checkValue(key, value, type="boolean")
-            self.checkType(key, "FSDevice")
 
         # kde extensions
         elif key == "ServiceTypes":
@@ -325,10 +280,39 @@ class DesktopEntry(IniFile):
             self.warnings.append("Key '%s' is a KDE extension" % key)
 
         elif key == "InitialPreference":
-            self.checkValue(key, value, type="number")
+            self.checkValue(key, value, type="numeric")
+            self.warnings.append("Key '%s' is a KDE extension" % key)
+
+        elif key == "Dev":
+            self.checkValue(key, value)
+            self.checkType(key, "FSDevice")
+            self.warnings.append("Key '%s' is a KDE extension" % key)
+
+        elif key == "FSType":
+            self.checkValue(key, value)
+            self.checkType(key, "FSDevice")
+            self.warnings.append("Key '%s' is a KDE extension" % key)
+
+        elif key == "MountPoint":
+            self.checkValue(key, value)
+            self.checkType(key, "FSDevice")
+            self.warnings.append("Key '%s' is a KDE extension" % key)
+
+        elif key == "ReadOnly":
+            self.checkValue(key, value, type="boolean")
+            self.checkType(key, "FSDevice")
+            self.warnings.append("Key '%s' is a KDE extension" % key)
+
+        elif re.match("^UnmountIcon"+xdg.Locale.regex+"$", key):
+            self.checkValue(key, value)
+            self.checkType(key, "FSDevice")
             self.warnings.append("Key '%s' is a KDE extension" % key)
 
         # deprecated keys
+        elif key == "Encoding":
+            self.checkValue(key, value)
+            self.warnings.append("Key '%s' is deprecated" % key)
+
         elif re.match("^MiniIcon"+xdg.Locale.regex+"$", key):
             self.checkValue(key, value)
             self.warnings.append("Key '%s' is deprecated" % key)
@@ -357,6 +341,25 @@ class DesktopEntry(IniFile):
             self.checkValue(key, value)
             self.warnings.append("Key '%s' is deprecated" % key)
 
+        elif re.match("^SwallowTitle"+xdg.Locale.regex+"$", key):
+            self.warnings.append("Key '%s' is deprecated" % key)
+
+        elif key == "SwallowExec":
+            self.checkValue(key, value)
+            self.warnings.append("Key '%s' is deprecated" % key)
+
+        elif key == "FilePattern":
+            self.checkValue(key, value, type="regex", list=True)
+            self.warnings.append("Key '%s' is deprecated" % key)
+
+        elif key == "SortOrder":
+            self.checkValue(key, value, list=True)
+            self.warnings.append("Key '%s' is deprecated" % key)
+
+        elif key == "Actions":
+            self.checkValue(key, value, list=True)
+            self.warnings.append("Key '%s' is deprecated" % key)
+
         # "X-" extensions
         elif re.match("^X-[a-zA-Z0-9-]+", key):
             pass
@@ -370,14 +373,25 @@ class DesktopEntry(IniFile):
 
     def checkOnlyShowIn(self, value):
         values = self.getList(value)
-        valid = ["GNOME", "KDE", "ROX", "XFCE", "Old"]
+        valid = ["GNOME", "KDE", "ROX", "XFCE", "Old", "LXDE"]
         for item in values:
-            if item not in valid:
+            if item not in valid and item[0:2] != "X-":
                 self.errors.append("'%s' is not a registered OnlyShowIn value" % item);
 
     def checkCategorie(self, value):
         values = self.getList(value)
-        valid = ["Legacy","Core","Development","Building","Debugger","IDE","GUIDesigner","Profiling","RevisionControl","Translation","Office","Calendar","ContactManagement","Database","Dictionary","Chart","Email","Finance","FlowChart","PDA","ProjectManagement","Presentation","Spreadsheet","WordProcessor","Graphics","2DGraphics","VectorGraphics","RasterGraphics","3DGraphics","Scanning","OCR","Photograph","Viewer","Settings","DesktopSettings","HardwareSettings","PackageManager","Network","Dialup","InstantMessaging","IRCClient","FileTransfer","HamRadio","News","P2P","RemoteAccess","Telephony","WebBrowser","WebDevelopment","AudioVideo","Audio","Midi","Mixer","Sequencer","Tuner","Video","TV","AudioVideoEditing","Player","Recorder","DiscBurning","Game","ActionGame","AdventureGame","ArcadeGame","BoardGame","BlocksGame","CardGame","KidsGame","LogicGame","RolePlaying","Simulation","SportsGame","StrategyGame","Education","Art","Art","Contruction","Music","Languages","Science","Astronomy","Biology","Chemistry","Geology","Math","MedicalSoftware","Physics","Teaching","Amusement","Applet","Archiving","Electronics","Emulator","Engineering","FileManager","Shell","Screensaver","TerminalEmulator","TrayIcon","System","Filesystem","Monitor","Security","Utility","Accessibility","Calculator","Clock","TextEditor","KDE","GNOME","GTK","Qt","Motif","Java","ConsoleOnly"]
+
+        main = ["AudioVideo", "Audio", "Video", "Development", "Education", "Game", "Graphics", "Network", "Office", "Settings", "System", "Utility"]
+        hasmain = False
         for item in values:
-            if item not in valid:
+            if item in main:
+                hasmain = True
+        if hasmain == False:
+            self.errors.append("Missing main category")
+
+        additional = ["Building", "Debugger", "IDE", "GUIDesigner", "Profiling", "RevisionControl", "Translation", "Calendar", "ContactManagement", "Database", "Dictionary", "Chart", "Email", "Finance", "FlowChart", "PDA", "ProjectManagement", "Presentation", "Spreadsheet", "WordProcessor", "2DGraphics", "VectorGraphics", "3DGraphics", "RasterGraphics", "Scanning", "OCR", "Photography", "Publishing", "Viewer", "TextTools", "DesktopSettings", "HardwareSettings", "Printing", "PackageManager", "Dialup", "InstantMessaging", "Chat", "IRCClient", "FileTransfer", "HamRadio", "News", "P2P", "RemoteAccess", "Telephony", "TelephonyTools", "VideoConference", "WebBrowser", "WebDevelopment", "Midi", "Mixer", "Sequencer", "Tuner", "TV", "AudioVideoEditing", "Player", "Recorder", "DiscBurning", "ActionGame", "AdventureGame", "ArcadeGame", "BoardGame", "BlocksGame", "CardGame", "KidsGame", "LogicGame", "RolePlaying", "Simulation", "SportsGame", "StrategyGame", "Art", "Construction", "Music", "Languages", "Science", "ArtificialIntelligence", "Astronomy", "Biology", "Chemistry", "ComputerScience", "DataVisualization", "Economy", "Electricity", "Geography", "Geology", "Geoscience", "History", "ImageProcessing", "Literature", "Math", "NumericalAnalysis", "MedicalSoftware", "Physics", "Robotics", "Sports", "ParallelComputing", "Amusement", "Archiving", "Compression", "Electronics", "Emulator", "Engineering", "FileTools", "FileManager", "TerminalEmulator", "Filesystem", "Monitor", "Security", "Accessibility", "Calculator", "Clock", "TextEditor", "Documentation", "Core", "KDE", "GNOME", "GTK", "Qt", "Motif", "Java", "ConsoleOnly", "Screensaver", "TrayIcon", "Applet", "Shell"]
+        
+        for item in values:
+            if item not in additional + main and item[0:2] != "X-":
                 self.errors.append("'%s' is not a registered Category" % item);
+

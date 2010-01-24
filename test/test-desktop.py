@@ -9,14 +9,12 @@ def checkfiles(path):
         for file in ls:
             checkfiles(os.path.join(path, file))
     else:
-        entry = DesktopEntry()
         try:
-            entry.parse(path)
+            entry = DesktopEntry(path)
         except ParsingError, e:
             print e
             return
 
-        #entry.setLocale("C")
         entry.getName()
 
         try:

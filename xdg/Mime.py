@@ -284,7 +284,7 @@ class MagicDB:
             if pri<min_pri:
                 break
             for type in self.types[pri]:
-                m=type.match(buf)
+                m=type.match(data)
                 if m:
                     return m
         
