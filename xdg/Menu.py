@@ -1,6 +1,37 @@
+#
+# Copyright 2003-2010, Lanius
+#                2011, Martin Owens
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 """
 Implementation of the XDG Menu Specification Version 1.0.draft-1
 http://standards.freedesktop.org/menu-spec/
+
+Example code:
+
+from xdg.Menu import parse, Menu, MenuEntry
+
+def print_menu(menu, tab=0):
+  for submenu in menu.Entries:
+    if isinstance(submenu, Menu):
+      print ("\t" * tab) + unicode(submenu)
+      print_menu(submenu, tab+1)
+    elif isinstance(submenu, MenuEntry):
+      print ("\t" * tab) + unicode(submenu.DesktopEntry)
+
+print_menu(parse())
 """
 
 from __future__ import generators
@@ -23,6 +54,10 @@ except NameError:
         return x[::-1]
 
 class Menu:
+    """Menu containing sub menus under menu.Entries
+
+Contains both Menu and MenuEntry items.
+    """
     def __init__(self):
         # Public stuff
         self.Name = ""
@@ -92,13 +127,14 @@ class Menu:
         return locale.strcoll(self.getName(), other.getName())
 
     def __eq__(self, other):
-        if self.Name == str(other):
+        if self.Name == unicode(other):
             return True
         else:
             return False
 
     """ PUBLIC STUFF """
     def getEntries(self, hidden=False):
+        """Interator for a list of Entries visible to the user."""
         for entry in self.Entries:
             if hidden == True:
                 yield entry
@@ -110,6 +146,7 @@ class Menu:
     # return multiple items
 
     def getMenuEntry(self, desktopfileid, deep = False):
+        """Searches for a MenuEntry with a given DesktopFileID."""
         for menuentry in self.MenuEntries:
             if menuentry.DesktopFileID == desktopfileid:
                 return menuentry
@@ -118,6 +155,7 @@ class Menu:
                 submenu.getMenuEntry(desktopfileid, deep)
 
     def getMenu(self, path):
+        """Searches for a Menu with a given path."""
         array = path.split("/", 1)
         for submenu in self.Submenus:
             if submenu.Name == array[0]:
@@ -127,6 +165,7 @@ class Menu:
                     return submenu
 
     def getPath(self, org=False, toplevel=False):
+        """Returns this menu's path in the menu structure."""
         parent = self
         names=[]
         while 1:
@@ -147,24 +186,28 @@ class Menu:
         return path
 
     def getName(self):
+        """Returns the menu's localised name."""
         try:
             return self.Directory.DesktopEntry.getName()
         except AttributeError:
             return self.Name
 
     def getGenericName(self):
+        """Returns the menu's generic name."""
         try:
             return self.Directory.DesktopEntry.getGenericName()
         except AttributeError:
             return ""
 
     def getComment(self):
+        """Returns the menu's comment text."""
         try:
             return self.Directory.DesktopEntry.getComment()
         except AttributeError:
             return ""
 
     def getIcon(self):
+        """Returns the menu's icon, filename or simple name"""
         try:
             return self.Directory.DesktopEntry.getIcon()
         except AttributeError:
@@ -412,7 +455,7 @@ class MenuEntry:
         return self.DesktopEntry.filename.replace(self.Filename, '')
 
     def getType(self):
-        # Can be one of System/User/Both
+        """Return the type of MenuEntry, System/User/Both"""
         if xdg.Config.root_mode == False:
             if self.Original:
                 return "Both"
