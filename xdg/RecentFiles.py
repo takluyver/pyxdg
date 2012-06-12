@@ -148,6 +148,9 @@ class RecentFile:
 
     def __cmp__(self, other):
         return cmp(self.Timestamp, other.Timestamp)
+    
+    def __lt__ (self, other):
+        return self.Timestamp < other.Timestamp
 
     def __eq__(self, other):
         if self.URI == str(other):
