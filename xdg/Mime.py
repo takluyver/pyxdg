@@ -21,6 +21,7 @@ information about the format of these files.
 
 import os
 import stat
+import sys
 import fnmatch
 
 import xdg.BaseDirectory
@@ -36,6 +37,8 @@ exts = None     # Maps extensions to types
 globs = None    # List of (glob, type) pairs
 literals = None # Maps liternal names to types
 magic = None
+
+PY3 = (sys.version_info[0] >= 3)
 
 def _get_node_data(node):
     """Get text of XML node"""
@@ -96,63 +99,63 @@ class MagicRule:
         self.prev=None
 
         #print line
-        ind=''
+        ind=b''
         while True:
             c=f.read(1)
-            if c=='>':
+            if c == b'>':
                 break
             ind+=c
         if not ind:
             self.nest=0
         else:
-            self.nest=int(ind)
+            self.nest=int(ind.decode('ascii'))
 
-        start=''
+        start = b''
         while True:
-            c=f.read(1)
-            if c=='=':
+            c = f.read(1)
+            if c == b'=':
                 break
-            start+=c
-        self.start=int(start)
+            start += c
+        self.start = int(start.decode('ascii'))
         
         hb=f.read(1)
         lb=f.read(1)
-        self.lenvalue=ord(lb)+(ord(hb)<<8)
+        self.lenvalue = ord(lb)+(ord(hb)<<8)
 
-        self.value=f.read(self.lenvalue)
+        self.value = f.read(self.lenvalue)
 
-        c=f.read(1)
-        if c=='&':
-            self.mask=f.read(self.lenvalue)
-            c=f.read(1)
+        c = f.read(1)
+        if c == b'&':
+            self.mask = f.read(self.lenvalue)
+            c = f.read(1)
         else:
             self.mask=None
 
-        if c=='~':
-            w=''
-            while c!='+' and c!='\n':
+        if c == b'~':
+            w = b''
+            while c!=b'+' and c!=b'\n':
                 c=f.read(1)
-                if c=='+' or c=='\n':
+                if c==b'+' or c==b'\n':
                     break
                 w+=c
             
-            self.word=int(w)
+            self.word=int(w.decode('ascii'))
         else:
             self.word=1
 
-        if c=='+':
-            r=''
-            while c!='\n':
+        if c==b'+':
+            r=b''
+            while c!=b'\n':
                 c=f.read(1)
-                if c=='\n':
+                if c==b'\n':
                     break
                 r+=c
             #print r
-            self.range=int(r)
+            self.range = int(r.decode('ascii'))
         else:
-            self.range=1
+            self.range = 1
 
-        if c!='\n':
+        if c != b'\n':
             raise 'Malformed MIME magic line'
 
     def getLength(self):
@@ -182,20 +185,23 @@ class MagicRule:
             if self.mask:
                 test=''
                 for i in range(self.lenvalue):
-                    c=ord(buffer[s+i]) & ord(self.mask[i])
-                    test+=chr(c)
+                    if PY3:
+                        c = buffer[s+i] & self.mask[i]
+                    else:
+                        c = ord(buffer[s+i]) & ord(self.mask[i])
+                    test += chr(c)
             else:
-                test=buffer[s:e]
+                test = buffer[s:e]
 
             if test==self.value:
                 return True
 
     def __repr__(self):
-        return '<MagicRule %d>%d=[%d]%s&%s~%d+%d>' % (self.nest,
+        return '<MagicRule %d>%d=[%d]%r&%r~%d+%d>' % (self.nest,
                                   self.start,
                                   self.lenvalue,
-                                  `self.value`,
-                                  `self.mask`,
+                                  self.value,
+                                  self.mask,
                                   self.word,
                                   self.range)
 
@@ -231,42 +237,42 @@ class MagicDB:
         self.maxlen=0
 
     def mergeFile(self, fname):
-        f=file(fname, 'r')
-        line=f.readline()
-        if line!='MIME-Magic\0\n':
-            raise 'Not a MIME magic file'
+        f = open(fname, 'rb')
+        line = f.readline()
+        if line != b'MIME-Magic\0\n':
+            raise IOError('Not a MIME magic file')
 
         while True:
-            shead=f.readline()
+            shead = f.readline().decode('ascii')
             #print shead
             if not shead:
                 break
-            if shead[0]!='[' or shead[-2:]!=']\n':
+            if shead[0] != '[' or shead[-2:] != ']\n':
                 raise 'Malformed section heading'
-            pri, tname=shead[1:-2].split(':')
+            pri, tname = shead[1:-2].split(':')
             #print shead[1:-2]
-            pri=int(pri)
-            mtype=lookup(tname)
+            pri = int(pri)
+            mtype = lookup(tname)
 
             try:
-                ents=self.types[pri]
+                ents = self.types[pri]
             except:
-                ents=[]
-                self.types[pri]=ents
+                ents = []
+                self.types[pri] = ents
 
-            magictype=MagicType(mtype)
+            magictype = MagicType(mtype)
             #print tname
 
             #rline=f.readline()
             c=f.read(1)
             f.seek(-1, 1)
-            while c and c!='[':
+            while c and c != b'[':
                 rule=magictype.getLine(f)
                 #print rule
-                if rule and rule.getLength()>self.maxlen:
-                    self.maxlen=rule.getLength()
+                if rule and rule.getLength() > self.maxlen:
+                    self.maxlen = rule.getLength()
 
-                c=f.read(1)
+                c = f.read(1)
                 f.seek(-1, 1)
 
             ents.append(magictype)
@@ -291,7 +297,7 @@ class MagicDB:
 
     def match(self, path, max_pri=100, min_pri=0):
         try:
-            buf=file(path, 'r').read(self.maxlen)
+            buf=open(path, 'r').read(self.maxlen)
             return self.match_data(buf, max_pri, min_pri)
         except:
             pass
@@ -327,7 +333,7 @@ def _cache_database():
 
     def _import_glob_file(path):
         """Loads name matching information from a MIME directory."""
-        for line in file(path):
+        for line in open(path):
             if line.startswith('#'): continue
             line = line[:-1]
 
@@ -350,7 +356,7 @@ def _cache_database():
         magic.mergeFile(path)
 
     # Sort globs by length
-    globs.sort(lambda a, b: cmp(len(b[0]), len(a[0])))
+    globs.sort(key=lambda x: len(x[0]) )
 
 def get_type_by_name(path):
     """Returns type of file by its name, or None if not known"""
@@ -422,7 +428,7 @@ def get_type(path, follow=1, name_pri=100):
         if not t: t = get_type_by_name(path)
         if not t: t = get_type_by_contents(path, max_pri=name_pri)
         if t is None:
-            if stat.S_IMODE(st.st_mode) & 0111:
+            if stat.S_IMODE(st.st_mode) & 0o111:
                 return app_exe
             else:
                 return text
@@ -442,14 +448,14 @@ def install_mime_info(application, package_file):
     file with the same name (if the contents are different)"""
     application += '.xml'
 
-    new_data = file(package_file).read()
+    new_data = open(package_file).read()
 
     # See if the file is already installed
     package_dir = os.path.join('mime', 'packages')
     resource = os.path.join(package_dir, application)
     for x in xdg.BaseDirectory.load_data_paths(resource):
         try:
-            old_data = file(x).read()
+            old_data = open(x).read()
         except:
             continue
         if old_data == new_data:
@@ -463,7 +469,7 @@ def install_mime_info(application, package_file):
     new_file = os.path.join(xdg.BaseDirectory.save_data_path(package_dir), application)
 
     # Write the file...
-    file(new_file, 'w').write(new_data)
+    open(new_file, 'w').write(new_data)
 
     # Update the database...
     command = 'update-mime-database'
