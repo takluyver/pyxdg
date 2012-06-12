@@ -13,7 +13,7 @@ def show_menu(menu, depth = 0):
             show_menu(entry, depth)
         elif isinstance(entry, xdg.Menu.MenuEntry):
 #            print depth*"-" + entry.DesktopEntry.getName().encode("ascii", 'ignore')
-            print menu.getPath() + "/\t" + entry.DesktopFileID + "\t" + entry.DesktopEntry.getFileName()
+            print(menu.getPath() + "/\t" + entry.DesktopFileID + "\t" + entry.DesktopEntry.getFileName())
 #        elif isinstance(entry, xdg.Menu.Separator):
 #            print depth*"-" + "|||"
 #        elif isinstance(entry, xdg.Menu.Header):

@@ -11,16 +11,16 @@ def checkfiles(path):
     else:
         try:
             entry = DesktopEntry(path)
-        except ParsingError, e:
-            print e
+        except ParsingError as e:
+            print(e)
             return
 
         entry.getName()
 
         try:
             entry.validate()
-        except ValidationError, e:
-            print e
+        except ValidationError as e:
+            print(e)
 
 try:
     checkfiles(sys.argv[1])
