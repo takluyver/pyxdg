@@ -2,9 +2,11 @@
 Base Class for DesktopEntry, IconTheme and IconData
 """
 
-import re, os, stat, codecs
-from Exceptions import *
+import re, os, stat, codecs, sys
+from xdg.Exceptions import *
 import xdg.Locale
+
+PY3 = sys.version_info[0] >= 3
 
 class IniFile:
     defaultGroup = ''
@@ -30,8 +32,8 @@ class IniFile:
             raise ParsingError("File not found", filename)
 
         try:
-            fd = file(filename, 'r')
-        except IOError, e:
+            fd = open(filename, 'r')
+        except IOError as e:
             if debug:
                 raise e
             else:
@@ -74,7 +76,7 @@ class IniFile:
         # check header
         if headers:
             for header in headers:
-                if content.has_key(header):
+                if header in content:
                     self.defaultGroup = header
                     break
             else:
@@ -87,16 +89,16 @@ class IniFile:
             group = self.defaultGroup
 
         # return key (with locale)
-        if self.content.has_key(group) and self.content[group].has_key(key):
+        if (group in self.content) and (key in self.content[group]):
             if locale:
                 value = self.content[group][self.__addLocale(key, group)]
             else:
                 value = self.content[group][key]
         else:
             if debug:
-                if not self.content.has_key(group):
+                if group not in self.content:
                     raise NoGroupError(group, self.filename)
-                elif not self.content[group].has_key(key):
+                elif key not in self.content[group]:
                     raise NoKeyError(key, group, self.filename)
             else:
                 value = ""
@@ -108,7 +110,7 @@ class IniFile:
             values = [value]
 
         for value in values:
-            if type == "string" and locale == True:
+            if type == "string" and locale == True and not PY3:
                 value = value.decode("utf-8", "ignore")
             elif type == "boolean":
                 value = self.__getBoolean(value)
@@ -164,8 +166,9 @@ class IniFile:
             group = self.defaultGroup
 
         for lang in xdg.Locale.langs:
-            if self.content[group].has_key(key+'['+lang+']'):
-                return key+'['+lang+']'
+            langkey = "%s[%s]" % (key, lang)
+            if langkey in self.content[group]:
+                return langkey
 
         return key
 
@@ -268,6 +271,12 @@ class IniFile:
             return 1
 
     def checkString(self, value):
+        if PY3:
+            try:
+                value.encode('ascii', 'strict')
+                return 0
+            except UnicodeError:
+                return 1
         # convert to ascii
         if not value.decode("utf-8", "ignore").encode("ascii", 'ignore') == value:
             return 1
@@ -329,7 +338,7 @@ class IniFile:
             key = key + "[" + xdg.Locale.langs[0] + "]"
 
         try:
-            if isinstance(value, unicode):
+            if (not PY3) and isinstance(value, unicode):
                 self.content[group][key] = value.encode("utf-8", "ignore")
             else:
                 self.content[group][key] = value
@@ -373,7 +382,7 @@ class IniFile:
             del self.content[group][key]
             self.tainted = True
             return value
-        except KeyError, e:
+        except KeyError as e:
             if debug:
                 if e == group:
                     raise NoGroupError(group, self.filename)
@@ -387,7 +396,7 @@ class IniFile:
         return self.content.keys()
 
     def hasGroup(self, group):
-        if self.content.has_key(group):
+        if group in self.content:
             return True
         else:
             return False
@@ -397,7 +406,7 @@ class IniFile:
         if not group:
             group = self.defaultGroup
 
-        if self.content[group].has_key(key):
+        if key in self.content[group]:
             return True
         else:
             return False

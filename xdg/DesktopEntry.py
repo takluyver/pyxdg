@@ -176,7 +176,7 @@ class DesktopEntry(IniFile):
             self.errors.append("Invalid Group name: %s" % group)
         else:
             #OnlyShowIn and NotShowIn
-            if self.content[group].has_key("OnlyShowIn") and self.content[group].has_key("NotShowIn"):
+            if ("OnlyShowIn" in self.content[group]) and ("NotShowIn" in self.content[group]):
                 self.errors.append("Group may either have OnlyShowIn or NotShowIn, but not both")
 
     def checkKey(self, key, value, group):
@@ -195,11 +195,11 @@ class DesktopEntry(IniFile):
                 self.warnings.append("Files with Type=Directory should have the extension .directory")
 
             if value == "Application":
-                if not self.content[group].has_key("Exec"):
+                if "Exec" not in self.content[group]:
                     self.warnings.append("Type=Application needs 'Exec' key")
             if value == "Link":
-                if not self.content[group].has_key("URL"):
-                    self.warnings.append("Type=Application needs 'Exec' key")
+                if "URL" not in self.content[group]:
+                    self.warnings.append("Type=Link needs 'URL' key")
 
         elif key == "Version":
             self.checkValue(key, value)

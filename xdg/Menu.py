@@ -56,7 +56,7 @@ except NameError:
 class Menu:
     """Menu containing sub menus under menu.Entries
 
-Contains both Menu and MenuEntry items.
+	Contains both Menu and MenuEntry items.
     """
     def __init__(self):
         # Public stuff
@@ -125,12 +125,23 @@ Contains both Menu and MenuEntry items.
     # FIXME: Performance: cache getName()
     def __cmp__(self, other):
         return locale.strcoll(self.getName(), other.getName())
+    
+    def _key(self):
+        """Key function for locale-aware sorting."""
+        return locale.strxfrm(self.getName())
+    
+    def __lt__(self, other):
+        try:
+            other = other._key()
+        except AttributeError:
+            pass
+        return self._key() < other
 
     def __eq__(self, other):
-        if self.Name == unicode(other):
-            return True
-        else:
-            return False
+        try:
+            return self.Name == unicode(other)
+        except NameError:  # unicode() becomes str() in Python 3
+            return self.Name == str(other)
 
     """ PUBLIC STUFF """
     def getEntries(self, hidden=False):
@@ -335,6 +346,19 @@ class Rule:
 
     def __str__(self):
         return self.Rule
+    
+    def do(self, menuentries, type, run):
+        for menuentry in menuentries:
+            if run == 2 and ( menuentry.MatchedInclude == True \
+            or menuentry.Allocated == True ):
+                continue
+            elif eval(self.Rule):
+                if type == "Include":
+                    menuentry.Add = True
+                    menuentry.MatchedInclude = True
+                else:
+                    menuentry.Add = False
+        return menuentries
 
     def compile(self):
         exec("""
@@ -494,6 +518,18 @@ class MenuEntry:
 
     def __cmp__(self, other):
         return locale.strcoll(self.DesktopEntry.getName(), other.DesktopEntry.getName())
+    
+    def _key(self):
+        """Key function for locale-aware sorting."""
+        return locale.strxfrm(self.DesktopEntry.getName())
+    
+    def __lt__(self, other):
+        try:
+            other = other._key()
+        except AttributeError:
+            pass
+        return self._key() < other
+            
 
     def __eq__(self, other):
         if self.DesktopFileID == str(other):
@@ -1068,7 +1104,7 @@ class MenuEntryCache:
 
     def addMenuEntries(self, dirs, prefix="", legacy=False):
         for dir in dirs:
-            if not self.cacheEntries.has_key(dir):
+            if not dir in self.cacheEntries:
                 self.cacheEntries[dir] = []
                 self.__addFiles(dir, "", prefix, legacy)
 
