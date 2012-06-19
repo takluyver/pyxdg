@@ -1,0 +1,9 @@
+include AUTHORS
+include ChangeLog
+include COPYING
+include INSTALL
+include README
+include TODO
+include setup.py
+include test/*.py
+include xdg/*.py
