@@ -477,4 +477,4 @@ def install_mime_info(application, package_file):
         os.unlink(new_file)
         raise Exception("The '%s' command returned an error code!\n" \
                   "Make sure you have the freedesktop.org shared MIME package:\n" \
-                  "http://standards.freedesktop.org/shared-mime-info/") % command
+                  "http://standards.freedesktop.org/shared-mime-info/" % command)
