@@ -351,7 +351,7 @@ def LookupIcon(iconname, size, theme, extensions):
                 if iconname + "." + extension in values[1]:
                     return os.path.join(dir, iconname + "." + extension)
 
-    minimal_size = sys.maxint
+    minimal_size = 2**31
     closest_filename = ""
     for dir, values in cache[theme.name][2].items():
         distance = DirectorySizeDistance(values[0], size, theme)
