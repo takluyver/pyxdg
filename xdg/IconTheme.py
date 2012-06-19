@@ -107,16 +107,23 @@ class IconTheme(IniFile):
     def checkGroup(self, group):
         # check if group header is valid
         if group == self.defaultGroup:
-            pass
+            try:
+                self.name = self.content[group]["Name"]
+            except KeyError:
+                self.errors.append("Key 'Name' in Group '%s' is missing" % group)
+            try:
+                self.name = self.content[group]["Comment"]
+            except KeyError:
+                self.errors.append("Key 'Comment' in Group '%s' is missing" % group)
         elif group in self.getDirectories():
             try:
                 self.type = self.content[group]["Type"]
             except KeyError:
                 self.type = "Threshold"
             try:
-                self.name = self.content[group]["Name"]
+                self.name = self.content[group]["Size"]
             except KeyError:
-                self.errors.append("Key 'Name' in Group '%s' is missing" % group)
+                self.errors.append("Key 'Size' in Group '%s' is missing" % group)
         elif not (re.match("^\[X-", group) and group.decode("utf-8", "ignore").encode("ascii", 'ignore') == group):
             self.errors.append("Invalid Group name: %s" % group)
 

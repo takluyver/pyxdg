@@ -1,8 +1,8 @@
 #!/usr/bin/python
 from xdg.IconTheme import *
 
-print (getIconPath("opera"))
+print (getIconPath("firefox"))
 
 theme = IconTheme()
-theme.parse("/usr/kde/3.4/share/icons/hicolor/index.desktop")
+theme.parse("/usr/share/icons/hicolor/index.theme")
 theme.validate()
