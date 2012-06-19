@@ -156,7 +156,7 @@ class MagicRule:
             self.range = 1
 
         if c != b'\n':
-            raise 'Malformed MIME magic line'
+            raise ValueError('Malformed MIME magic line')
 
     def getLength(self):
         return self.start+self.lenvalue+self.range
@@ -248,7 +248,7 @@ class MagicDB:
             if not shead:
                 break
             if shead[0] != '[' or shead[-2:] != ']\n':
-                raise 'Malformed section heading'
+                raise ValueError('Malformed section heading')
             pri, tname = shead[1:-2].split(':')
             #print shead[1:-2]
             pri = int(pri)
