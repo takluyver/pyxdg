@@ -25,6 +25,10 @@ class IniFile:
         return cmp(self.content, other.content)
 
     def parse(self, filename, headers=None):
+        '''Parse an INI file.
+        
+        headers -- list of headers the parser will try to select as a default header
+        '''
         # for performance reasons
         content = self.content
 
