@@ -28,21 +28,21 @@ Note: see the rox.Options module for a higher-level API for managing options.
 from __future__ import generators
 import os
 
-_home = os.environ.get('HOME', '/')
-xdg_data_home = os.environ.get('XDG_DATA_HOME',
-            os.path.join(_home, '.local', 'share'))
+_home = os.path.expanduser('~')
+xdg_data_home = os.environ.get('XDG_DATA_HOME') or \
+            os.path.join(_home, '.local', 'share')
 
 xdg_data_dirs = [xdg_data_home] + \
-    os.environ.get('XDG_DATA_DIRS', '/usr/local/share:/usr/share').split(':')
+    (os.environ.get('XDG_DATA_DIRS') or '/usr/local/share:/usr/share').split(':')
 
-xdg_config_home = os.environ.get('XDG_CONFIG_HOME',
-            os.path.join(_home, '.config'))
+xdg_config_home = os.environ.get('XDG_CONFIG_HOME') or \
+            os.path.join(_home, '.config')
 
 xdg_config_dirs = [xdg_config_home] + \
-    os.environ.get('XDG_CONFIG_DIRS', '/etc/xdg').split(':')
+    (os.environ.get('XDG_CONFIG_DIRS') or '/etc/xdg').split(':')
 
-xdg_cache_home = os.environ.get('XDG_CACHE_HOME',
-            os.path.join(_home, '.cache'))
+xdg_cache_home = os.environ.get('XDG_CACHE_HOME') or \
+            os.path.join(_home, '.cache')
 
 xdg_data_dirs = [x for x in xdg_data_dirs if x]
 xdg_config_dirs = [x for x in xdg_config_dirs if x]
