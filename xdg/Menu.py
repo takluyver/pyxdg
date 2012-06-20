@@ -17,7 +17,6 @@ def print_menu(menu, tab=0):
 print_menu(parse())
 """
 
-from __future__ import generators
 import locale, os, xml.dom.minidom
 import subprocess
 
@@ -29,13 +28,6 @@ import xdg.Locale
 import xdg.Config
 
 ELEMENT_NODE = xml.dom.Node.ELEMENT_NODE
-
-# for python <= 2.3
-try:
-    reversed = reversed
-except NameError:
-    def reversed(x):
-        return x[::-1]
 
 class Menu:
     """Menu containing sub menus under menu.Entries

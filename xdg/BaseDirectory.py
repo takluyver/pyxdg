@@ -25,7 +25,6 @@ Typical usage:
 Note: see the rox.Options module for a higher-level API for managing options.
 """
 
-from __future__ import generators
 import os
 
 _home = os.path.expanduser('~')
