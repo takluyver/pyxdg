@@ -19,6 +19,7 @@ print_menu(parse())
 
 from __future__ import generators
 import locale, os, xml.dom.minidom
+import subprocess
 
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
@@ -904,8 +905,8 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
         return m
 
 def __parseKDELegacyDirs(filename, parent):
-    f=os.popen3("kde-config --path apps")
-    output = f[1].readlines()
+    output = subprocess.check_output(['kde-config', '--path', 'apps'],
+                                     universal_newlines=True).splitlines()
     try:
         for dir in output[0].split(":"):
             __parseLegacyDir(dir,"kde", filename, parent)
