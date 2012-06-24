@@ -1,9 +1,20 @@
+Version 0.20 (June 2012)
+    * Compatible with Python 3; requires Python 2.6 or later
+    * Clean up accidental GPL license notice in Menu.py
+    * Add test scripts for xdg.Mime, xdg.Locale and xdg.RecentFiles
+    * Fixes for icon theme validation
+    * Fix exception in xdg.Mime
+    * Replace invalid string exceptions
+    * Fall back to default base directories if $XDG* environment variables are
+      set but empty.
+    * Remove use of deprecated os.popen3 in Menu.py
+    * Correct URLs in README
+
 Version 0.19
     * IniFile.py: add support for trusted desktop files (thanks to karl mikaelsson)
     * DesktopEntry.py: Support spec version 1.0, Debian bug #563660
     * MimeType.py: Fix parsing of in memory data, Debian bug #563718
     * DesktopEntry.py: Fix constructor, Debian bug #551297, #562951, #562952
-
 
 Version 0.18
 
