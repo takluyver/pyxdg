@@ -171,8 +171,8 @@ class DesktopEntry(IniFile):
     def checkGroup(self, group):
         # check if group header is valid
         if not (group == self.defaultGroup \
-        or re.match("^\Desktop Action [a-zA-Z]+\$", group) \
-        or (re.match("^\X-", group) and group.decode("utf-8", "ignore").encode("ascii", 'ignore') == group)):
+        or re.match("^Desktop Action [a-zA-Z0-9\-]+$", group) \
+        or (re.match("^X-", group) and group.decode("utf-8", "ignore").encode("ascii", 'ignore') == group)):
             self.errors.append("Invalid Group name: %s" % group)
         else:
             #OnlyShowIn and NotShowIn
@@ -245,6 +245,10 @@ class DesktopEntry(IniFile):
         elif key == "Terminal":
             self.checkValue(key, value, type="boolean")
             self.checkType(key, "Application")
+        
+        elif key == "Actions":
+            self.checkValue(key, value, list=True)
+            self.checkType(key, "Application")
 
         elif key == "MimeType":
             self.checkValue(key, value, list=True)
@@ -254,6 +258,10 @@ class DesktopEntry(IniFile):
             self.checkValue(key, value)
             self.checkType(key, "Application")
             self.checkCategorie(value)
+        
+        elif re.match("^Keywords"+xdg.Locale.regex+"$", key):
+            self.checkValue(key, value, list=True)
+            self.checkType(key, "Application")
 
         elif key == "StartupNotify":
             self.checkValue(key, value, type="boolean")
@@ -273,10 +281,6 @@ class DesktopEntry(IniFile):
 
         elif key == "DocPath":
             self.checkValue(key, value)
-            self.warnings.append("Key '%s' is a KDE extension" % key)
-
-        elif re.match("^Keywords"+xdg.Locale.regex+"$", key):
-            self.checkValue(key, value, list=True)
             self.warnings.append("Key '%s' is a KDE extension" % key)
 
         elif key == "InitialPreference":
@@ -356,10 +360,6 @@ class DesktopEntry(IniFile):
             self.checkValue(key, value, list=True)
             self.warnings.append("Key '%s' is deprecated" % key)
 
-        elif key == "Actions":
-            self.checkValue(key, value, list=True)
-            self.warnings.append("Key '%s' is deprecated" % key)
-
         # "X-" extensions
         elif re.match("^X-[a-zA-Z0-9-]+", key):
             pass
@@ -373,7 +373,8 @@ class DesktopEntry(IniFile):
 
     def checkOnlyShowIn(self, value):
         values = self.getList(value)
-        valid = ["GNOME", "KDE", "ROX", "XFCE", "Old", "LXDE"]
+        valid = ["GNOME", "KDE", "LXDE", "MATE", "Razor", "ROX", "TDE", "Unity",
+                 "XFCE", "Old"]
         for item in values:
             if item not in valid and item[0:2] != "X-":
                 self.errors.append("'%s' is not a registered OnlyShowIn value" % item);
