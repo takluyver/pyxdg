@@ -26,14 +26,19 @@ class DesktopEntryTest(unittest.TestCase):
         de.addGroup("Hallo")
         de.set("key", "value", "Hallo")
         
-        path = os.path.join(self.tmpdir, "test.desktop")
-        de.write(path)
+        new_file = os.path.join(self.tmpdir, "test.desktop")
+        de.write(new_file)
         
-        with open(path) as f:
+        with open(new_file) as f:
             contents = f.read()
         
         assert "[Hallo]" in contents, contents
         assert re.search("key\s*=\s*value", contents), contents
+        
+        # This is missing the Name key, and has an unknown Hallo group, so it
+        # shouldn't validate.
+        new_entry = DesktopEntry(new_file)
+        self.assertRaises(ValidationError, new_entry.validate)
     
     def test_validate(self):
         entry = DesktopEntry(self.test_file)
