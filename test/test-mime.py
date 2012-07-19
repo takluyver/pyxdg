@@ -36,3 +36,5 @@ class MimeTest(unittest.TestCase):
         self.assertEqual(pdf1, pdf2)
         self.assertEqual(pdf1.media, "application")
         self.assertEqual(pdf1.subtype, "pdf")
+        
+        pdf1.get_comment()
