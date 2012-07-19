@@ -37,5 +37,19 @@ class DesktopEntryTest(unittest.TestCase):
     
     def test_validate(self):
         entry = DesktopEntry(self.test_file)
-        self.assertEqual(entry.getName(), 'gedit')
         entry.validate()
+    
+    def test_values(self):
+        entry = DesktopEntry(self.test_file)
+        self.assertEqual(entry.getName(), 'gedit')
+        self.assertEqual(entry.getGenericName(), 'Text Editor')
+        self.assertEqual(entry.getNoDisplay(), False)
+        self.assertEqual(entry.getComment(), 'Edit text files')
+        self.assertEqual(entry.getIcon(), 'accessories-text-editor')
+        self.assertEqual(entry.getHidden(), False)
+        self.assertEqual(entry.getOnlyShowIn(), [])
+        self.assertEqual(entry.getExec(), 'gedit %U')
+        self.assertEqual(entry.getTerminal(), False)
+        self.assertEqual(entry.getMimeTypes(), ['text/plain'])
+        self.assertEqual(entry.getCategories(), ['GNOME', 'GTK', 'Utility', 'TextEditor'])
+        self.assertEqual(entry.getTerminal(), False)

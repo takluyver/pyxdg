@@ -35,8 +35,8 @@ class DesktopEntry(IniFile):
     # start standard keys
     def getType(self):
         return self.get('Type')
-    """ @deprecated, use getVersionString instead """
     def getVersion(self):
+        """deprecated, use getVersionString instead """
         return self.get('Version', type="numeric")
     def getVersionString(self):
         return self.get('Version')
@@ -64,8 +64,8 @@ class DesktopEntry(IniFile):
         return self.get('Path')
     def getTerminal(self):
         return self.get('Terminal', type="boolean")
-    """ @deprecated, use getMimeTypes instead """
     def getMimeType(self):
+        """deprecated, use getMimeTypes instead """
         return self.get('MimeType', list=True, type="regex")
     def getMimeTypes(self):
         return self.get('MimeType', list=True)
