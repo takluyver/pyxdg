@@ -281,28 +281,24 @@ class MagicDB:
                 break
 
     def match_data(self, data, max_pri=100, min_pri=0):
-        pris=self.types.keys()
-        pris.sort(lambda a, b: -cmp(a, b))
-        for pri in pris:
-            #print pri, max_pri, min_pri
-            if pri>max_pri:
+        for priority in sorted(self.types.keys(), reverse=True):
+            #print priority, max_pri, min_pri
+            if priority > max_pri:
                 continue
-            if pri<min_pri:
+            if priority < min_pri:
                 break
-            for type in self.types[pri]:
+            for type in self.types[priority]:
                 m=type.match(data)
                 if m:
                     return m
-        
 
     def match(self, path, max_pri=100, min_pri=0):
         try:
-            buf=open(path, 'r').read(self.maxlen)
+            with open(path, 'rb') as f:
+                buf = f.read(self.maxlen)
             return self.match_data(buf, max_pri, min_pri)
         except:
             pass
-
-        return None
     
     def __repr__(self):
         return '<MagicDB %s>' % self.types
