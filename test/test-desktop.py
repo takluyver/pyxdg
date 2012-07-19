@@ -53,3 +53,11 @@ class DesktopEntryTest(unittest.TestCase):
         self.assertEqual(entry.getMimeTypes(), ['text/plain'])
         self.assertEqual(entry.getCategories(), ['GNOME', 'GTK', 'Utility', 'TextEditor'])
         self.assertEqual(entry.getTerminal(), False)
+    
+    def test_basic(self):
+        entry = DesktopEntry(self.test_file)
+        assert entry.hasKey("Categories")
+        assert not entry.hasKey("TryExec")
+        
+        assert entry.hasGroup("Desktop Action Window")
+        assert not entry.hasGroup("Desktop Action Door")

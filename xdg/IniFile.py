@@ -61,9 +61,7 @@ class IniFile:
                     content[currentGroup] = {}
             # key
             else:
-                index = line.find("=")
-                key = line[0:index].strip()
-                value = line[index+1:].strip()
+                key, value = line.split("=", 1)
                 try:
                     if debug and self.hasKey(key, currentGroup):
                         raise DuplicateKeyError(key, currentGroup, filename)
@@ -355,8 +353,6 @@ class IniFile:
         if self.hasGroup(group):
             if debug:
                 raise DuplicateGroupError(group, self.filename)
-            else:
-                pass
         else:
             self.content[group] = {}
             self.tainted = True
@@ -398,20 +394,14 @@ class IniFile:
         return self.content.keys()
 
     def hasGroup(self, group):
-        if group in self.content:
-            return True
-        else:
-            return False
+        return group in self.content
 
     def hasKey(self, key, group=None):
         # set default group
         if not group:
             group = self.defaultGroup
 
-        if key in self.content[group]:
-            return True
-        else:
-            return False
+        return key in self.content[group]
 
     def getFileName(self):
         return self.filename
