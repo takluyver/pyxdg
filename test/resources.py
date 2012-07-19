@@ -3,13 +3,14 @@
 written out to temporary files for the relevant tests.
 """
 
-# The Arabic name is actually from Firefox, to test locale & unicode support
+# With additions from firefox.desktop, to test locale & unicode support
 gedit_desktop = """[Desktop Entry]
 Name=gedit
 Name[ar]=متصفح الوِب فَيَرفُكْس
 GenericName=Text Editor
 Comment=Edit text files
 Keywords=Plaintext;Write;
+Keywords[ja]=Internet;WWW;Web;インターネット;ブラウザ;ウェブ;エクスプローラ
 Exec=gedit %U
 Terminal=false
 Type=Application

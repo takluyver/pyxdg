@@ -228,6 +228,8 @@ class IniFile:
         for value in values:
             if type == "string":
                 code = self.checkString(value)
+            if type == "localestring":
+                continue
             elif type == "boolean":
                 code = self.checkBoolean(value)
             elif type == "numeric":

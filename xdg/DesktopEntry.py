@@ -260,7 +260,7 @@ class DesktopEntry(IniFile):
             self.checkCategorie(value)
         
         elif re.match("^Keywords"+xdg.Locale.regex+"$", key):
-            self.checkValue(key, value, list=True)
+            self.checkValue(key, value, type="localestring", list=True)
             self.checkType(key, "Application")
 
         elif key == "StartupNotify":
