@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import unittest
 
 import xdg.Menu
 import xdg.DesktopEntry
@@ -20,6 +21,7 @@ def show_menu(menu, depth = 0):
 #            print depth*"-" + "\x1b[01m" + entry.Name + "\x1b[0m"
 #    depth -= 1
 
-menu = xdg.Menu.parse()
-show_menu(menu)
-#xdg.Menu.parse()
+class MenuTest(unittest.TestCase):
+    def test_parse_menu(self):
+        menu = xdg.Menu.parse()
+        show_menu(menu)

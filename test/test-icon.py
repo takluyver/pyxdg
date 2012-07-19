@@ -1,13 +1,17 @@
 #!/usr/bin/python
 from xdg.IconTheme import *
+import unittest
 
-print("Finding an icon that probably exists:")
-print (getIconPath("firefox"))
+class IconThemeTest(unittest.TestCase):
+    def test_find_icon_exists(self):
+        print("Finding an icon that probably exists:")
+        print (getIconPath("firefox"))
 
-print("Finding one that doesn't (should print None):")
-print (getIconPath("oijeorjewrjkngjhbqefew"))
-
-print("Validating icon theme...")
-theme = IconTheme()
-theme.parse("/usr/share/icons/hicolor/index.theme")
-theme.validate()
+    def test_find_icon_nonexistant(self):
+        icon = getIconPath("oijeorjewrjkngjhbqefew")
+        assert icon is None, "%r is not None" % icon
+    
+    def test_validate_icon_theme(self):
+        theme = IconTheme()
+        theme.parse("/usr/share/icons/hicolor/index.theme")
+        theme.validate()
