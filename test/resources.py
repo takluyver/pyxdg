@@ -1,10 +1,12 @@
+# coding: utf-8
 """This file contains sample data for the test suite - these are
 written out to temporary files for the relevant tests.
 """
 
-
+# The Arabic name is actually from Firefox, to test locale & unicode support
 gedit_desktop = """[Desktop Entry]
 Name=gedit
+Name[ar]=متصفح الوِب فَيَرفُكْس
 GenericName=Text Editor
 Comment=Edit text files
 Keywords=Plaintext;Write;

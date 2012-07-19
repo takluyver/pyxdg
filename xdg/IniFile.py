@@ -378,12 +378,10 @@ class IniFile:
 
         try:
             if locales:
-                for (name, value) in self.content[group].items():
+                for name in list(self.content[group]):
                     if re.match("^" + key + xdg.Locale.regex + "$", name) and name != key:
-                        value = self.content[group][name]
                         del self.content[group][name]
-            value = self.content[group][key]
-            del self.content[group][key]
+            value = self.content[group].pop(key)
             self.tainted = True
             return value
         except KeyError as e:
