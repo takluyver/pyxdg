@@ -46,7 +46,7 @@ class RecentFiles:
                 elif attribute.tagName == "Mime-Type":
                     recent.MimeType = attribute.childNodes[0].nodeValue
                 elif attribute.tagName == "Timestamp":
-                    recent.Timestamp = attribute.childNodes[0].nodeValue
+                    recent.Timestamp = int(attribute.childNodes[0].nodeValue)
                 elif attribute.tagName == "Private":
                     recent.Prviate = True
                 elif attribute.tagName == "Groups":
@@ -125,7 +125,8 @@ class RecentFiles:
         recent.MimeType = mimetype
         recent.Timestamp = int(time.time())
         recent.Private = private
-        recent.Groups = groups
+        if groups:
+            recent.Groups = groups
 
         self.sort()
 
@@ -153,10 +154,7 @@ class RecentFile:
         return self.Timestamp < other.Timestamp
 
     def __eq__(self, other):
-        if self.URI == str(other):
-            return True
-        else:
-            return False
+        return self.URI == str(other)
 
     def __str__(self):
         return self.URI
