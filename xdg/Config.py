@@ -4,7 +4,7 @@ Functions to configure Basic Settings
 
 language = "C"
 windowmanager = None
-icon_theme = "highcolor"
+icon_theme = "hicolor"
 icon_size = 48
 cache_time = 5
 root_mode = False
