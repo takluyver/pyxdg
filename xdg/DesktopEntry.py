@@ -13,6 +13,7 @@ Not supported:
 from xdg.IniFile import *
 from xdg.BaseDirectory import *
 import os.path
+import warnings
 
 class DesktopEntry(IniFile):
     "Class to parse and validate DesktopEntries"
@@ -257,7 +258,7 @@ class DesktopEntry(IniFile):
         elif key == "Categories":
             self.checkValue(key, value)
             self.checkType(key, "Application")
-            self.checkCategorie(value)
+            self.checkCategories(value)
         
         elif re.match("^Keywords"+xdg.Locale.regex+"$", key):
             self.checkValue(key, value, type="localestring", list=True)
@@ -379,20 +380,25 @@ class DesktopEntry(IniFile):
             if item not in valid and item[0:2] != "X-":
                 self.errors.append("'%s' is not a registered OnlyShowIn value" % item);
 
-    def checkCategorie(self, value):
+    def checkCategories(self, value):
         values = self.getList(value)
 
         main = ["AudioVideo", "Audio", "Video", "Development", "Education", "Game", "Graphics", "Network", "Office", "Settings", "System", "Utility"]
-        hasmain = False
-        for item in values:
-            if item in main:
-                hasmain = True
-        if hasmain == False:
+        if not any(item in main for item in values):
             self.errors.append("Missing main category")
 
         additional = ["Building", "Debugger", "IDE", "GUIDesigner", "Profiling", "RevisionControl", "Translation", "Calendar", "ContactManagement", "Database", "Dictionary", "Chart", "Email", "Finance", "FlowChart", "PDA", "ProjectManagement", "Presentation", "Spreadsheet", "WordProcessor", "2DGraphics", "VectorGraphics", "3DGraphics", "RasterGraphics", "Scanning", "OCR", "Photography", "Publishing", "Viewer", "TextTools", "DesktopSettings", "HardwareSettings", "Printing", "PackageManager", "Dialup", "InstantMessaging", "Chat", "IRCClient", "FileTransfer", "HamRadio", "News", "P2P", "RemoteAccess", "Telephony", "TelephonyTools", "VideoConference", "WebBrowser", "WebDevelopment", "Midi", "Mixer", "Sequencer", "Tuner", "TV", "AudioVideoEditing", "Player", "Recorder", "DiscBurning", "ActionGame", "AdventureGame", "ArcadeGame", "BoardGame", "BlocksGame", "CardGame", "KidsGame", "LogicGame", "RolePlaying", "Simulation", "SportsGame", "StrategyGame", "Art", "Construction", "Music", "Languages", "Science", "ArtificialIntelligence", "Astronomy", "Biology", "Chemistry", "ComputerScience", "DataVisualization", "Economy", "Electricity", "Geography", "Geology", "Geoscience", "History", "ImageProcessing", "Literature", "Math", "NumericalAnalysis", "MedicalSoftware", "Physics", "Robotics", "Sports", "ParallelComputing", "Amusement", "Archiving", "Compression", "Electronics", "Emulator", "Engineering", "FileTools", "FileManager", "TerminalEmulator", "Filesystem", "Monitor", "Security", "Accessibility", "Calculator", "Clock", "TextEditor", "Documentation", "Core", "KDE", "GNOME", "GTK", "Qt", "Motif", "Java", "ConsoleOnly", "Screensaver", "TrayIcon", "Applet", "Shell"]
+        allcategories = additional + main
         
         for item in values:
-            if item not in additional + main and item[0:2] != "X-":
+            if item not in allcategories and not item.startswith("X-"):
                 self.errors.append("'%s' is not a registered Category" % item);
+    
+    def checkCategorie(self, value):
+        """Deprecated alias for checkCategories - only exists for backwards
+        compatibility.
+        """
+        warnings.warn("checkCategorie is deprecated, use checkCategories",
+                                                            DeprecationWarning)
+        return self.checkCategories(value)
 
