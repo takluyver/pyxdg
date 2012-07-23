@@ -70,6 +70,18 @@ def save_data_path(*resource):
         os.makedirs(path)
     return path
 
+def save_cache_path(*resource):
+    """Ensure $XDG_CACHE_HOME/<resource>/ exists, and return its path.
+    'resource' is the name of some shared resource. Use this when updating
+    a shared (between programs) database. Use the xdg_cache_home variable
+    for loading."""
+    resource = os.path.join(*resource)
+    assert not resource.startswith('/')
+    path = os.path.join(xdg_cache_home, resource)
+    if not os.path.isdir(path):
+        os.makedirs(path)
+    return path
+
 def load_config_paths(*resource):
     """Returns an iterator which gives each directory named 'resource' in the
     configuration search path. Information provided by earlier directories should

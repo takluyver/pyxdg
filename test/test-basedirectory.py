@@ -40,6 +40,16 @@ class BaseDirectoryTest(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir)
     
+    def test_save_cache_path(self):
+        tmpdir = tempfile.mkdtemp()
+        try:
+            environ['XDG_CACHE_HOME'] = tmpdir
+            reload(BaseDirectory)
+            datapath = BaseDirectory.save_cache_path("foo")
+            self.assertEqual(datapath, os.path.join(tmpdir, "foo"))
+        finally:
+            shutil.rmtree(tmpdir)
+    
     def test_load_first_config(self):
         tmpdir = tempfile.mkdtemp()
         tmpdir2 = tempfile.mkdtemp()
