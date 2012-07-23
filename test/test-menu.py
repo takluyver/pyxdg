@@ -38,3 +38,9 @@ class MenuTest(unittest.TestCase):
     def test_parse_menu(self):
         menu = xdg.Menu.parse(self.test_file)
         show_menu(menu)
+        
+        # Check these don't throw an error
+        menu.getName()
+        menu.getGenericName()
+        menu.getComment()
+        menu.getIcon()
