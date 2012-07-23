@@ -318,7 +318,6 @@ class Rule:
         # Begin parsing
         if node:
             self.parseNode(node)
-            self.compile()
 
     def __str__(self):
         return self.Rule
@@ -335,22 +334,6 @@ class Rule:
                 else:
                     menuentry.Add = False
         return menuentries
-
-    def compile(self):
-        exec("""
-def do(menuentries, type, run):
-    for menuentry in menuentries:
-        if run == 2 and ( menuentry.MatchedInclude == True \
-        or menuentry.Allocated == True ):
-            continue
-        elif %s:
-            if type == "Include":
-                menuentry.Add = True
-                menuentry.MatchedInclude = True
-            else:
-                menuentry.Add = False
-    return menuentries
-""" % self.Rule) in self.__dict__
 
     def parseNode(self, node):
         for child in node.childNodes:
@@ -888,7 +871,6 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
             if len(categories) == 0:
                 r = Rule("Include")
                 r.parseFilename(menuentry.DesktopFileID)
-                r.compile()
                 m.Rules.append(r)
             if not dir in parent.AppDirs:
                 categories.append("Legacy")
