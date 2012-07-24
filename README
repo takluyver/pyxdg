@@ -17,3 +17,5 @@ The XDG Package contains:
 
     - Implementation of the XDG-Recent File Storage Specification
       http://standards.freedesktop.org/recent-file-spec/
+
+To run the tests, run nosetests in the top level directory.
