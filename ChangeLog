@@ -1,3 +1,17 @@
+Version 0.21 (July 2012)
+    * Tests can now be run conveniently using nosetests, and cover more of the
+      code.
+    * BaseDirectory: New save_cache_path() function, freedesktop bug #26458.
+    * Config: Default icon theme is 'hicolor', not 'highcolor'.
+    * Menu: Obsolete Rule.compile() method removed.
+    * DesktopEntry: Corrected spelling of checkCategories() method, freedesktop
+      bug #24974.
+    * DesktopEntry: Consider Actions and Keywords keys standard.
+    * DesktopEntry: Accept non-ASCII Keywords.
+    * DesktopEntry: Update list of environments valid for OnlyShowIn.
+    * Mime: Fix get_type_by_contents() in Python 3.
+    * RecentFiles: Minor bug fixes.
+
 Version 0.20 (June 2012)
     * Compatible with Python 3; requires Python 2.6 or later
     * Clean up accidental GPL license notice in Menu.py
