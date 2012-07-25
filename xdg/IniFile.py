@@ -7,6 +7,14 @@ from xdg.Exceptions import *
 import xdg.Locale
 from xdg.util import u, PY3
 
+def is_ascii(s):
+    """Return True if a string consists entirely of ASCII characters."""
+    try:
+        s.encode('ascii', 'strict')
+        return True
+    except UnicodeError:
+        return False
+
 class IniFile:
     defaultGroup = ''
     fileExtension = ''
@@ -272,15 +280,7 @@ class IniFile:
             return 1
 
     def checkString(self, value):
-        if PY3:
-            try:
-                value.encode('ascii', 'strict')
-                return 0
-            except UnicodeError:
-                return 1
-        # convert to ascii
-        if not value.decode("utf-8", "ignore").encode("ascii", 'ignore') == value:
-            return 1
+        return 0 if is_ascii(value) else 1
 
     def checkRegex(self, value):
         try:
@@ -339,10 +339,7 @@ class IniFile:
             key = key + "[" + xdg.Locale.langs[0] + "]"
 
         try:
-            if (not PY3) and isinstance(value, unicode):
-                self.content[group][key] = value.encode("utf-8", "ignore")
-            else:
-                self.content[group][key] = value
+            self.content[group][key] = value
         except KeyError:
             raise NoGroupError(group, self.filename)
             
