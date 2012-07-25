@@ -23,11 +23,21 @@ import subprocess
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
 from xdg.Exceptions import *
+from xdg.util import PY3
 
 import xdg.Locale
 import xdg.Config
 
 ELEMENT_NODE = xml.dom.Node.ELEMENT_NODE
+
+def _strxfrm(s):
+    """Wrapper around locale.strxfrm that accepts unicode strings on Python 2.
+    
+    See Python bug #2481.
+    """
+    if (not PY3) and isinstance(s, unicode):
+        s = s.encode('utf-8')
+    return locale.strxfrm(s)
 
 class Menu:
     """Menu containing sub menus under menu.Entries
@@ -104,7 +114,7 @@ class Menu:
     
     def _key(self):
         """Key function for locale-aware sorting."""
-        return locale.strxfrm(self.getName())
+        return _strxfrm(self.getName())
     
     def __lt__(self, other):
         try:
@@ -480,7 +490,7 @@ class MenuEntry:
     
     def _key(self):
         """Key function for locale-aware sorting."""
-        return locale.strxfrm(self.DesktopEntry.getName())
+        return _strxfrm(self.DesktopEntry.getName())
     
     def __lt__(self, other):
         try:
