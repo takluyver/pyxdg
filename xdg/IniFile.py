@@ -2,11 +2,10 @@
 Base Class for DesktopEntry, IconTheme and IconData
 """
 
-import re, os, stat, codecs, sys
+import re, os, stat, io, sys
 from xdg.Exceptions import *
 import xdg.Locale
-
-PY3 = sys.version_info[0] >= 3
+from xdg.util import u, PY3
 
 class IniFile:
     defaultGroup = ''
@@ -36,7 +35,7 @@ class IniFile:
             raise ParsingError("File not found", filename)
 
         try:
-            fd = open(filename, 'r')
+            fd = io.open(filename, 'r', encoding='utf-8')
         except IOError as e:
             if debug:
                 raise e
@@ -112,9 +111,7 @@ class IniFile:
             values = [value]
 
         for value in values:
-            if type == "string" and locale == True and not PY3:
-                value = value.decode("utf-8", "ignore")
-            elif type == "boolean":
+            if type == "boolean":
                 value = self.__getBoolean(value)
             elif type == "integer":
                 try:
@@ -304,26 +301,26 @@ class IniFile:
         if os.path.dirname(filename) and not os.path.isdir(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename))
 
-        fp = codecs.open(filename, 'w')
+        with io.open(filename, 'w', encoding='utf-8') as fp:
 
-        # An executable bit signifies that the desktop file is
-        # trusted, but then the file can be executed. Add hashbang to
-        # make sure that the file is opened by something that
-        # understands desktop files.
-        if trusted:
-            fp.write("#!/usr/bin/env xdg-open\n")
+            # An executable bit signifies that the desktop file is
+            # trusted, but then the file can be executed. Add hashbang to
+            # make sure that the file is opened by something that
+            # understands desktop files.
+            if trusted:
+                fp.write(u("#!/usr/bin/env xdg-open\n"))
 
-        if self.defaultGroup:
-            fp.write("[%s]\n" % self.defaultGroup)
-            for (key, value) in self.content[self.defaultGroup].items():
-                fp.write("%s=%s\n" % (key, value))
-            fp.write("\n")
-        for (name, group) in self.content.items():
-            if name != self.defaultGroup:
-                fp.write("[%s]\n" % name)
-                for (key, value) in group.items():
-                    fp.write("%s=%s\n" % (key, value))
-                fp.write("\n")
+            if self.defaultGroup:
+                fp.write(u("[%s]\n") % self.defaultGroup)
+                for (key, value) in self.content[self.defaultGroup].items():
+                    fp.write(u("%s=%s\n") % (key, value))
+                fp.write(u("\n"))
+            for (name, group) in self.content.items():
+                if name != self.defaultGroup:
+                    fp.write(u("[%s]\n") % name)
+                    for (key, value) in group.items():
+                        fp.write(u("%s=%s\n") % (key, value))
+                    fp.write(u("\n"))
 
         # Add executable bits to the file to show that it's trusted.
         if trusted:

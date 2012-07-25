@@ -237,48 +237,48 @@ class MagicDB:
         self.maxlen=0
 
     def mergeFile(self, fname):
-        f = open(fname, 'rb')
-        line = f.readline()
-        if line != b'MIME-Magic\0\n':
-            raise IOError('Not a MIME magic file')
+        with open(fname, 'rb') as f:
+            line = f.readline()
+            if line != b'MIME-Magic\0\n':
+                raise IOError('Not a MIME magic file')
 
-        while True:
-            shead = f.readline().decode('ascii')
-            #print shead
-            if not shead:
-                break
-            if shead[0] != '[' or shead[-2:] != ']\n':
-                raise ValueError('Malformed section heading')
-            pri, tname = shead[1:-2].split(':')
-            #print shead[1:-2]
-            pri = int(pri)
-            mtype = lookup(tname)
+            while True:
+                shead = f.readline().decode('ascii')
+                #print shead
+                if not shead:
+                    break
+                if shead[0] != '[' or shead[-2:] != ']\n':
+                    raise ValueError('Malformed section heading')
+                pri, tname = shead[1:-2].split(':')
+                #print shead[1:-2]
+                pri = int(pri)
+                mtype = lookup(tname)
 
-            try:
-                ents = self.types[pri]
-            except:
-                ents = []
-                self.types[pri] = ents
+                try:
+                    ents = self.types[pri]
+                except:
+                    ents = []
+                    self.types[pri] = ents
 
-            magictype = MagicType(mtype)
-            #print tname
+                magictype = MagicType(mtype)
+                #print tname
 
-            #rline=f.readline()
-            c=f.read(1)
-            f.seek(-1, 1)
-            while c and c != b'[':
-                rule=magictype.getLine(f)
-                #print rule
-                if rule and rule.getLength() > self.maxlen:
-                    self.maxlen = rule.getLength()
-
-                c = f.read(1)
+                #rline=f.readline()
+                c=f.read(1)
                 f.seek(-1, 1)
+                while c and c != b'[':
+                    rule=magictype.getLine(f)
+                    #print rule
+                    if rule and rule.getLength() > self.maxlen:
+                        self.maxlen = rule.getLength()
 
-            ents.append(magictype)
-            #self.types[pri]=ents
-            if not c:
-                break
+                    c = f.read(1)
+                    f.seek(-1, 1)
+
+                ents.append(magictype)
+                #self.types[pri]=ents
+                if not c:
+                    break
 
     def match_data(self, data, max_pri=100, min_pri=0):
         for priority in sorted(self.types.keys(), reverse=True):
@@ -329,7 +329,8 @@ def _cache_database():
 
     def _import_glob_file(path):
         """Loads name matching information from a MIME directory."""
-        for line in open(path):
+        with open(path) as f:
+          for line in f:
             if line.startswith('#'): continue
             line = line[:-1]
 

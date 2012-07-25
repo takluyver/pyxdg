@@ -1,8 +1,11 @@
 #!/usr/bin/python
+# coding: utf-8
 from xdg.DesktopEntry import *
+from xdg.util import u
 
 import resources
 
+import io
 import os, sys
 import shutil
 import re
@@ -13,7 +16,7 @@ class DesktopEntryTest(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.test_file = os.path.join(self.tmpdir, "gedit.desktop")
-        with open(self.test_file, "w") as f:
+        with io.open(self.test_file, "w", encoding='utf-8') as f:
             f.write(resources.gedit_desktop)
     
     def tearDown(self):
@@ -66,3 +69,10 @@ class DesktopEntryTest(unittest.TestCase):
         
         assert entry.hasGroup("Desktop Action Window")
         assert not entry.hasGroup("Desktop Action Door")
+    
+    def test_unicode_name(self):
+        with io.open(self.test_file, "w", encoding='utf-8') as f:
+            f.write(resources.unicode_desktop)
+        
+        entry = DesktopEntry(self.test_file)
+        self.assertEqual(entry.getName(), u('Abc€þ'))

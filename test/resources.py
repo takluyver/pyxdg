@@ -2,6 +2,7 @@
 """This file contains sample data for the test suite - these are
 written out to temporary files for the relevant tests.
 """
+from __future__ import unicode_literals
 
 # With additions from firefox.desktop, to test locale & unicode support
 gedit_desktop = """[Desktop Entry]
@@ -37,6 +38,12 @@ OnlyShowIn=Unity;
 Name=Open a New Document
 Exec=gedit --new-window
 OnlyShowIn=Unity;
+"""
+
+unicode_desktop = """[Desktop Entry]
+Name=Abc€þ
+Type=Application
+Exec=date
 """
 
 recently_used = """<?xml version="1.0"?>
