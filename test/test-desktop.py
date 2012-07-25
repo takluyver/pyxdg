@@ -30,7 +30,7 @@ class DesktopEntryTest(unittest.TestCase):
         de.set("key", "value", "Hallo")
         
         new_file = os.path.join(self.tmpdir, "test.desktop")
-        de.write(new_file)
+        de.write(new_file, trusted=True)
         
         with open(new_file) as f:
             contents = f.read()
