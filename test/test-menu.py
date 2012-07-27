@@ -1,16 +1,25 @@
 #!/usr/bin/python
+# coding: utf-8
 from __future__ import print_function
 
 import io
-import os.path
+import os
 import shutil
 import sys
 import tempfile
 import unittest
+import warnings
 
 import xdg.Menu
 import xdg.DesktopEntry
+import xdg.BaseDirectory
+from xdg.util import u
 import resources
+
+try:
+    reload
+except NameError:
+    from imp import reload
 
 def show_menu(menu, depth = 0):
     print(depth*"-" + "\x1b[01m" + menu.getName() + "\x1b[0m")
@@ -55,3 +64,25 @@ class MenuTest(unittest.TestCase):
         entry = xdg.Menu.MenuEntry(test_file)
         assert entry == entry
         assert not entry < entry
+    
+    def test_unicode_filename(self):
+        # https://bugs.freedesktop.org/show_bug.cgi?id=52516
+        with open(self.test_file, "w") as f:
+            f.write("<Menu> <DefaultMergeDirs/> </Menu>")
+        mergedir = os.path.join(self.tmpdir, "menus", "applications-merged")
+        os.makedirs(mergedir)
+        unicode_file = os.path.join(mergedir, u("ab€.menu"))
+        # Create file (empty)
+        with open(unicode_file, "w"): pass
+        with open(os.path.join(mergedir, "ab.desktop"), "w"): pass
+        
+        
+        os.environ['XDG_CONFIG_HOME'] = self.tmpdir
+        reload(xdg.BaseDirectory)
+        reload(xdg.DesktopEntry)
+        reload(xdg.Menu)
+        
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            xdg.Menu.parse(self.test_file)
+            assert len(w)==0, w
