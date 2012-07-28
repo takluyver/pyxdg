@@ -1,3 +1,8 @@
+Version 0.22 (July 2012)
+    * Better unicode handling in several modules.
+    * Fix for sorting non-ASCII menu entries, freedesktop bug #52492.
+    * More tests.
+
 Version 0.21 (July 2012)
     * Tests can now be run conveniently using nosetests, and cover more of the
       code.
