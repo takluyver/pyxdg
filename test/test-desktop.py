@@ -32,7 +32,7 @@ class DesktopEntryTest(unittest.TestCase):
         new_file = os.path.join(self.tmpdir, "test.desktop")
         de.write(new_file, trusted=True)
         
-        with open(new_file) as f:
+        with io.open(new_file, encoding='utf-8') as f:
             contents = f.read()
         
         assert "[Hallo]" in contents, contents
