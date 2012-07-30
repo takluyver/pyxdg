@@ -1,3 +1,6 @@
+Version 0.23 (July 2012)
+    * Fix a test for non-UTF-8 locales.
+
 Version 0.22 (July 2012)
     * Better unicode handling in several modules.
     * Fix for sorting non-ASCII menu entries, freedesktop bug #52492.
