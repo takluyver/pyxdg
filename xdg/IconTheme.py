@@ -236,9 +236,9 @@ icondirs.append(os.path.expanduser("~/.icons"))
 
 # just cache variables, they give a 10x speed improvement
 themes = []
-cache = dict()
-dache = dict()
-eache = dict()
+theme_cache = {}
+dir_cache = {}
+icon_cache = {}
 
 def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg", "xpm"]):
     """Get the path to a specified icon.
@@ -274,41 +274,41 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
         iconname = os.path.splitext(iconname)[0]
 
     # parse theme files
-    try:
-        if themes[0].name != theme:
-            themes = []
-            __addTheme(theme)
-    except IndexError:
-        __addTheme(theme)
+    if (themes == []) or (themes[0].name != theme):
+        themes = list(__get_themes(theme))
 
     # more caching (icon looked up in the last 5 seconds?)
-    tmp = "".join([iconname, str(size), theme, "".join(extensions)])
-    if tmp in eache:
-        if int(time.time() - eache[tmp][0]) >= xdg.Config.cache_time:
-            del eache[tmp]
+    tmp = (iconname, size, theme, tuple(extensions))
+    try:
+        timestamp, icon = icon_cache[tmp]
+    except KeyError:
+        pass
+    else:
+        if (time.time() - timestamp) >= xdg.Config.cache_time:
+            del icon_cache[tmp]
         else:
-            return eache[tmp][1]
+            return icon
 
     for thme in themes:
         icon = LookupIcon(iconname, size, thme, extensions)
         if icon:
-            eache[tmp] = [time.time(), icon]
+            icon_cache[tmp] = (time.time(), icon)
             return icon
 
-    # cache stuff again (directories lookuped up in the last 5 seconds?)
+    # cache stuff again (directories looked up in the last 5 seconds?)
     for directory in icondirs:
-        if (directory not in dache \
-            or (int(time.time() - dache[directory][1]) >= xdg.Config.cache_time \
-            and dache[directory][2] < os.path.getmtime(directory))) \
+        if (directory not in dir_cache \
+            or (int(time.time() - dir_cache[directory][1]) >= xdg.Config.cache_time \
+            and dir_cache[directory][2] < os.path.getmtime(directory))) \
             and os.path.isdir(directory):
-            dache[directory] = [os.listdir(directory), time.time(), os.path.getmtime(directory)]
+            dir_cache[directory] = (os.listdir(directory), time.time(), os.path.getmtime(directory))
 
-    for dir, values in dache.items():
+    for dir, values in dir_cache.items():
         for extension in extensions:
             try:
                 if iconname + "." + extension in values[0]:
                     icon = os.path.join(dir, iconname + "." + extension)
-                    eache[tmp] = [time.time(), icon]
+                    icon_cache[tmp] = [time.time(), icon]
                     return icon
             except UnicodeDecodeError as e:
                 if debug:
@@ -319,7 +319,7 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
     # we haven't found anything? "hicolor" is our fallback
     if theme != "hicolor":
         icon = getIconPath(iconname, size, "hicolor")
-        eache[tmp] = [time.time(), icon]
+        icon_cache[tmp] = [time.time(), icon]
         return icon
 
 def getIconData(path):
@@ -337,47 +337,51 @@ def getIconData(path):
             data.parse(icon_file)
             return data
 
-def __addTheme(theme):
+def __get_themes(themename):
+    """Generator yielding IconTheme objects for a specified theme and any themes
+    from which it inherits.
+    """
     for dir in icondirs:
-        if os.path.isfile(os.path.join(dir, theme, "index.theme")):
-            __parseTheme(os.path.join(dir,theme, "index.theme"))
+        theme_file = os.path.join(dir, themename, "index.theme")
+        if os.path.isfile(theme_file):
             break
-        elif os.path.isfile(os.path.join(dir, theme, "index.desktop")):
-            __parseTheme(os.path.join(dir,theme, "index.desktop"))
+        theme_file = os.path.join(dir, themename, "index.desktop")
+        if os.path.isfile(theme_file):
             break
     else:
         if debug:
             raise NoThemeError(theme)
-
-def __parseTheme(file):
+        return
+    
     theme = IconTheme()
-    theme.parse(file)
-    themes.append(theme)
+    theme.parse(theme_file)
+    yield theme
     for subtheme in theme.getInherits():
-        __addTheme(subtheme)
+        for t in __get_themes(subtheme):
+            yield t
 
 def LookupIcon(iconname, size, theme, extensions):
     # look for the cache
-    if theme.name not in cache:
-        cache[theme.name] = []
-        cache[theme.name].append(time.time() - (xdg.Config.cache_time + 1)) # [0] last time of lookup
-        cache[theme.name].append(0)               # [1] mtime
-        cache[theme.name].append(dict())          # [2] dir: [subdir, [items]]
+    if theme.name not in theme_cache:
+        theme_cache[theme.name] = []
+        theme_cache[theme.name].append(time.time() - (xdg.Config.cache_time + 1)) # [0] last time of lookup
+        theme_cache[theme.name].append(0)               # [1] mtime
+        theme_cache[theme.name].append(dict())          # [2] dir: [subdir, [items]]
 
     # cache stuff (directory lookuped up the in the last 5 seconds?)
-    if int(time.time() - cache[theme.name][0]) >= xdg.Config.cache_time:
-        cache[theme.name][0] = time.time()
+    if int(time.time() - theme_cache[theme.name][0]) >= xdg.Config.cache_time:
+        theme_cache[theme.name][0] = time.time()
         for subdir in theme.getDirectories():
             for directory in icondirs:
                 dir = os.path.join(directory,theme.name,subdir)
-                if (dir not in cache[theme.name][2] \
-                or cache[theme.name][1] < os.path.getmtime(os.path.join(directory,theme.name))) \
+                if (dir not in theme_cache[theme.name][2] \
+                or theme_cache[theme.name][1] < os.path.getmtime(os.path.join(directory,theme.name))) \
                 and subdir != "" \
                 and os.path.isdir(dir):
-                    cache[theme.name][2][dir] = [subdir, os.listdir(dir)]
-                    cache[theme.name][1] = os.path.getmtime(os.path.join(directory,theme.name))
+                    theme_cache[theme.name][2][dir] = [subdir, os.listdir(dir)]
+                    theme_cache[theme.name][1] = os.path.getmtime(os.path.join(directory,theme.name))
 
-    for dir, values in cache[theme.name][2].items():
+    for dir, values in theme_cache[theme.name][2].items():
         if DirectoryMatchesSize(values[0], size, theme):
             for extension in extensions:
                 if iconname + "." + extension in values[1]:
@@ -385,7 +389,7 @@ def LookupIcon(iconname, size, theme, extensions):
 
     minimal_size = 2**31
     closest_filename = ""
-    for dir, values in cache[theme.name][2].items():
+    for dir, values in theme_cache[theme.name][2].items():
         distance = DirectorySizeDistance(values[0], size, theme)
         if distance < minimal_size:
             for extension in extensions:
