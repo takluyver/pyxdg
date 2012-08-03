@@ -134,7 +134,8 @@ class IniFile:
             elif type == "regex":
                 value = re.compile(value)
             elif type == "point":
-                value = value.split(",")
+                x, y = value.split(",")
+                value = int(x), int(y)
 
             if list == True:
                 result.append(value)

@@ -179,17 +179,26 @@ class IconData(IniFile):
         IniFile.__init__(self)
 
     def __repr__(self):
-        return self.getDisplayName()
+        displayname = self.getDisplayName()
+        if displayname:
+            return "<IconData: %s>" % displayname
+        else:
+            return "<IconData>"
 
     def parse(self, file):
         IniFile.parse(self, file, ["Icon Data"])
 
     # Standard Keys
     def getDisplayName(self):
+        """Retrieve the display name from the icon data, if one is specified."""
         return self.get('DisplayName', locale=True)
     def getEmbeddedTextRectangle(self):
-        return self.get('EmbeddedTextRectangle', list=True)
+        """Retrieve the embedded text rectangle from the icon data as a list of
+        numbers (x0, y0, x1, y1), if it is specified."""
+        return self.get('EmbeddedTextRectangle', type="integer", list=True)
     def getAttachPoints(self):
+        """Retrieve the anchor points for overlays & emblems from the icon data,
+        as a list of co-ordinate pairs, if they are specified."""
         return self.get('AttachPoints', type="point", list=True)
 
     # validation stuff
@@ -314,12 +323,18 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
         return icon
 
 def getIconData(path):
+    """Retrieve the data from the .icon file corresponding to the given file. If
+    there is no .icon file, it returns None.
+    
+    Example::
+    
+        getIconData("/usr/share/icons/Tango/scalable/places/folder.svg")
+    """
     if os.path.isfile(path):
-        dirname = os.path.dirname(path)
-        basename = os.path.basename(path)
-        if os.path.isfile(os.path.join(dirname, basename + ".icon")):
+        icon_file = os.path.splitext(path)[0] + ".icon"
+        if os.path.isfile(icon_file):
             data = IconData()
-            data.parse(os.path.join(dirname, basename + ".icon"))
+            data.parse(icon_file)
             return data
 
 def __addTheme(theme):
