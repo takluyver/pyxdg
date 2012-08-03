@@ -541,7 +541,12 @@ def __getFileName(filename):
             return menuname
 
 def parse(filename=None):
-    # conver to absolute path
+    """Load an applications.menu file.
+    
+    filename : str, optional
+      The default is ``$XDG_CONFIG_DIRS/menus/${XDG_MENU_PREFIX}applications.menu``.
+    """
+    # convert to absolute path
     if filename and not os.path.isabs(filename):
         filename = __getFileName(filename)
 

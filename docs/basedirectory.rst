@@ -3,7 +3,7 @@
 Base Directories
 ================
 
-`XDG Base Directory spec <http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`_
+`XDG Base Directory specification <http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`_
 
 Data directories
 ----------------
