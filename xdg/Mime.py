@@ -45,7 +45,11 @@ def _get_node_data(node):
     return ''.join([n.nodeValue for n in node.childNodes]).strip()
 
 def lookup(media, subtype = None):
-    "Get the MIMEtype object for this type, creating a new one if needed."
+    """Get the MIMEtype object for this type, creating a new one if needed.
+    
+    The name can either be passed as one part ('text/plain'), or as two
+    ('text', 'plain').
+    """
     if subtype is None and '/' in media:
         media, subtype = media.split('/', 1)
     if (media, subtype) not in types:
@@ -91,7 +95,7 @@ class MIMEtype:
         return self.media + '/' + self.subtype
 
     def __repr__(self):
-        return '[%s: %s]' % (self, self._comment or '(comment not loaded)')
+        return '<%s: %s>' % (self, self._comment or '(comment not loaded)')
 
 class MagicRule:
     def __init__(self, f):
@@ -397,17 +401,25 @@ def get_type_by_contents(path, max_pri=100, min_pri=0):
     return magic.match(path, max_pri, min_pri)
 
 def get_type_by_data(data, max_pri=100, min_pri=0):
-    """Returns type of the data"""
+    """Returns type of the data, which should be bytes."""
     if not _cache_uptodate:
         _cache_database()
 
     return magic.match_data(data, max_pri, min_pri)
 
-def get_type(path, follow=1, name_pri=100):
+def get_type(path, follow=True, name_pri=100):
     """Returns type of file indicated by path.
-    path     - pathname to check (need not exist)
-    follow   - when reading file, follow symbolic links
-    name_pri - Priority to do name matches.  100=override magic"""
+    
+    path :
+      pathname to check (need not exist)
+    follow :
+      when reading file, follow symbolic links
+    name_pri :
+      Priority to do name matches.  100=override magic
+    
+    This tries to use the contents of the file, and falls back to the name. It
+    can also handle special filesystem objects like directories and sockets.
+    """
     if not _cache_uptodate:
         _cache_database()
     

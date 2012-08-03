@@ -11,6 +11,7 @@ Contents:
    basedirectory
    desktopentry
    menu
+   mime
    recentfiles
 
 Indices and tables
