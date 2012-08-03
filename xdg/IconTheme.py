@@ -232,6 +232,23 @@ dache = dict()
 eache = dict()
 
 def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg", "xpm"]):
+    """Get the path to a specified icon.
+    
+    size :
+      Icon size in pixels. Defaults to ``xdg.Config.icon_size``.
+    theme :
+      Icon theme name. Defaults to ``xdg.Config.icon_theme``. If the icon isn't
+      found in the specified theme, it will be looked up in the basic 'hicolor'
+      theme.
+    extensions :
+      List of preferred file extensions.
+    
+    Example::
+    
+        >>> getIconPath("inkscape", 32)
+        '/usr/share/icons/hicolor/32x32/apps/inkscape.png'
+    """
+    
     global themes
 
     if size == None:

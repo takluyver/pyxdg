@@ -11,6 +11,7 @@ Contents:
    basedirectory
    desktopentry
    menu
+   icontheme
    mime
    recentfiles
 
