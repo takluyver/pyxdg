@@ -16,11 +16,16 @@ import os.path
 import warnings
 
 class DesktopEntry(IniFile):
-    "Class to parse and validate DesktopEntries"
+    "Class to parse and validate Desktop Entries"
 
     defaultGroup = 'Desktop Entry'
 
     def __init__(self, filename=None):
+        """Create a new DesktopEntry
+        
+        If filename exists, it will be parsed as a desktop entry file. If not,
+        or if filename is None, a blank DesktopEntry is created.
+        """
         self.content = dict()
         if filename and os.path.exists(filename):
             self.parse(filename)
@@ -31,6 +36,7 @@ class DesktopEntry(IniFile):
         return self.getName()
 
     def parse(self, file):
+        """Parse a desktop entry file."""
         IniFile.parse(self, file, ["Desktop Entry", "KDE Desktop Entry"])
 
     # start standard keys
@@ -132,6 +138,11 @@ class DesktopEntry(IniFile):
 
     # desktop entry edit stuff
     def new(self, filename):
+        """Make this instance into a new desktop entry.
+        
+        If filename has a .desktop extension, Type is set to Application. If it
+        has a .directory extension, Type is Directory.
+        """
         if os.path.splitext(filename)[1] == ".desktop":
             type = "Application"
         elif os.path.splitext(filename)[1] == ".directory":

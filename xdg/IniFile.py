@@ -181,7 +181,11 @@ class IniFile:
 
     # start validation stuff
     def validate(self, report="All"):
-        "validate ... report = All / Warnings / Errors"
+        """Validate the contents, raising ``ValidationError`` if there
+        is anything amiss.
+        
+        report can be 'All' / 'Warnings' / 'Errors'
+        """
 
         self.warnings = []
         self.errors = []
