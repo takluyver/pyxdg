@@ -31,8 +31,11 @@ class IconDataTest(unittest.TestCase):
             f.write(resources.icon_data)
         
         icondata = getIconData(png_file)
+        icondata.validate()
         
         self.assertEqual(icondata.getDisplayName(), 'Mime text/plain')
         self.assertEqual(icondata.getAttachPoints(), [(200,200), (800,200), (500,500), (200,800), (800,800)])
         self.assertEqual(icondata.getEmbeddedTextRectangle(), [100,100,900,900])
+        
+        assert "<IconData" in repr(icondata), repr(icondata)
         
