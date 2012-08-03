@@ -47,10 +47,10 @@ xdg_data_dirs = [x for x in xdg_data_dirs if x]
 xdg_config_dirs = [x for x in xdg_config_dirs if x]
 
 def save_config_path(*resource):
-    """Ensure $XDG_CONFIG_HOME/<resource>/ exists, and return its path.
+    """Ensure ``$XDG_CONFIG_HOME/<resource>/`` exists, and return its path.
     'resource' should normally be the name of your application. Use this
-    when SAVING configuration settings. Use the xdg_config_dirs variable
-    for loading."""
+    when SAVING configuration settings.
+    """
     resource = os.path.join(*resource)
     assert not resource.startswith('/')
     path = os.path.join(xdg_config_home, resource)
@@ -59,10 +59,10 @@ def save_config_path(*resource):
     return path
 
 def save_data_path(*resource):
-    """Ensure $XDG_DATA_HOME/<resource>/ exists, and return its path.
+    """Ensure ``$XDG_DATA_HOME/<resource>/`` exists, and return its path.
     'resource' is the name of some shared resource. Use this when updating
-    a shared (between programs) database. Use the xdg_data_dirs variable
-    for loading."""
+    a shared (between programs) database.
+    """
     resource = os.path.join(*resource)
     assert not resource.startswith('/')
     path = os.path.join(xdg_data_home, resource)
