@@ -13,6 +13,10 @@ class RecentFiles:
         self.filename = ""
 
     def parse(self, filename=None):
+        """Parse a list of recently used files.
+        
+        filename defaults to ``~/.recently-used``.
+        """
         if not filename:
             filename = os.path.join(os.getenv("HOME"), ".recently-used")
 
@@ -57,6 +61,11 @@ class RecentFiles:
                                 recent.Groups.append(group.childNodes[0].nodeValue)
 
     def write(self, filename=None):
+        """Write the list of recently used files to disk.
+        
+        If the instance is already associated with a file, filename can be
+        omitted to save it there again.
+        """
         if not filename and not self.filename:
             raise ParsingError('File not found', filename)
         elif not filename:
@@ -86,6 +95,12 @@ class RecentFiles:
         f.close()
 
     def getFiles(self, mimetypes=None, groups=None, limit=0):
+        """Get a list of recently used files.
+        
+        The parameters can be used to filter by mime types, by group, or to
+        limit the number of items returned. By default, the entire list is
+        returned, except for items marked private.
+        """
         tmp = []
         i = 0
         for item in self.RecentFiles:
@@ -109,6 +124,10 @@ class RecentFiles:
         return tmp
 
     def addFile(self, item, mimetype, groups=None, private=False):
+        """Add a recently used file.
+        
+        item should be the URI of the file, typically starting with ``file:///``.
+        """
         # check if entry already there
         if item in self.RecentFiles:
             index = self.RecentFiles.index(item)
@@ -131,6 +150,8 @@ class RecentFiles:
         self.sort()
 
     def deleteFile(self, item):
+        """Remove a recently used file, by URI, from the list.
+        """
         if item in self.RecentFiles:
             self.RecentFiles.remove(item)
 

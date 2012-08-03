@@ -11,9 +11,7 @@ Contents:
    basedirectory
    desktopentry
    menu
-   
-
-
+   recentfiles
 
 Indices and tables
 ==================
