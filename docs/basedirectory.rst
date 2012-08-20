@@ -3,7 +3,9 @@
 Base Directories
 ================
 
-`XDG Base Directory specification <http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`_
+The `XDG Base Directory specification <http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`_
+provides standard locations to store application data, configuration, and cached
+data.
 
 Data directories
 ----------------

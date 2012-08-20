@@ -49,7 +49,7 @@ xdg_config_dirs = [x for x in xdg_config_dirs if x]
 def save_config_path(*resource):
     """Ensure ``$XDG_CONFIG_HOME/<resource>/`` exists, and return its path.
     'resource' should normally be the name of your application. Use this
-    when SAVING configuration settings.
+    when saving configuration settings.
     """
     resource = os.path.join(*resource)
     assert not resource.startswith('/')
@@ -60,8 +60,8 @@ def save_config_path(*resource):
 
 def save_data_path(*resource):
     """Ensure ``$XDG_DATA_HOME/<resource>/`` exists, and return its path.
-    'resource' is the name of some shared resource. Use this when updating
-    a shared (between programs) database.
+    'resource' should normally be the name of your application or a shared
+    resource. Use this when saving or updating application data.
     """
     resource = os.path.join(*resource)
     assert not resource.startswith('/')
@@ -71,10 +71,9 @@ def save_data_path(*resource):
     return path
 
 def save_cache_path(*resource):
-    """Ensure $XDG_CACHE_HOME/<resource>/ exists, and return its path.
-    'resource' is the name of some shared resource. Use this when updating
-    a shared (between programs) database. Use the xdg_cache_home variable
-    for loading."""
+    """Ensure ``$XDG_CACHE_HOME/<resource>/`` exists, and return its path.
+    'resource' should normally be the name of your application or a shared
+    resource."""
     resource = os.path.join(*resource)
     assert not resource.startswith('/')
     path = os.path.join(xdg_cache_home, resource)
@@ -85,7 +84,8 @@ def save_cache_path(*resource):
 def load_config_paths(*resource):
     """Returns an iterator which gives each directory named 'resource' in the
     configuration search path. Information provided by earlier directories should
-    take precedence over later ones (ie, the user's config dir comes first)."""
+    take precedence over later ones, and the user-specific config dir comes
+    first."""
     resource = os.path.join(*resource)
     for config_dir in xdg_config_dirs:
         path = os.path.join(config_dir, resource)
@@ -100,8 +100,8 @@ def load_first_config(*resource):
 
 def load_data_paths(*resource):
     """Returns an iterator which gives each directory named 'resource' in the
-    shared data search path. Information provided by earlier directories should
-    take precedence over later ones."""
+    application data search path. Information provided by earlier directories
+    should take precedence over later ones."""
     resource = os.path.join(*resource)
     for data_dir in xdg_data_dirs:
         path = os.path.join(data_dir, resource)
