@@ -11,4 +11,9 @@ Desktop Menu
    :members: getName, getGenericName, getIcon, getComment, getPath, getEntries, getMenu, getMenuEntry
 
 .. autoclass:: MenuEntry
-   :members: getDir, getType
+   :members: save, getDir, getType
+   
+   .. attribute:: DesktopEntry
+   
+       The :class:`xdg.DesktopEntry.DesktopEntry` instance holding the data for this
+       entry.

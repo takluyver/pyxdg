@@ -441,10 +441,12 @@ class MenuEntry:
         self.Categories = self.DesktopEntry.getCategories()
 
     def save(self):
+        """Save any changes to the desktop entry."""
         if self.DesktopEntry.tainted == True:
             self.DesktopEntry.write()
 
     def getDir(self):
+        """Return the directory containing the desktop entry file."""
         return self.DesktopEntry.filename.replace(self.Filename, '')
 
     def getType(self):
