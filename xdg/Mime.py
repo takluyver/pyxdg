@@ -451,8 +451,8 @@ def get_type(path, follow=True, name_pri=100):
     return inode_door
 
 def install_mime_info(application, package_file):
-    """Copy 'package_file' as ~/.local/share/mime/packages/<application>.xml.
-    If package_file is None, install <app_dir>/<application>.xml.
+    """Copy 'package_file' as ``~/.local/share/mime/packages/<application>.xml.``
+    If package_file is None, install ``<app_dir>/<application>.xml``.
     If already installed, does nothing. May overwrite an existing
     file with the same name (if the contents are different)"""
     application += '.xml'
