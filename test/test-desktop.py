@@ -1,12 +1,13 @@
 #!/usr/bin/python
 # coding: utf-8
-from xdg.DesktopEntry import *
+from xdg.DesktopEntry import DesktopEntry
+from xdg.Exceptions import ValidationError
 from xdg.util import u
 
 import resources
 
 import io
-import os, sys
+import os
 import shutil
 import re
 import tempfile

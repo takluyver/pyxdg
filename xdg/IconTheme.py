@@ -3,11 +3,12 @@ Complete implementation of the XDG Icon Spec Version 0.8
 http://standards.freedesktop.org/icon-theme-spec/
 """
 
-import os, sys, time
+import os, time
+import re
 
-from xdg.IniFile import *
-from xdg.BaseDirectory import *
-from xdg.Exceptions import *
+from xdg.IniFile import IniFile, is_ascii
+from xdg.BaseDirectory import xdg_data_dirs
+from xdg.Exceptions import NoThemeError, debug
 
 import xdg.Config
 
@@ -350,7 +351,7 @@ def __get_themes(themename):
             break
     else:
         if debug:
-            raise NoThemeError(theme)
+            raise NoThemeError(themename)
         return
     
     theme = IconTheme()

@@ -27,7 +27,7 @@ import fnmatch
 import xdg.BaseDirectory
 import xdg.Locale
 
-from xml.dom import Node, minidom, XML_NAMESPACE
+from xml.dom import minidom, XML_NAMESPACE
 
 FREE_NS = 'http://www.freedesktop.org/standards/shared-mime-info'
 

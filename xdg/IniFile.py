@@ -2,10 +2,12 @@
 Base Class for DesktopEntry, IconTheme and IconData
 """
 
-import re, os, stat, io, sys
-from xdg.Exceptions import *
+import re, os, stat, io
+from xdg.Exceptions import (ParsingError, DuplicateGroupError, NoGroupError,
+                            NoKeyError, DuplicateKeyError, ValidationError,
+                            debug)
 import xdg.Locale
-from xdg.util import u, PY3
+from xdg.util import u
 
 def is_ascii(s):
     """Return True if a string consists entirely of ASCII characters."""

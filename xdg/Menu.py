@@ -20,9 +20,9 @@ print_menu(parse())
 import locale, os, xml.dom.minidom
 import subprocess
 
-from xdg.BaseDirectory import *
-from xdg.DesktopEntry import *
-from xdg.Exceptions import *
+from xdg.BaseDirectory import xdg_data_dirs, xdg_config_dirs
+from xdg.DesktopEntry import DesktopEntry
+from xdg.Exceptions import ParsingError, ValidationError, debug
 from xdg.util import PY3
 
 import xdg.Locale

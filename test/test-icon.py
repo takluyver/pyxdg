@@ -1,6 +1,6 @@
 #!/usr/bin/python
-from xdg.IconTheme import *
-import tempfile, shutil
+from xdg.IconTheme import IconTheme, getIconPath, getIconData
+import tempfile, shutil, os
 import unittest
 
 import resources
@@ -22,20 +22,24 @@ class IconThemeTest(unittest.TestCase):
 class IconDataTest(unittest.TestCase):
     def test_read_icon_data(self):
         tmpdir = tempfile.mkdtemp()
-        png_file = os.path.join(tmpdir, "test.png")
-        with open(png_file, "wb") as f:
-            f.write(resources.png_data)
+        try:
+            png_file = os.path.join(tmpdir, "test.png")
+            with open(png_file, "wb") as f:
+                f.write(resources.png_data)
+            
+            icon_file = os.path.join(tmpdir, "test.icon")
+            with open(icon_file, "w") as f:
+                f.write(resources.icon_data)
+            
+            icondata = getIconData(png_file)
+            icondata.validate()
+            
+            self.assertEqual(icondata.getDisplayName(), 'Mime text/plain')
+            self.assertEqual(icondata.getAttachPoints(), [(200,200), (800,200), (500,500), (200,800), (800,800)])
+            self.assertEqual(icondata.getEmbeddedTextRectangle(), [100,100,900,900])
+            
+            assert "<IconData" in repr(icondata), repr(icondata)
         
-        icon_file = os.path.join(tmpdir, "test.icon")
-        with open(icon_file, "w") as f:
-            f.write(resources.icon_data)
-        
-        icondata = getIconData(png_file)
-        icondata.validate()
-        
-        self.assertEqual(icondata.getDisplayName(), 'Mime text/plain')
-        self.assertEqual(icondata.getAttachPoints(), [(200,200), (800,200), (500,500), (200,800), (800,800)])
-        self.assertEqual(icondata.getEmbeddedTextRectangle(), [100,100,900,900])
-        
-        assert "<IconData" in repr(icondata), repr(icondata)
+        finally:
+            shutil.rmtree(tmpdir)
         

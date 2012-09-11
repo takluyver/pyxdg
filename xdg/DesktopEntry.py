@@ -10,9 +10,11 @@ Not supported:
 - Does not completly check categories
 """
 
-from xdg.IniFile import *
-from xdg.BaseDirectory import *
+from xdg.IniFile import IniFile, is_ascii
+import xdg.Locale
+from xdg.Exceptions import ParsingError
 import os.path
+import re
 import warnings
 
 class DesktopEntry(IniFile):
