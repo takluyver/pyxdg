@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 import io
+import os
 import os.path
 import shutil
 import tempfile
@@ -54,3 +55,19 @@ class MenuTest(unittest.TestCase):
         entry = xdg.Menu.MenuEntry(test_file)
         assert entry == entry
         assert not entry < entry
+    
+    def test_empty_legacy_dirs(self):
+        legacy_dir = os.path.join(self.tmpdir, "applnk")
+        os.mkdir(legacy_dir)
+        os.mkdir(os.path.join(legacy_dir, "Toys"))
+        os.mkdir(os.path.join(legacy_dir, "Utilities"))
+        test_file = os.path.join(self.tmpdir, "legacy.menu")
+        with open(test_file, "w") as f:
+            f.write(resources.legacy_menu.replace("legacy_dir", legacy_dir))
+        
+        menu = xdg.Menu.parse(test_file)
+        
+        # The menu should be empty besides the root named "Legacy"
+        show_menu(menu)
+        
+        assert len(menu.Entries) == 0
