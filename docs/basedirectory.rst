@@ -36,7 +36,7 @@ Configuration directories
 
    $XDG_CONFIG_HOME or the default, ``~/.config``
 
-.. data:: xdg_data_dirs
+.. data:: xdg_config_dirs
 
    A list of directory paths in which configuration may be stored, in preference
    order.
