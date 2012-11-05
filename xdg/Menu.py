@@ -896,8 +896,13 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
         return m
 
 def __parseKDELegacyDirs(filename, parent):
-    output = subprocess.check_output(['kde-config', '--path', 'apps'],
+    try:
+        output = subprocess.check_output(['kde-config', '--path', 'apps'],
                                      universal_newlines=True).splitlines()
+    except OSError:
+        # If kde-config doesn't exist, ignore this.
+        return
+    
     try:
         for dir in output[0].split(":"):
             __parseLegacyDir(dir,"kde", filename, parent)

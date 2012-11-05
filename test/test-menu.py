@@ -71,3 +71,15 @@ class MenuTest(unittest.TestCase):
         show_menu(menu)
         
         assert len(menu.Entries) == 0
+    
+    def test_kde_legacy_dirs(self):
+        """This was failing on systems which didn't have kde-config installed.
+        We just check that parsing doesn't throw an error.
+        
+        See fd.o bug #56426.
+        """
+        test_file = os.path.join(self.tmpdir, "kde_legacy.menu")
+        with open(test_file, "w") as f:
+            f.write(resources.kde_legacy_menu)
+        
+        menu = xdg.Menu.parse(test_file)

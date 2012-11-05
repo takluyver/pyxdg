@@ -403,6 +403,17 @@ legacy_menu = """<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
 </Menu>
 """
 
+kde_legacy_menu = """<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+ "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+
+  <Name>KDE Legacy</Name>
+  <KDELegacyDirs/>
+
+</Menu>
+"""
+
 png_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x04sBIT\x08\x08\x08\x08|\x08d\x88\x00\x00\x00\rIDAT\x08\x99c\xf8\x7f\x83\xe1?\x00\x07\x88\x02\xd7\xd9\n\xd8\xdc\x00\x00\x00\x00IEND\xaeB`\x82'
 
 icon_data = """[Icon Data]

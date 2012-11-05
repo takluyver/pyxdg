@@ -4,6 +4,8 @@ Version 0.24 (October 2012)
     * Fix removal of empty submenu, freedesktop bug #54747.
     * Documentation is now available on RTD: http://pyxdg.readthedocs.org/
     * A few more tests, and some code cleanup.
+    * Fix failure to parse some menu files when kde-config is missing,
+      freedesktop bug #56426.
 
 Version 0.23 (July 2012)
     * Fix a test for non-UTF-8 locales.
