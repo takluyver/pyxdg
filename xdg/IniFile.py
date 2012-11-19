@@ -75,11 +75,12 @@ class IniFile:
                 except ValueError:
                     raise ParsingError("Invalid line: " + line, filename)
                 
+                key = key.strip() # Spaces before/after '=' should be ignored
                 try:
                     if debug and self.hasKey(key, currentGroup):
                         raise DuplicateKeyError(key, currentGroup, filename)
                     else:
-                        content[currentGroup][key] = value
+                        content[currentGroup][key] = value.strip()
                 except (IndexError, UnboundLocalError):
                     raise ParsingError("Parsing error on key, group missing", filename)
 
