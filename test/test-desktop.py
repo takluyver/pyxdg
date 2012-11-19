@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # coding: utf-8
 from xdg.DesktopEntry import DesktopEntry
-from xdg.Exceptions import ValidationError
+from xdg.Exceptions import ValidationError, ParsingError
 from xdg.util import u
 
 import resources
@@ -77,3 +77,10 @@ class DesktopEntryTest(unittest.TestCase):
         
         entry = DesktopEntry(self.test_file)
         self.assertEqual(entry.getName(), u('Abc€þ'))
+    
+    def test_invalid(self):
+        test_file = os.path.join(self.tmpdir, "spout.desktop")
+        with io.open(test_file, "w", encoding='utf-8') as f:
+            f.write(resources.spout_desktop)
+        
+        self.assertRaises(ParsingError, DesktopEntry, test_file)

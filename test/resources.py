@@ -46,6 +46,19 @@ Type=Application
 Exec=date
 """
 
+# Invalid - see the Categories line
+spout_desktop = """[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=Spout
+GenericName=
+Comment=
+Icon=spout
+Exec=/usr/games/spout
+Terminal=false
+Categories:Application:Game:ArcadeGame
+"""
+
 recently_used = """<?xml version="1.0"?>
 <RecentFiles>
 <RecentItem>

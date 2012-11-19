@@ -70,7 +70,11 @@ class IniFile:
                     content[currentGroup] = {}
             # key
             else:
-                key, value = line.split("=", 1)
+                try:
+                    key, value = line.split("=", 1)
+                except ValueError:
+                    raise ParsingError("Invalid line: " + line, filename)
+                
                 try:
                     if debug and self.hasKey(key, currentGroup):
                         raise DuplicateKeyError(key, currentGroup, filename)
