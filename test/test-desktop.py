@@ -84,3 +84,11 @@ class DesktopEntryTest(unittest.TestCase):
             f.write(resources.spout_desktop)
         
         self.assertRaises(ParsingError, DesktopEntry, test_file)
+
+    def test_invalid_unicode(self):
+        test_file = os.path.join(self.tmpdir, "gnome-alsamixer.desktop")
+        with io.open(test_file, "w", encoding='latin-1') as f:
+            f.write(resources.gnome_alsamixer_desktop)
+        
+        # Just check this doesn't throw a UnicodeError.
+        DesktopEntry(test_file)

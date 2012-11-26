@@ -45,7 +45,10 @@ class IniFile:
             raise ParsingError("File not found", filename)
 
         try:
-            fd = io.open(filename, 'r', encoding='utf-8')
+            # The content should be UTF-8, but legacy files can have other
+            # encodings, including mixed encodings in one file. We don't attempt
+            # to decode them, but we silence the errors.
+            fd = io.open(filename, 'r', encoding='utf-8', errors='replace')
         except IOError as e:
             if debug:
                 raise e

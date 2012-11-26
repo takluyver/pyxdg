@@ -59,6 +59,16 @@ Terminal=false
 Categories:Application:Game:ArcadeGame
 """
 
+# Test with invalid UTF-8
+gnome_alsamixer_desktop = """[Desktop Entry]
+Name=GNOME ALSA Mixer
+Comment=ALSA sound mixer for GNOME
+Comment[es]=Mezclador de sonido ALSA para GNOME
+Comment[fr]=Mélangeur de son ALSA pour GNOME
+Exec=gnome-alsamixer
+Type=Application
+"""
+
 recently_used = """<?xml version="1.0"?>
 <RecentFiles>
 <RecentItem>
