@@ -32,7 +32,7 @@ MimeType objects
 .. autofunction:: lookup
 
 .. autoclass:: MIMEtype
-   :members: get_comment
+   :members: canonical, inherits_from
    
    .. attribute:: media
    
@@ -41,3 +41,8 @@ MimeType objects
    .. attribute:: subtype
       
       e.g. 'plain'
+      
+   .. automethod:: get_comment
+   
+   .. versionadded:: 0.25
+      :meth:`MIMEtype.canonical` and :meth:`MIMEtype.inherits_from`.

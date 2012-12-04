@@ -68,3 +68,15 @@ class MimeTest(unittest.TestCase):
         self.check_mimetype(dot_c, 'text', 'x-csrc')
         dot_C = Mime.get_type_by_name('foo.C')
         self.check_mimetype(dot_C, 'text', 'x-c++src')
+    
+    def test_canonical(self):
+        text_xml = Mime.lookup('text/xml')
+        self.check_mimetype(text_xml, 'text', 'xml')
+        self.check_mimetype(text_xml.canonical(), 'application', 'xml')
+    
+    def test_inheritance(self):
+        text_python = Mime.lookup('text/x-python')
+        self.check_mimetype(text_python, 'text', 'x-python')
+        text_plain = Mime.lookup('text/plain')
+        app_executable = Mime.lookup('application/x-executable')
+        self.assertEqual(text_python.inherits_from(), set([text_plain, app_executable]))

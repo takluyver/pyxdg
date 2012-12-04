@@ -24,10 +24,11 @@ import stat
 import sys
 import fnmatch
 
-import xdg.BaseDirectory
+from xdg import BaseDirectory
 import xdg.Locale
 
 from xml.dom import minidom, XML_NAMESPACE
+from collections import defaultdict
 
 FREE_NS = 'http://www.freedesktop.org/standards/shared-mime-info'
 
@@ -71,7 +72,7 @@ class MIMEtype:
     def _load(self):
         "Loads comment for current language. Use get_comment() instead."
         resource = os.path.join('mime', self.media, self.subtype + '.xml')
-        for path in xdg.BaseDirectory.load_data_paths(resource):
+        for path in BaseDirectory.load_data_paths(resource):
             doc = minidom.parse(path)
             if doc is None:
                 continue
@@ -90,6 +91,19 @@ class MIMEtype:
             self._comment = (0, str(self))
             self._load()
         return self._comment[1]
+    
+    def canonical(self):
+        """Returns the canonical MimeType object if this is an alias."""
+        update_cache()
+        s = str(self)
+        if s in aliases:
+            return lookup(aliases[s])
+        return self
+    
+    def inherits_from(self):
+        """Returns a set of Mime types which this inherits from."""
+        update_cache()
+        return set(lookup(t) for t in inheritance[str(self)])
 
     def __str__(self):
         return self.media + '/' + self.subtype
@@ -322,13 +336,15 @@ app_exe = lookup('application', 'executable')
 _cache_uptodate = False
 
 def _cache_database():
-    global exts, globs, literals, magic, _cache_uptodate
+    global exts, globs, literals, magic, aliases, inheritance, _cache_uptodate
 
     _cache_uptodate = True
 
     exts = {}       # Maps extensions to types
     globs = []      # List of (glob, type) pairs
-    literals = {}   # Maps liternal names to types
+    literals = {}   # Maps literal names to types
+    aliases = {}    # Maps alias Mime types to canonical names
+    inheritance = defaultdict(set) # Maps to sets of parent mime types.
     magic = MagicDB()
 
     def _import_glob_file(path):
@@ -351,18 +367,35 @@ def _cache_database():
             else:
                 literals[pattern] = mtype
 
-    for path in xdg.BaseDirectory.load_data_paths(os.path.join('mime', 'globs')):
+    for path in BaseDirectory.load_data_paths(os.path.join('mime', 'globs')):
         _import_glob_file(path)
-    for path in xdg.BaseDirectory.load_data_paths(os.path.join('mime', 'magic')):
+    for path in BaseDirectory.load_data_paths(os.path.join('mime', 'magic')):
         magic.mergeFile(path)
 
     # Sort globs by length
     globs.sort(key=lambda x: len(x[0]) )
+    
+    # Load aliases
+    for path in BaseDirectory.load_data_paths(os.path.join('mime', 'aliases')):
+        with open(path, 'r') as f:
+            for line in f:
+                alias, canonical = line.strip().split(None, 1)
+                aliases[alias] = canonical
+    
+    # Load subclasses
+    for path in BaseDirectory.load_data_paths(os.path.join('mime', 'subclasses')):
+        with open(path, 'r') as f:
+            for line in f:
+                sub, parent = line.strip().split(None, 1)
+                inheritance[sub].add(parent)
+
+def update_cache():
+    if not _cache_uptodate:
+        _cache_database()
 
 def get_type_by_name(path):
     """Returns type of file by its name, or None if not known"""
-    if not _cache_uptodate:
-        _cache_database()
+    update_cache()
 
     leaf = os.path.basename(path)
     if leaf in literals:
@@ -395,15 +428,13 @@ def get_type_by_name(path):
 
 def get_type_by_contents(path, max_pri=100, min_pri=0):
     """Returns type of file by its contents, or None if not known"""
-    if not _cache_uptodate:
-        _cache_database()
+    update_cache()
 
     return magic.match(path, max_pri, min_pri)
 
 def get_type_by_data(data, max_pri=100, min_pri=0):
     """Returns type of the data, which should be bytes."""
-    if not _cache_uptodate:
-        _cache_database()
+    update_cache()
 
     return magic.match_data(data, max_pri, min_pri)
 
@@ -420,8 +451,7 @@ def get_type(path, follow=True, name_pri=100):
     This tries to use the contents of the file, and falls back to the name. It
     can also handle special filesystem objects like directories and sockets.
     """
-    if not _cache_uptodate:
-        _cache_database()
+    update_cache()
     
     try:
         if follow:
@@ -462,7 +492,7 @@ def install_mime_info(application, package_file):
     # See if the file is already installed
     package_dir = os.path.join('mime', 'packages')
     resource = os.path.join(package_dir, application)
-    for x in xdg.BaseDirectory.load_data_paths(resource):
+    for x in BaseDirectory.load_data_paths(resource):
         try:
             old_data = open(x).read()
         except:
@@ -475,14 +505,14 @@ def install_mime_info(application, package_file):
 
     # Not already installed; add a new copy
     # Create the directory structure...
-    new_file = os.path.join(xdg.BaseDirectory.save_data_path(package_dir), application)
+    new_file = os.path.join(BaseDirectory.save_data_path(package_dir), application)
 
     # Write the file...
     open(new_file, 'w').write(new_data)
 
     # Update the database...
     command = 'update-mime-database'
-    if os.spawnlp(os.P_WAIT, command, command, xdg.BaseDirectory.save_data_path('mime')):
+    if os.spawnlp(os.P_WAIT, command, command, BaseDirectory.save_data_path('mime')):
         os.unlink(new_file)
         raise Exception("The '%s' command returned an error code!\n" \
                   "Make sure you have the freedesktop.org shared MIME package:\n" \
