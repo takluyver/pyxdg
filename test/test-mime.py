@@ -62,3 +62,9 @@ class MimeTest(unittest.TestCase):
         self.check_mimetype(pdf1, 'application', 'pdf')
         
         pdf1.get_comment()
+
+    def test_by_name(self):
+        dot_c = Mime.get_type_by_name('foo.c')
+        self.check_mimetype(dot_c, 'text', 'x-csrc')
+        dot_C = Mime.get_type_by_name('foo.C')
+        self.check_mimetype(dot_C, 'text', 'x-c++src')
