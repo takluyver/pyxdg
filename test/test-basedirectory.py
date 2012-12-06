@@ -4,6 +4,7 @@ import os
 from os import environ
 import unittest
 import tempfile, shutil
+import stat
 
 try:
     reload
@@ -83,3 +84,24 @@ class BaseDirectoryTest(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir)
             shutil.rmtree(tmpdir2)
+
+    def test_runtime_dir(self):
+        rd = '/pyxdg-example/run/user/fred'
+        environ['XDG_RUNTIME_DIR'] = rd
+        self.assertEqual(BaseDirectory.get_runtime_dir(strict=True), rd)
+        self.assertEqual(BaseDirectory.get_runtime_dir(strict=False), rd)
+    
+    def test_runtime_dir_notset(self):
+        environ.pop('XDG_RUNTIME_DIR', None)
+        self.assertRaises(KeyError, BaseDirectory.get_runtime_dir, strict=True)
+        fallback = BaseDirectory.get_runtime_dir(strict=False)
+        assert fallback.startswith('/tmp/'), fallback
+        assert os.path.isdir(fallback), fallback
+        mode = stat.S_IMODE(os.stat(fallback).st_mode)
+        self.assertEqual(mode, stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)
+        
+        # Calling it again should return the same directory.
+        fallback2 = BaseDirectory.get_runtime_dir(strict=False)
+        self.assertEqual(fallback, fallback2)
+        mode = stat.S_IMODE(os.stat(fallback2).st_mode)
+        self.assertEqual(mode, stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)

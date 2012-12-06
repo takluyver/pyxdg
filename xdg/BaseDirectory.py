@@ -106,3 +106,40 @@ def load_data_paths(*resource):
     for data_dir in xdg_data_dirs:
         path = os.path.join(data_dir, resource)
         if os.path.exists(path): yield path
+
+def get_runtime_dir(strict=True):
+    """Returns the value of $XDG_RUNTIME_DIR, a directory path.
+    
+    This directory is intended for 'user-specific non-essential runtime files
+    and other file objects (such as sockets, named pipes, ...)', and
+    'communication and synchronization purposes'.
+    
+    As of late 2012, only quite new systems set $XDG_RUNTIME_DIR. If it is not
+    set, with ``strict=True`` (the default), a KeyError is raised. With 
+    ``strict=False``, PyXDG will create a fallback under /tmp for the current
+    user. This fallback does *not* provide the same guarantees as the
+    specification requires for the runtime directory.
+    
+    The strict default is deliberately conservative, so that application
+    developers can make a conscious decision to allow the fallback.
+    """
+    try:
+        return os.environ['XDG_RUNTIME_DIR']
+    except KeyError:
+        if strict:
+            raise
+        
+        import getpass
+        fallback = '/tmp/pyxdg-runtime-dir-fallback-' + getpass.getuser()
+        try:
+            os.mkdir(fallback, 0o700)
+        except OSError as e:
+            import errno
+            if e.errno == errno.EEXIST:
+                # Already exists - set 700 permissions again.
+                import stat
+                os.chmod(fallback, stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)
+            else: # pragma: no cover
+                raise
+        
+        return fallback

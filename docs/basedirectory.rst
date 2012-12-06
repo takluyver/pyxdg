@@ -50,3 +50,8 @@ Cache directory
 .. data:: xdg_cache_home
 
    $XDG_CACHE_HOME or the default, ``~/.cache``
+
+Runtime directory
+-----------------
+
+.. autofunction:: get_runtime_dir
