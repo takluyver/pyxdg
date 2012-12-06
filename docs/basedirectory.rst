@@ -55,3 +55,5 @@ Runtime directory
 -----------------
 
 .. autofunction:: get_runtime_dir
+
+   .. versionadded:: 0.25
