@@ -312,32 +312,162 @@ class Layout:
         self.order.append(["Merge", type])
 
 
+class Expression(object):
+
+    (
+        TYPE_ALL,
+        TYPE_OR,
+        TYPE_AND,
+        TYPE_NOT,
+        TYPE_EQUALS,
+        TYPE_IN,
+        TYPE_FILENAME,
+        TYPE_CATEGORY
+    ) = range(8)
+
+    def evaluate(self):
+        pass
+
+    def __bool__(self):
+        return self.evaluate()
+
+
+class EqualsExpression(Expression):
+
+    type = Expression.TYPE_EQUALS
+
+    def __init__(self, lhs, rhs):
+        self.leftValue = lhs
+        self.rightValue = rhs
+
+    def evaluate(self):
+        return (self.leftValue == self.rightValue)
+
+    def __str__(self):
+        return "(%s) == (%s)" % (self.leftValue, self.rightValue)
+
+
+class InExpression(Expression):
+
+    type = Expression.TYPE_IN
+
+    def __init__(self, lhs, rhs):
+        self.leftValue = lhs
+        self.rightValue = rhs
+
+    def evaluate(self):
+        return bool(self.leftValue in self.rightValue)
+
+    def __str__(self):
+        return "(%s) in (%s)" % (self.leftValue, self.rightValue)
+
+
+class AllExpression(Expression):
+
+    type = Expression.TYPE_ALL
+
+    def evaluate(self):
+        return True
+
+    def __str__(self):
+        return "True"
+
+
+class AndExpression(Expression):
+
+    type = Expression.TYPE_AND
+
+    def __init__(self, *args):
+        self.expressions = list(args)
+
+    def evaluate(self):
+        prev = self.expressions[0].evaluate()
+        for next in self.expressions[1:]:
+            prev = bool(prev and next.evaluate())
+        return prev
+
+    def __str__(self):
+        return " and ".join(["(%s)" % expr for expr in self.expressions])
+
+
+class OrExpression(Expression):
+
+    type = Expression.TYPE_OR
+
+    def __init__(self, *args):
+        self.expressions = list(args)
+
+    def evaluate(self):
+        prev = self.expressions[0].evaluate()
+        for next in self.expressions[1:]:
+            prev = bool(prev or next.evaluate())
+        return prev
+
+    def __str__(self):
+        return " or ".join(["(%s)" % expr for expr in self.expressions])
+
+
+class NotExpression(Expression):
+
+    type = Expression.TYPE_NOT
+
+    def __init__(self, expr):
+        self.expression = expr
+
+    def evaluate(self):
+        return not self.expression.evaluate()
+
+    def __str__(self):
+        return "not (%s)" % self.expression
+
+
+class FilenameExpression(EqualsExpression):
+
+    type = Expression.TYPE_FILENAME
+
+    def __init__(self, value, context=None):
+        super(FilenameExpression, self).__init__(
+            context,
+            value.strip().replace("\\", r"\\").replace("'", r"\'")
+        )
+
+    def __str__(self):
+        return "('%s') == ('%s')" % (self.leftValue, self.rightValue)
+
+
+class CategoryExpression(InExpression):
+
+    type = Expression.TYPE_CATEGORY
+
+    def __init__(self, value, context=None):
+        super(CategoryExpression, self).__init__(value.strip(), context)
+
+    def __str__(self):
+        return "('%s') in (%s)" % (self.leftValue, self.rightValue)
+
+
 class Rule:
     "Inlcude / Exclude Rules Class"
     def __init__(self, type, node=None):
         # Type is Include or Exclude
         self.Type = type
         # Rule is a python expression
-        self.Rule = ""
-
-        # Private attributes, only needed for parsing
-        self.Depth = 0
-        self.Expr = [ "or" ]
-        self.New = True
+        self.Rule = OrExpression()
 
         # Begin parsing
         if node:
-            self.parseNode(node)
+            self.Rule = self.parseRule(node)
 
     def __str__(self):
         return self.Rule
-    
+
     def do(self, menuentries, type, run):
         for menuentry in menuentries:
-            if run == 2 and ( menuentry.MatchedInclude == True \
-            or menuentry.Allocated == True ):
+            if run == 2 and (menuentry.MatchedInclude is True or
+                             menuentry.Allocated is True):
                 continue
-            elif eval(self.Rule):
+            self.visitRule(self.Rule, menuentry)
+            if self.Rule.evaluate():
                 if type == "Include":
                     menuentry.Add = True
                     menuentry.MatchedInclude = True
@@ -345,77 +475,88 @@ class Rule:
                     menuentry.Add = False
         return menuentries
 
-    def parseNode(self, node):
+    def visitRule(self, expr, menuentry):
+        t = expr.type
+        if t == Expression.TYPE_CATEGORY:
+            expr.rightValue = menuentry.Categories
+        elif t == Expression.TYPE_FILENAME:
+            expr.leftValue = menuentry.DesktopFileID
+        elif t == Expression.TYPE_OR or t == Expression.TYPE_AND:
+            for childExpr in expr.expressions:
+                self.visitRule(childExpr, menuentry)
+        elif t == Expression.TYPE_NOT:
+            self.visitRule(expr.expression, menuentry)
+        elif t == Expression.TYPE_ALL:
+            pass
+        else:
+            raise TypeError("Unknown Expression type")
+
+    def parseRule(self, node):
+        expr = OrExpression()
         for child in node.childNodes:
-            if child.nodeType == ELEMENT_NODE:
-                if child.tagName == 'Filename':
-                    try:
-                        self.parseFilename(child.childNodes[0].nodeValue)
-                    except IndexError:
-                        raise ValidationError('Filename cannot be empty', "???")
-                elif child.tagName == 'Category':
-                    try:
-                        self.parseCategory(child.childNodes[0].nodeValue)
-                    except IndexError:
-                        raise ValidationError('Category cannot be empty', "???")
-                elif child.tagName == 'All':
-                    self.parseAll()
-                elif child.tagName == 'And':
-                    self.parseAnd(child)
-                elif child.tagName == 'Or':
-                    self.parseOr(child)
-                elif child.tagName == 'Not':
-                    self.parseNot(child)
+            if child.nodeType != ELEMENT_NODE:
+                continue
+            expr.expressions.append(self.parseNode(child))
+        return expr
 
-    def parseNew(self, set=True):
-        if not self.New:
-            self.Rule += " " + self.Expr[self.Depth] + " "
-        if not set:
-            self.New = True
-        elif set:
-            self.New = False
-
-    def parseFilename(self, value):
-        self.parseNew()
-        self.Rule += "menuentry.DesktopFileID == '%s'" % value.strip().replace("\\", r"\\").replace("'", r"\'")
-
-    def parseCategory(self, value):
-        self.parseNew()
-        self.Rule += "'%s' in menuentry.Categories" % value.strip()
-
-    def parseAll(self):
-        self.parseNew()
-        self.Rule += "True"
+    def parseNode(self, node):
+        tag = node.tagName
+        if tag == 'Or':
+            return self.parseOr(node)
+        elif tag == 'And':
+            return self.parseAnd(node)
+        elif tag == 'Not':
+            return self.parseNot(node)
+        elif tag == 'Category':
+            return self.parseCategory(node)
+        elif tag == 'Filename':
+            return self.parseFilename(node)
+        elif tag == 'All':
+            return self.parseAll(node)
 
     def parseAnd(self, node):
-        self.parseNew(False)
-        self.Rule += "("
-        self.Depth += 1
-        self.Expr.append("and")
-        self.parseNode(node)
-        self.Depth -= 1
-        self.Expr.pop()
-        self.Rule += ")"
+        expr = AndExpression()
+        for child in node.childNodes:
+            if child.nodeType != ELEMENT_NODE:
+                continue
+            rule = self.parseNode(child)
+            expr.expressions.append(rule)
+        return expr
 
     def parseOr(self, node):
-        self.parseNew(False)
-        self.Rule += "("
-        self.Depth += 1
-        self.Expr.append("or")
-        self.parseNode(node)
-        self.Depth -= 1
-        self.Expr.pop()
-        self.Rule += ")"
+        expr = OrExpression()
+        for child in node.childNodes:
+            if child.nodeType != ELEMENT_NODE:
+                continue
+            rule = self.parseNode(child)
+            expr.expressions.append(rule)
+        return expr
 
     def parseNot(self, node):
-        self.parseNew(False)
-        self.Rule += "not ("
-        self.Depth += 1
-        self.Expr.append("or")
-        self.parseNode(node)
-        self.Depth -= 1
-        self.Expr.pop()
-        self.Rule += ")"
+        expr = OrExpression()
+        for child in node.childNodes:
+            if child.nodeType != ELEMENT_NODE:
+                continue
+            rule = self.parseNode(child)
+            expr.expressions.append(rule)
+        return NotExpression(expr)
+
+    def parseCategory(self, node):
+        try:
+            category = node.childNodes[0].nodeValue
+        except IndexError:
+            raise ValidationError('Category cannot be empty', "???")
+        return CategoryExpression(category)
+
+    def parseFilename(self, node):
+        try:
+            filename = node.childNodes[0].nodeValue
+        except IndexError:
+            raise ValidationError('Filename cannot be empty', "???")
+        return FilenameExpression(filename)
+
+    def parseAll(self, node):
+        return AllExpression()
 
 
 class MenuEntry:
