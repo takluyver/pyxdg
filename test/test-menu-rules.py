@@ -1,10 +1,5 @@
-import sys
-import os
 import xml.dom.minidom
 import unittest
-
-sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..'))
 
 from xdg.Menu import Rule
 
