@@ -19,6 +19,7 @@ print_menu(parse())
 
 import locale, os, xml.dom.minidom
 import subprocess
+import ast
 
 from xdg.BaseDirectory import xdg_data_dirs, xdg_config_dirs
 from xdg.DesktopEntry import DesktopEntry
@@ -312,138 +313,18 @@ class Layout:
         self.order.append(["Merge", type])
 
 
-class Expression(object):
+class RuleTransformer(ast.NodeTransformer):
 
-    (
-        TYPE_ALL,
-        TYPE_OR,
-        TYPE_AND,
-        TYPE_NOT,
-        TYPE_EQUALS,
-        TYPE_IN,
-        TYPE_FILENAME,
-        TYPE_CATEGORY
-    ) = range(8)
+    def __init__(self, menuentry):
+        self.entry = menuentry
 
-    def evaluate(self):
-        pass
-
-    def __bool__(self):
-        return self.evaluate()
-
-
-class EqualsExpression(Expression):
-
-    type = Expression.TYPE_EQUALS
-
-    def __init__(self, lhs, rhs):
-        self.leftValue = lhs
-        self.rightValue = rhs
-
-    def evaluate(self):
-        return (self.leftValue == self.rightValue)
-
-    def __str__(self):
-        return "(%s) == (%s)" % (self.leftValue, self.rightValue)
-
-
-class InExpression(Expression):
-
-    type = Expression.TYPE_IN
-
-    def __init__(self, lhs, rhs):
-        self.leftValue = lhs
-        self.rightValue = rhs
-
-    def evaluate(self):
-        return bool(self.leftValue in self.rightValue)
-
-    def __str__(self):
-        return "(%s) in (%s)" % (self.leftValue, self.rightValue)
-
-
-class AllExpression(Expression):
-
-    type = Expression.TYPE_ALL
-
-    def evaluate(self):
-        return True
-
-    def __str__(self):
-        return "True"
-
-
-class AndExpression(Expression):
-
-    type = Expression.TYPE_AND
-
-    def __init__(self, *args):
-        self.expressions = list(args)
-
-    def evaluate(self):
-        prev = self.expressions[0].evaluate()
-        for next in self.expressions[1:]:
-            prev = bool(prev and next.evaluate())
-        return prev
-
-    def __str__(self):
-        return " and ".join(["(%s)" % expr for expr in self.expressions])
-
-
-class OrExpression(Expression):
-
-    type = Expression.TYPE_OR
-
-    def __init__(self, *args):
-        self.expressions = list(args)
-
-    def evaluate(self):
-        prev = self.expressions[0].evaluate()
-        for next in self.expressions[1:]:
-            prev = bool(prev or next.evaluate())
-        return prev
-
-    def __str__(self):
-        return " or ".join(["(%s)" % expr for expr in self.expressions])
-
-
-class NotExpression(Expression):
-
-    type = Expression.TYPE_NOT
-
-    def __init__(self, expr):
-        self.expression = expr
-
-    def evaluate(self):
-        return not self.expression.evaluate()
-
-    def __str__(self):
-        return "not (%s)" % self.expression
-
-
-class FilenameExpression(EqualsExpression):
-
-    type = Expression.TYPE_FILENAME
-
-    def __init__(self, value, context=None):
-        super(FilenameExpression, self).__init__(
-            context,
-            value.strip().replace("\\", r"\\").replace("'", r"\'")
-        )
-
-    def __str__(self):
-        return "('%s') == ('%s')" % (self.leftValue, self.rightValue)
-
-
-class CategoryExpression(InExpression):
-
-    type = Expression.TYPE_CATEGORY
-
-    def __init__(self, value, context=None):
-        super(CategoryExpression, self).__init__(value.strip(), context)
-
-    def __str__(self):
-        return "('%s') in (%s)" % (self.leftValue, self.rightValue)
+    def visit_Compare(self, node):
+        if isinstance(node.ops[0], ast.Eq):
+            new = ast.Compare(node.left, node.ops, [ast.Str(self.entry.DesktopFileID)])
+        elif isinstance(node.ops[0], ast.In):
+            new = ast.Compare(node.left, node.ops,
+                    [ast.List(self.entry.Categories, ast.Load())])
+        return ast.copy_location(new, node)
 
 
 class Rule:
@@ -452,22 +333,26 @@ class Rule:
         # Type is Include or Exclude
         self.Type = type
         # Rule is a python expression
-        self.Rule = OrExpression()
+        self.Rule = ast.Expression()
 
         # Begin parsing
         if node:
-            self.Rule = self.parseRule(node)
+            tree = ast.Expression(
+                body=self.parseRule(node),
+                lineno=1, col_offset=0
+            )
+            ast.fix_missing_locations(tree)
+            self.Rule = compile(tree, '<compiled-rule>', 'eval')
 
     def __str__(self):
-        return self.Rule
+        return ast.dump(self.Rule)
 
     def do(self, menuentries, type, run):
         for menuentry in menuentries:
             if run == 2 and (menuentry.MatchedInclude is True or
                              menuentry.Allocated is True):
                 continue
-            self.visitRule(self.Rule, menuentry)
-            if self.Rule.evaluate():
+            if eval(self.Rule):
                 if type == "Include":
                     menuentry.Add = True
                     menuentry.MatchedInclude = True
@@ -475,28 +360,12 @@ class Rule:
                     menuentry.Add = False
         return menuentries
 
-    def visitRule(self, expr, menuentry):
-        t = expr.type
-        if t == Expression.TYPE_CATEGORY:
-            expr.rightValue = menuentry.Categories
-        elif t == Expression.TYPE_FILENAME:
-            expr.leftValue = menuentry.DesktopFileID
-        elif t == Expression.TYPE_OR or t == Expression.TYPE_AND:
-            for childExpr in expr.expressions:
-                self.visitRule(childExpr, menuentry)
-        elif t == Expression.TYPE_NOT:
-            self.visitRule(expr.expression, menuentry)
-        elif t == Expression.TYPE_ALL:
-            pass
-        else:
-            raise TypeError("Unknown Expression type")
-
     def parseRule(self, node):
-        expr = OrExpression()
+        expr = ast.BoolOp(ast.Or(), [])
         for child in node.childNodes:
             if child.nodeType != ELEMENT_NODE:
                 continue
-            expr.expressions.append(self.parseNode(child))
+            expr.values.append(self.parseNode(child))
         return expr
 
     def parseNode(self, node):
@@ -515,48 +384,64 @@ class Rule:
             return self.parseAll(node)
 
     def parseAnd(self, node):
-        expr = AndExpression()
+        expr = ast.BoolOp(ast.And(), [])
         for child in node.childNodes:
             if child.nodeType != ELEMENT_NODE:
                 continue
             rule = self.parseNode(child)
-            expr.expressions.append(rule)
+            expr.values.append(rule)
         return expr
 
     def parseOr(self, node):
-        expr = OrExpression()
+        expr = ast.BoolOp(ast.Or(), [])
         for child in node.childNodes:
             if child.nodeType != ELEMENT_NODE:
                 continue
             rule = self.parseNode(child)
-            expr.expressions.append(rule)
+            expr.values.append(rule)
         return expr
 
     def parseNot(self, node):
-        expr = OrExpression()
+        expr = ast.BoolOp(ast.Or(), [])
         for child in node.childNodes:
             if child.nodeType != ELEMENT_NODE:
                 continue
             rule = self.parseNode(child)
-            expr.expressions.append(rule)
-        return NotExpression(expr)
+            expr.values.append(rule)
+        return ast.UnaryOp(ast.Not(), expr)
 
     def parseCategory(self, node):
         try:
             category = node.childNodes[0].nodeValue
         except IndexError:
             raise ValidationError('Category cannot be empty', "???")
-        return CategoryExpression(category)
+        return ast.Compare(
+            left=ast.Str(category),
+            ops=[ast.In()],
+            comparators=[ast.Attribute(
+                value=ast.Name(id='menuentry', ctx=ast.Load()),
+                attr='Categories',
+                ctx=ast.Load()
+            )]
+        )
 
     def parseFilename(self, node):
         try:
             filename = node.childNodes[0].nodeValue
         except IndexError:
             raise ValidationError('Filename cannot be empty', "???")
-        return FilenameExpression(filename)
+        return ast.Compare(
+            left=ast.Str(filename),
+            ops=[ast.Eq()],
+            comparators=[ast.Attribute(
+                value=ast.Name(id='menuentry', ctx=ast.Load()),
+                attr='DesktopFileID',
+                ctx=ast.Load()
+            )]
+        )
 
     def parseAll(self, node):
-        return AllExpression()
+        return ast.Name('True', ast.Load())
 
 
 class MenuEntry:

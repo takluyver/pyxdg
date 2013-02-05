@@ -63,11 +63,6 @@ class MockMenuEntry(object):
         return "<%s: %s>" % (self.DesktopFileID, self.Categories)
 
 
-def evaluate(rule, entry):
-    rule.visitRule(rule.Rule, entry)
-    return rule.Rule.evaluate()
-
-
 class RulesTest(unittest.TestCase):
     """Basic rule matching tests"""
 
@@ -78,6 +73,6 @@ class RulesTest(unittest.TestCase):
             rule = Rule(type, root)
             for i, data in enumerate(test['data']):
                 menuentry = MockMenuEntry(data[0], data[1])
-                result = evaluate(rule, menuentry)
+                result = eval(rule.Rule)
                 message = "Error with result set %s: got %s, expected %s"
                 assert result == data[2], message % (i, result, data[2])
