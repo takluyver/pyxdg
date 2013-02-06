@@ -313,27 +313,11 @@ class Layout:
         self.order.append(["Merge", type])
 
 
-class RuleTransformer(ast.NodeTransformer):
-
-    def __init__(self, menuentry):
-        self.entry = menuentry
-
-    def visit_Compare(self, node):
-        if isinstance(node.ops[0], ast.Eq):
-            new = ast.Compare(node.left, node.ops, [ast.Str(self.entry.DesktopFileID)])
-        elif isinstance(node.ops[0], ast.In):
-            new = ast.Compare(node.left, node.ops,
-                    [ast.List(self.entry.Categories, ast.Load())])
-        return ast.copy_location(new, node)
-
-
 class Rule:
     "Inlcude / Exclude Rules Class"
     def __init__(self, type, node=None):
         # Type is Include or Exclude
         self.Type = type
-        # Rule is a python expression
-        self.Rule = ast.Expression()
 
         # Begin parsing
         if node:
@@ -341,13 +325,16 @@ class Rule:
                 body=self.parseRule(node),
                 lineno=1, col_offset=0
             )
-            ast.fix_missing_locations(tree)
-            self.Rule = compile(tree, '<compiled-rule>', 'eval')
+        else:
+            tree = ast.Expression(ast.Name('False', ast.Load()))
+        ast.fix_missing_locations(tree)
+        # Rule is a compiled python expression
+        self.Rule = compile(tree, '<compiled-rule>', 'eval')
 
     def __str__(self):
         return ast.dump(self.Rule)
 
-    def do(self, menuentries, type, run):
+    def apply(self, menuentries, type, run):
         for menuentry in menuentries:
             if run == 2 and (menuentry.MatchedInclude is True or
                              menuentry.Allocated is True):
@@ -953,7 +940,7 @@ def __genmenuNotOnlyAllocated(menu):
         tmp["cache"].addMenuEntries(menu.AppDirs)
         menuentries = []
         for rule in menu.Rules:
-            menuentries = rule.do(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 1)
+            menuentries = rule.apply(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 1)
         for menuentry in menuentries:
             if menuentry.Add == True:
                 menuentry.Parents.append(menu)
@@ -969,7 +956,7 @@ def __genmenuOnlyAllocated(menu):
         tmp["cache"].addMenuEntries(menu.AppDirs)
         menuentries = []
         for rule in menu.Rules:
-            menuentries = rule.do(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 2)
+            menuentries = rule.apply(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 2)
         for menuentry in menuentries:
             if menuentry.Add == True:
                 menuentry.Parents.append(menu)
