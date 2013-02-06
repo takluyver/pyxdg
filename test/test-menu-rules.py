@@ -71,13 +71,24 @@ def evaluate(rule, entry):
 class RulesTest(unittest.TestCase):
     """Basic rule matching tests"""
 
-    def test_rules(self):
-        for test in _tests:
+    def test_rule_from_node(self):
+        for i, test in enumerate(_tests):
             root = xml.dom.minidom.parseString(test['doc']).childNodes[0]
-            type = root.tagName
-            rule = Rule(type, root)
-            for i, data in enumerate(test['data']):
+            rule = Rule.fromNode(root)
+            for j, data in enumerate(test['data']):
                 menuentry = MockMenuEntry(data[0], data[1])
-                result = evaluate(rule, menuentry)
-                message = "Error with result set %s: got %s, expected %s"
-                assert result == data[2], message % (i, result, data[2])
+                result = eval(rule.Rule)
+                message = "Error in test %s with result set %s: got %s, expected %s"
+                assert result == data[2], message % (i, j, result, data[2])
+
+    def test_rule_from_filename(self):
+        tests = [
+            ('foobar.desktop', 'foobar.desktop', True),
+            ('barfoo.desktop', 'foobar.desktop', False)
+        ]
+        for i, test in enumerate(tests):
+            rule = Rule.fromFilename('Include', test[0])
+            menuentry = MockMenuEntry(test[1], [])
+            result = eval(rule.Rule)
+            message = "Error with result set %s: got %s, expected %s"
+            assert result == test[2], message % (i, result, test[2])

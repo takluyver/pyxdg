@@ -432,7 +432,7 @@ class FilenameExpression(EqualsExpression):
         )
 
     def __str__(self):
-        return "('%s') == ('%s')" % (self.leftValue, self.rightValue)
+        return "(%s) == ('%s')" % (self.leftValue, self.rightValue)
 
 
 class CategoryExpression(InExpression):
@@ -448,44 +448,55 @@ class CategoryExpression(InExpression):
 
 class Rule:
     "Inlcude / Exclude Rules Class"
-    def __init__(self, type, node=None):
+
+    @classmethod
+    def fromNode(cls, node):
+        rule = cls(node.tagName)
+        expr = rule.parseRule(node)
+        rule.visitExpression(expr)
+        rule.Rule = compile(str(expr), '<compiled Rule>', 'eval')
+        return rule
+
+    @classmethod
+    def fromFilename(cls, type, filename):
+        rule = cls(type)
+        expr = FilenameExpression(filename, 'menuentry.DesktopFileID')
+        rule.Rule = compile(str(expr), '<compiled Rule>', 'eval')
+        return rule
+
+    def __init__(self, type):
         # Type is Include or Exclude
         self.Type = type
-        # Rule is a python expression
-        self.Rule = OrExpression()
-
-        # Begin parsing
-        if node:
-            self.Rule = self.parseRule(node)
+        # Rule is a compiled python expression
+        self.Rule = None
 
     def __str__(self):
         return self.Rule
 
-    def do(self, menuentries, type, run):
+    def apply(self, menuentries, run):
         for menuentry in menuentries:
             if run == 2 and (menuentry.MatchedInclude is True or
                              menuentry.Allocated is True):
                 continue
-            self.visitRule(self.Rule, menuentry)
-            if self.Rule.evaluate():
-                if type == "Include":
+            if eval(self.Rule):
+                if self.Type == "Include":
                     menuentry.Add = True
                     menuentry.MatchedInclude = True
                 else:
                     menuentry.Add = False
         return menuentries
 
-    def visitRule(self, expr, menuentry):
+    def visitExpression(self, expr):
         t = expr.type
         if t == Expression.TYPE_CATEGORY:
-            expr.rightValue = menuentry.Categories
+            expr.rightValue = 'menuentry.Categories'
         elif t == Expression.TYPE_FILENAME:
-            expr.leftValue = menuentry.DesktopFileID
+            expr.leftValue = 'menuentry.DesktopFileID'
         elif t == Expression.TYPE_OR or t == Expression.TYPE_AND:
             for childExpr in expr.expressions:
-                self.visitRule(childExpr, menuentry)
+                self.visitExpression(childExpr)
         elif t == Expression.TYPE_NOT:
-            self.visitRule(expr.expression, menuentry)
+            self.visitExpression(expr.expression)
         elif t == Expression.TYPE_ALL:
             pass
         else:
@@ -772,7 +783,7 @@ def __parse(node, filename, parent=None):
             elif child.tagName == 'NotDeleted':
                 parent.Deleted = False
             elif child.tagName == 'Include' or child.tagName == 'Exclude':
-                parent.Rules.append(Rule(child.tagName, child))
+                parent.Rules.append(Rule.fromNode(child))
             elif child.tagName == 'MergeFile':
                 try:
                     if child.getAttribute("type") == "parent":
@@ -1027,8 +1038,7 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
         for menuentry in menuentries:
             categories = menuentry.Categories
             if len(categories) == 0:
-                r = Rule("Include")
-                r.parseFilename(menuentry.DesktopFileID)
+                r = Rule.fromFilename("Include", menuentry.DesktopFileID)
                 m.Rules.append(r)
             if not dir in parent.AppDirs:
                 categories.append("Legacy")
@@ -1068,7 +1078,7 @@ def __genmenuNotOnlyAllocated(menu):
         tmp["cache"].addMenuEntries(menu.AppDirs)
         menuentries = []
         for rule in menu.Rules:
-            menuentries = rule.do(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 1)
+            menuentries = rule.apply(tmp["cache"].getMenuEntries(menu.AppDirs), 1)
         for menuentry in menuentries:
             if menuentry.Add == True:
                 menuentry.Parents.append(menu)
@@ -1084,7 +1094,7 @@ def __genmenuOnlyAllocated(menu):
         tmp["cache"].addMenuEntries(menu.AppDirs)
         menuentries = []
         for rule in menu.Rules:
-            menuentries = rule.do(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 2)
+            menuentries = rule.apply(tmp["cache"].getMenuEntries(menu.AppDirs), 2)
         for menuentry in menuentries:
             if menuentry.Add == True:
                 menuentry.Parents.append(menu)
