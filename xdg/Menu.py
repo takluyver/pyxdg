@@ -344,7 +344,7 @@ class EqualsExpression(Expression):
         return (self.leftValue == self.rightValue)
 
     def __str__(self):
-        return "(%s) == (%s)" % (self.leftValue, self.rightValue)
+        return "(%s == %s)" % (self.leftValue, self.rightValue)
 
 
 class InExpression(Expression):
@@ -359,7 +359,7 @@ class InExpression(Expression):
         return bool(self.leftValue in self.rightValue)
 
     def __str__(self):
-        return "(%s) in (%s)" % (self.leftValue, self.rightValue)
+        return "(%s in %s)" % (self.leftValue, self.rightValue)
 
 
 class AllExpression(Expression):
@@ -387,7 +387,11 @@ class AndExpression(Expression):
         return prev
 
     def __str__(self):
-        return " and ".join(["(%s)" % expr for expr in self.expressions])
+        if not self.expressions:
+            return ""
+        elif len(self.expressions) == 1:
+            return str(self.expressions[0])
+        return "(%s)" % " and ".join(filter(None, [str(expr) for expr in self.expressions]))
 
 
 class OrExpression(Expression):
@@ -404,7 +408,11 @@ class OrExpression(Expression):
         return prev
 
     def __str__(self):
-        return " or ".join(["(%s)" % expr for expr in self.expressions])
+        if not self.expressions:
+            return ""
+        elif len(self.expressions) == 1:
+            return str(self.expressions[0])
+        return "(%s)" % " or ".join(filter(None, [str(expr) for expr in self.expressions]))
 
 
 class NotExpression(Expression):
@@ -418,7 +426,10 @@ class NotExpression(Expression):
         return not self.expression.evaluate()
 
     def __str__(self):
-        return "not (%s)" % self.expression
+        expr = str(self.expression)
+        if not expr:
+            return ''
+        return "not %s" % expr
 
 
 class FilenameExpression(EqualsExpression):
@@ -427,12 +438,9 @@ class FilenameExpression(EqualsExpression):
 
     def __init__(self, value, context=None):
         super(FilenameExpression, self).__init__(
-            context,
-            value.strip().replace("\\", r"\\").replace("'", r"\'")
+            "'%s'" % value.strip().replace("\\", r"\\").replace("'", r"\'"),
+            context
         )
-
-    def __str__(self):
-        return "(%s) == ('%s')" % (self.leftValue, self.rightValue)
 
 
 class CategoryExpression(InExpression):
@@ -440,10 +448,10 @@ class CategoryExpression(InExpression):
     type = Expression.TYPE_CATEGORY
 
     def __init__(self, value, context=None):
-        super(CategoryExpression, self).__init__(value.strip(), context)
-
-    def __str__(self):
-        return "('%s') in (%s)" % (self.leftValue, self.rightValue)
+        super(CategoryExpression, self).__init__(
+            "'%s'" % value.strip(),
+            context
+        )
 
 
 class Rule:
@@ -454,7 +462,10 @@ class Rule:
         rule = cls(node.tagName)
         expr = rule.parseRule(node)
         rule.visitExpression(expr)
-        rule.Rule = compile(str(expr), '<compiled Rule>', 'eval')
+        code_str = str(expr)
+        if not code_str:
+            code_str = 'False'
+        rule.Rule = compile(code_str, '<compiled Rule>', 'eval')
         return rule
 
     @classmethod
@@ -491,7 +502,7 @@ class Rule:
         if t == Expression.TYPE_CATEGORY:
             expr.rightValue = 'menuentry.Categories'
         elif t == Expression.TYPE_FILENAME:
-            expr.leftValue = 'menuentry.DesktopFileID'
+            expr.rightValue = 'menuentry.DesktopFileID'
         elif t == Expression.TYPE_OR or t == Expression.TYPE_AND:
             for childExpr in expr.expressions:
                 self.visitExpression(childExpr)

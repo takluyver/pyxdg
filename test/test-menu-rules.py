@@ -49,6 +49,99 @@ _tests = [
             ('app5.desktop', ['X-GNOME-Settings-Panel', 'Settings'], False),
             ('foobar.desktop', ['Settings', 'Other'], False)
         ]
+    },
+    # Empty conditions
+    {
+        'doc': "<Include></Include>",
+        'data': [
+            ('app0.desktop', ['Graphics', 'Settings'], False),
+            ('screenreader.desktop', [], False)
+        ]
+    },
+    {
+        'doc': "<Include><Or></Or></Include>",
+        'data': [
+            ('app0.desktop', ['Graphics', 'Settings'], False),
+            ('screenreader.desktop', [], False)
+        ]
+    },
+    {
+        'doc': "<Include><And></And></Include>",
+        'data': [
+            ('app0.desktop', ['Graphics', 'Settings'], False),
+            ('screenreader.desktop', [], False)
+        ]
+    },
+    {
+        'doc': "<Include><Not></Not></Include>",
+        'data': [
+            ('app0.desktop', ['Graphics', 'Settings'], False),
+            ('screenreader.desktop', [], False)
+        ]
+    },
+    {
+        'doc': """
+<Include>
+    <Filename>screenreader.desktop</Filename>
+    <Not></Not>
+</Include>
+        """,
+        'data': [
+            ('app0.desktop', ['Graphics', 'Settings'], False),
+            ('screenreader.desktop', [], True)
+        ]
+    },
+    {
+        'doc': """
+<Include>
+    <And>
+        <Filename>screenreader.desktop</Filename>
+        <Not></Not>
+    </And>
+</Include>
+        """,
+        'data': [
+            ('app0.desktop', ['Graphics', 'Settings'], False),
+            ('screenreader.desktop', [], True)
+        ]
+    },
+    # Single condition
+    {
+        'doc': "<Include><Or><Filename>foobar.desktop</Filename></Or></Include>",
+        'data': [
+            ('app0.desktop', ['Graphics', 'Settings'], False),
+            ('foobar.desktop', [], True)
+        ]
+    },
+    # All
+    {
+        'doc': "<Include><Or><All/></Or></Include>",
+        'data': [
+            ('app0.desktop', ['Graphics', 'Settings'], True),
+            ('foobar.desktop', [], True)
+        ]
+    },
+    {
+        'doc': "<Include><Filename>foobar.desktop</Filename><All/></Include>",
+        'data': [
+            ('app0.desktop', ['Graphics', 'Settings'], True),
+            ('foobar.desktop', [], True)
+        ]
+    },
+    {
+        'doc': """
+<Include>
+    <Filename>foobar.desktop</Filename>
+    <Category>Graphics</Category>
+    <Not><All/></Not>
+</Include>
+        """,
+        'data': [
+            ('app0.desktop', ['Graphics', 'Settings'], True),
+            ('app1.desktop', ['Accessibility'], False),
+            ('app2.desktop', ['Accessibility', 'Settings'], False),
+            ('foobar.desktop', [], True),
+        ]
     }
 ]
 
