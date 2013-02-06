@@ -286,7 +286,7 @@ class Layout:
                             child.getAttribute("inline") or "false",
                             child.getAttribute("inline_limit") or 4,
                             child.getAttribute("inline_header") or "true",
-                            child.getAttribute("inline_alias") or "false" )
+                            child.getAttribute("inline_alias") or "false")
                     except IndexError:
                         raise ValidationError('Menuname cannot be empty', "")
                 elif child.tagName == "Separator":
@@ -314,22 +314,42 @@ class Layout:
 
 
 class Rule:
+
+    @classmethod
+    def fromNode(cls, type, node):
+        rule = Rule(type)
+        tree = ast.Expression(
+            body=self.parseRule(node),
+            lineno=1, col_offset=0
+        )
+        ast.fix_missing_locations(tree)
+        rule.Rule = compile(tree, '<compiled-rule>', 'eval')
+        return rule
+
+    @classmethod
+    def fromFilename(cls, type, filename):
+        rule = Rule(type)
+        tree = ast.Expression(
+            body=ast.Compare(
+                left=ast.Str(filename),
+                ops=[ast.Eq()],
+                comparators=[ast.Attribute(
+                    value=ast.Name(id='menuentry', ctx=ast.Load()),
+                    attr='DesktopFileID',
+                    ctx=ast.Load()
+                )]
+            ),
+            lineno=1, col_offset=0
+        )
+        ast.fix_missing_locations(tree)
+        rule.Rule = compile(tree, '<compiled-rule>', 'eval')
+        return rule
+
     "Inlcude / Exclude Rules Class"
-    def __init__(self, type, node=None):
+    def __init__(self, type, rule=None):
         # Type is Include or Exclude
         self.Type = type
-
-        # Begin parsing
-        if node:
-            tree = ast.Expression(
-                body=self.parseRule(node),
-                lineno=1, col_offset=0
-            )
-        else:
-            tree = ast.Expression(ast.Name('False', ast.Load()))
-        ast.fix_missing_locations(tree)
-        # Rule is a compiled python expression
-        self.Rule = compile(tree, '<compiled-rule>', 'eval')
+        self.Rule = rule
 
     def __str__(self):
         return ast.dump(self.Rule)
@@ -644,7 +664,7 @@ def __parse(node, filename, parent=None):
             elif child.tagName == 'NotDeleted':
                 parent.Deleted = False
             elif child.tagName == 'Include' or child.tagName == 'Exclude':
-                parent.Rules.append(Rule(child.tagName, child))
+                parent.Rules.append(Rule.fromNode(child.tagName, child))
             elif child.tagName == 'MergeFile':
                 try:
                     if child.getAttribute("type") == "parent":
@@ -899,8 +919,7 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
         for menuentry in menuentries:
             categories = menuentry.Categories
             if len(categories) == 0:
-                r = Rule("Include")
-                r.parseFilename(menuentry.DesktopFileID)
+                r = Rule.fromFilename("Include", menuentry.DesktopFileID)
                 m.Rules.append(r)
             if not dir in parent.AppDirs:
                 categories.append("Legacy")
