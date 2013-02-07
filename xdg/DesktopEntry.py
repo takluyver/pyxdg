@@ -24,7 +24,7 @@ class DesktopEntry(IniFile):
     defaultGroup = 'Desktop Entry'
 
     def __init__(self, filename=None):
-        """Create a new DesktopEntry
+        """Create a new DesktopEntry.
         
         If filename exists, it will be parsed as a desktop entry file. If not,
         or if filename is None, a blank DesktopEntry is created.
@@ -39,7 +39,12 @@ class DesktopEntry(IniFile):
         return self.getName()
 
     def parse(self, file):
-        """Parse a desktop entry file."""
+        """Parse a desktop entry file.
+        
+        This can raise :class:`~xdg.Exceptions.ParsingError`,
+        :class:`~xdg.Exceptions.DuplicateGroupError` or
+        :class:`~xdg.Exceptions.DuplicateKeyError`.
+        """
         IniFile.parse(self, file, ["Desktop Entry", "KDE Desktop Entry"])
     
     def findTryExec(self):
@@ -150,10 +155,11 @@ class DesktopEntry(IniFile):
 
     # desktop entry edit stuff
     def new(self, filename):
-        """Make this instance into a new desktop entry.
+        """Make this instance into a new, blank desktop entry.
         
         If filename has a .desktop extension, Type is set to Application. If it
-        has a .directory extension, Type is Directory.
+        has a .directory extension, Type is Directory. Other extensions will
+        cause :class:`~xdg.Exceptions.ParsingError` to be raised.
         """
         if os.path.splitext(filename)[1] == ".desktop":
             type = "Application"

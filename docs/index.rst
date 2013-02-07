@@ -14,6 +14,7 @@ Contents:
    icontheme
    mime
    recentfiles
+   exceptions
 
 Indices and tables
 ==================

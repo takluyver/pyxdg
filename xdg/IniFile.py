@@ -192,8 +192,8 @@ class IniFile:
 
     # start validation stuff
     def validate(self, report="All"):
-        """Validate the contents, raising ``ValidationError`` if there
-        is anything amiss.
+        """Validate the contents, raising :class:`~xdg.Exceptions.ValidationError`
+        if there is anything amiss.
         
         report can be 'All' / 'Warnings' / 'Errors'
         """
