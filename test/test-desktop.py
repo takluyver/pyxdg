@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # coding: utf-8
 from xdg.DesktopEntry import DesktopEntry
-from xdg.Exceptions import ValidationError, ParsingError
+from xdg.Exceptions import ValidationError, ParsingError, NoKeyError
 from xdg.util import u
 
 import resources
@@ -92,3 +92,31 @@ class DesktopEntryTest(unittest.TestCase):
         
         # Just check this doesn't throw a UnicodeError.
         DesktopEntry(test_file)
+
+class TestTryExec(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.test_file = os.path.join(self.tmpdir, "foo.desktop")
+
+    def test_present(self):
+        with io.open(self.test_file, "w", encoding='utf-8') as f:
+            f.write(resources.python_desktop)
+        
+        entry = DesktopEntry(self.test_file)
+        res = entry.findTryExec()
+        assert res, repr(res)
+
+    def test_absent(self):
+        with io.open(self.test_file, "w", encoding='utf-8') as f:
+            f.write(resources.unicode_desktop)
+        
+        entry = DesktopEntry(self.test_file)
+        res = entry.findTryExec()
+        assert res is None, repr(res)
+        
+    def test_no_TryExec(self):
+        with io.open(self.test_file, "w", encoding='utf-8') as f:
+            f.write(resources.gedit_desktop)
+        
+        entry = DesktopEntry(self.test_file)
+        self.assertRaises(NoKeyError, entry.findTryExec)

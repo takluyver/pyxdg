@@ -6,14 +6,42 @@ Desktop Entries
 `XDG Desktop Entry Specification <http://standards.freedesktop.org/desktop-entry-spec/latest/>`_
 
 .. autoclass:: DesktopEntry
-   :members: __init__, new, parse, validate, 
+
+   .. automethod:: __init__
    
-DesktopEntry also has  get* methods for most values: getActions,
-getBinaryPattern, getCategories, getComment, getDefaultApp, getDev,
-getDocPath, getEncoding, getExec, getExtensions, getFSType, getFileName,
-getFilePattern, getGenericName, getHidden, getIcon, getInitialPreference,
-getKeywords, getList, getMapNotify, getMimeTypes, getMiniIcon, getMountPoint,
-getName, getNoDisplay, getNotShowIn, getOnlyShowIn, getPath, getProtocols,
-getReadonly, getServiceTypes, getSortOrder, getStartupNotify, getStartupWMClass,
-getSwallowExec, getSwallowTitle, getTerminal, getTerminalOptions, getTryExec,
-getType, getURL, getUnmountIcon and getVersionString.
+   .. automethod:: new
+   
+   .. automethod:: parse
+   
+   .. automethod:: validate
+   
+   .. automethod:: findTryExec
+   
+      .. versionadded:: 0.26
+   
+   .. method:: getCategories
+               getComment
+               getExec
+               getGenericName
+               getHidden
+               getIcon
+               getMimeTypes
+               getMiniIcon
+               getName
+               getNoDisplay
+               getNotShowIn
+               getOnlyShowIn
+               getPath
+               getProtocols
+               getStartupNotify
+               getStartupWMClass
+               getTerminal
+               getTerminalOptions
+               getTryExec
+               getType
+               getURL
+               getVersionString
+   
+     Convenience methods to get the values of specific fields. If the field is
+     missing, these will simply return an empty or zero value. There are similar
+     methods for deprecated and KDE specific keys, but these are not listed here.

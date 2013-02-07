@@ -1,3 +1,7 @@
+Version 0.26 ()
+    * DesktopEntry: Add a method to check the existence of the TryExec value,
+      Debian bug #618514.
+
 Version 0.25 (December 2012)
     * Add support for $XDG_RUNTIME_DIR, Debian bug #656338.
     * Allow desktop entry files that are not encoded in UTF-8, Debian bug #693855.

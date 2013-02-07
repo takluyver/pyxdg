@@ -40,10 +40,12 @@ Exec=gedit --new-window
 OnlyShowIn=Unity;
 """
 
+# Unicode, + TryExec that doesn't exist
 unicode_desktop = """[Desktop Entry]
 Name=Abc€þ
 Type=Application
 Exec=date
+TryExec=ewoirjge
 """
 
 # Invalid - see the Categories line
@@ -66,6 +68,15 @@ Comment=ALSA sound mixer for GNOME
 Comment[es]=Mezclador de sonido ALSA para GNOME
 Comment[fr]=Mélangeur de son ALSA pour GNOME
 Exec=gnome-alsamixer
+Type=Application
+"""
+
+# TryExec that should exist
+python_desktop = """[Desktop Entry]
+Name=Python
+Comment=Dynamic programming language
+Exec=python
+TryExec=python
 Type=Application
 """
 
