@@ -70,7 +70,7 @@ class RulesTest(unittest.TestCase):
         for test in _tests:
             root = xml.dom.minidom.parseString(test['doc']).childNodes[0]
             type = root.tagName
-            rule = Rule(type, root)
+            rule = Rule.fromNode(type, root)
             for i, data in enumerate(test['data']):
                 menuentry = MockMenuEntry(data[0], data[1])
                 result = eval(rule.Rule)

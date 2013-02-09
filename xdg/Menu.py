@@ -319,7 +319,7 @@ class Rule:
     def fromNode(cls, type, node):
         rule = Rule(type)
         tree = ast.Expression(
-            body=self.parseRule(node),
+            body=rule.parseRule(node),
             lineno=1, col_offset=0
         )
         ast.fix_missing_locations(tree)
@@ -368,12 +368,7 @@ class Rule:
         return menuentries
 
     def parseRule(self, node):
-        expr = ast.BoolOp(ast.Or(), [])
-        for child in node.childNodes:
-            if child.nodeType != ELEMENT_NODE:
-                continue
-            expr.values.append(self.parseNode(child))
-        return expr
+        return self.parseOr(node)
 
     def parseNode(self, node):
         tag = node.tagName
@@ -391,30 +386,31 @@ class Rule:
             return self.parseAll(node)
 
     def parseAnd(self, node):
-        expr = ast.BoolOp(ast.And(), [])
+        values = []
         for child in node.childNodes:
             if child.nodeType != ELEMENT_NODE:
                 continue
             rule = self.parseNode(child)
-            expr.values.append(rule)
-        return expr
+            values.append(rule)
+        num_values = len(values)
+        if num_values == 1:
+            return values[0]
+        return ast.BoolOp(ast.And(), values)
 
     def parseOr(self, node):
-        expr = ast.BoolOp(ast.Or(), [])
+        values = []
         for child in node.childNodes:
             if child.nodeType != ELEMENT_NODE:
                 continue
             rule = self.parseNode(child)
-            expr.values.append(rule)
-        return expr
+            values.append(rule)
+        num_values = len(values)
+        if num_values == 1:
+            return values[0]
+        return ast.BoolOp(ast.Or(), values)
 
     def parseNot(self, node):
-        expr = ast.BoolOp(ast.Or(), [])
-        for child in node.childNodes:
-            if child.nodeType != ELEMENT_NODE:
-                continue
-            rule = self.parseNode(child)
-            expr.values.append(rule)
+        expr = self.parseOr(node)
         return ast.UnaryOp(ast.Not(), expr)
 
     def parseCategory(self, node):
