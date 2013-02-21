@@ -19,6 +19,7 @@ print_menu(parse())
 
 import locale, os, xml.dom.minidom
 import subprocess
+import ast
 
 from xdg.BaseDirectory import xdg_data_dirs, xdg_config_dirs
 from xdg.DesktopEntry import DesktopEntry
@@ -29,6 +30,8 @@ import xdg.Locale
 import xdg.Config
 
 ELEMENT_NODE = xml.dom.Node.ELEMENT_NODE
+TEXT_NODE = xml.dom.Node.TEXT_NODE
+CDATA_SECTION_NODE = xml.dom.Node.CDATA_SECTION_NODE
 
 def _strxfrm(s):
     """Wrapper around locale.strxfrm that accepts unicode strings on Python 2.
@@ -285,7 +288,7 @@ class Layout:
                             child.getAttribute("inline") or "false",
                             child.getAttribute("inline_limit") or 4,
                             child.getAttribute("inline_header") or "true",
-                            child.getAttribute("inline_alias") or "false" )
+                            child.getAttribute("inline_alias") or "false")
                     except IndexError:
                         raise ValidationError('Menuname cannot be empty', "")
                 elif child.tagName == "Separator":
@@ -313,109 +316,50 @@ class Layout:
 
 
 class Rule:
-    "Inlcude / Exclude Rules Class"
-    def __init__(self, type, node=None):
-        # Type is Include or Exclude
+    """Include / Exclude Rules Class"""
+
+    TYPE_INCLUDE, TYPE_EXCLUDE = 0, 1
+
+    @classmethod
+    def fromFilename(cls, type, filename):
+        tree = ast.Expression(
+            body=ast.Compare(
+                left=ast.Str(filename),
+                ops=[ast.Eq()],
+                comparators=[ast.Attribute(
+                    value=ast.Name(id='menuentry', ctx=ast.Load()),
+                    attr='DesktopFileID',
+                    ctx=ast.Load()
+                )]
+            ),
+            lineno=1, col_offset=0
+        )
+        ast.fix_missing_locations(tree)
+        rule = Rule(type, tree)
+        return rule
+
+    def __init__(self, type, expression):
+        # Type is TYPE_INCLUDE or TYPE_EXCLUDE
         self.Type = type
-        # Rule is a python expression
-        self.Rule = ""
-
-        # Private attributes, only needed for parsing
-        self.Depth = 0
-        self.Expr = [ "or" ]
-        self.New = True
-
-        # Begin parsing
-        if node:
-            self.parseNode(node)
+        # expression is ast.Expression
+        self.expression = expression
+        self.code = compile(self.expression, '<compiled-menu-rule>', 'eval')
 
     def __str__(self):
-        return self.Rule
-    
-    def do(self, menuentries, type, run):
+        return ast.dump(self.expression)
+
+    def apply(self, menuentries, run):
         for menuentry in menuentries:
-            if run == 2 and ( menuentry.MatchedInclude == True \
-            or menuentry.Allocated == True ):
+            if run == 2 and (menuentry.MatchedInclude is True or
+                             menuentry.Allocated is True):
                 continue
-            elif eval(self.Rule):
-                if type == "Include":
+            if eval(self.code):
+                if self.Type is Rule.TYPE_INCLUDE:
                     menuentry.Add = True
                     menuentry.MatchedInclude = True
                 else:
                     menuentry.Add = False
         return menuentries
-
-    def parseNode(self, node):
-        for child in node.childNodes:
-            if child.nodeType == ELEMENT_NODE:
-                if child.tagName == 'Filename':
-                    try:
-                        self.parseFilename(child.childNodes[0].nodeValue)
-                    except IndexError:
-                        raise ValidationError('Filename cannot be empty', "???")
-                elif child.tagName == 'Category':
-                    try:
-                        self.parseCategory(child.childNodes[0].nodeValue)
-                    except IndexError:
-                        raise ValidationError('Category cannot be empty', "???")
-                elif child.tagName == 'All':
-                    self.parseAll()
-                elif child.tagName == 'And':
-                    self.parseAnd(child)
-                elif child.tagName == 'Or':
-                    self.parseOr(child)
-                elif child.tagName == 'Not':
-                    self.parseNot(child)
-
-    def parseNew(self, set=True):
-        if not self.New:
-            self.Rule += " " + self.Expr[self.Depth] + " "
-        if not set:
-            self.New = True
-        elif set:
-            self.New = False
-
-    def parseFilename(self, value):
-        self.parseNew()
-        self.Rule += "menuentry.DesktopFileID == '%s'" % value.strip().replace("\\", r"\\").replace("'", r"\'")
-
-    def parseCategory(self, value):
-        self.parseNew()
-        self.Rule += "'%s' in menuentry.Categories" % value.strip()
-
-    def parseAll(self):
-        self.parseNew()
-        self.Rule += "True"
-
-    def parseAnd(self, node):
-        self.parseNew(False)
-        self.Rule += "("
-        self.Depth += 1
-        self.Expr.append("and")
-        self.parseNode(node)
-        self.Depth -= 1
-        self.Expr.pop()
-        self.Rule += ")"
-
-    def parseOr(self, node):
-        self.parseNew(False)
-        self.Rule += "("
-        self.Depth += 1
-        self.Expr.append("or")
-        self.parseNode(node)
-        self.Depth -= 1
-        self.Expr.pop()
-        self.Rule += ")"
-
-    def parseNot(self, node):
-        self.parseNew(False)
-        self.Rule += "not ("
-        self.Depth += 1
-        self.Expr.append("or")
-        self.parseNode(node)
-        self.Depth -= 1
-        self.Expr.pop()
-        self.Rule += ")"
 
 
 class MenuEntry:
@@ -529,6 +473,24 @@ class Header:
     def __str__(self):
         return self.Name
 
+# Some XML utility functions
+
+
+def _get_children(node):
+    return [n for n in node.childNodes if n.nodeType == ELEMENT_NODE]
+
+
+def _iter_children(node):
+    for n in node.childNodes:
+        if n.nodeType == ELEMENT_NODE:
+            yield n
+
+
+def _get_node_text(node):
+    return ' '.join([
+        n.nodeValue.strip() for n in node.childNodes if n.nodeType in (TEXT_NODE, CDATA_SECTION_NODE)
+    ]).strip()
+
 
 tmp = {}
 
@@ -631,7 +593,7 @@ def __parse(node, filename, parent=None):
             elif child.tagName == 'NotDeleted':
                 parent.Deleted = False
             elif child.tagName == 'Include' or child.tagName == 'Exclude':
-                parent.Rules.append(Rule(child.tagName, child))
+                parent.Rules.append(__parseRule(child))
             elif child.tagName == 'MergeFile':
                 try:
                     if child.getAttribute("type") == "parent":
@@ -886,8 +848,7 @@ def __mergeLegacyDir(dir, prefix, filename, parent):
         for menuentry in menuentries:
             categories = menuentry.Categories
             if len(categories) == 0:
-                r = Rule("Include")
-                r.parseFilename(menuentry.DesktopFileID)
+                r = Rule.fromFilename(Rule.TYPE_INCLUDE, menuentry.DesktopFileID)
                 m.Rules.append(r)
             if not dir in parent.AppDirs:
                 categories.append("Legacy")
@@ -910,6 +871,66 @@ def __parseKDELegacyDirs(filename, parent):
     except IndexError:
         pass
 
+# ---------- <Rule> parsing
+
+def __parseRule(node):
+    type = Rule.TYPE_INCLUDE if node.tagName == 'Include' else Rule.TYPE_EXCLUDE
+    tree = ast.Expression(lineno=1, col_offset=0)
+    expr = __parseBoolOp(node, ast.Or())
+    if expr:
+        tree.body = expr
+    else:
+        tree.body = ast.Name('False', ast.Load())
+    ast.fix_missing_locations(tree)
+    return Rule(type, tree)
+
+def __parseBoolOp(node, operator):
+    values = []
+    for child in _iter_children(node):
+        rule = __parseRuleNode(child)
+        if rule:
+            values.append(rule)
+    num_values = len(values)
+    if num_values > 1:
+        return ast.BoolOp(operator, values)
+    elif num_values == 1:
+        return values[0]
+    return None
+
+def __parseRuleNode(node):
+    tag = node.tagName
+    if tag == 'Or':
+        return __parseBoolOp(node, ast.Or())
+    elif tag == 'And':
+        return __parseBoolOp(node, ast.And())
+    elif tag == 'Not':
+        expr = __parseBoolOp(node, ast.Or())
+        return ast.UnaryOp(ast.Not(), expr) if expr else None
+    elif tag == 'All':
+        return ast.Name('True', ast.Load())
+    elif tag == 'Category':
+        category = _get_node_text(node)
+        return ast.Compare(
+            left=ast.Str(category),
+            ops=[ast.In()],
+            comparators=[ast.Attribute(
+                value=ast.Name(id='menuentry', ctx=ast.Load()),
+                attr='Categories',
+                ctx=ast.Load()
+            )]
+        )
+    elif tag == 'Filename':
+        filename = _get_node_text(node)
+        return ast.Compare(
+            left=ast.Str(filename),
+            ops=[ast.Eq()],
+            comparators=[ast.Attribute(
+                value=ast.Name(id='menuentry', ctx=ast.Load()),
+                attr='DesktopFileID',
+                ctx=ast.Load()
+            )]
+        )
+
 # remove duplicate entries from a list
 def __removeDuplicates(list):
     set = {}
@@ -927,7 +948,7 @@ def __genmenuNotOnlyAllocated(menu):
         tmp["cache"].addMenuEntries(menu.AppDirs)
         menuentries = []
         for rule in menu.Rules:
-            menuentries = rule.do(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 1)
+            menuentries = rule.apply(tmp["cache"].getMenuEntries(menu.AppDirs), 1)
         for menuentry in menuentries:
             if menuentry.Add == True:
                 menuentry.Parents.append(menu)
@@ -943,7 +964,7 @@ def __genmenuOnlyAllocated(menu):
         tmp["cache"].addMenuEntries(menu.AppDirs)
         menuentries = []
         for rule in menu.Rules:
-            menuentries = rule.do(tmp["cache"].getMenuEntries(menu.AppDirs), rule.Type, 2)
+            menuentries = rule.apply(tmp["cache"].getMenuEntries(menu.AppDirs), 2)
         for menuentry in menuentries:
             if menuentry.Add == True:
                 menuentry.Parents.append(menu)
