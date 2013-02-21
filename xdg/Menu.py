@@ -318,23 +318,10 @@ class Layout:
 class Rule:
     """Include / Exclude Rules Class"""
 
-    (TYPE_INCLUDE, TYPE_EXCLUDE) = range(2)
-
-    @classmethod
-    def fromNode(cls, node):
-        type = cls.TYPE_INCLUDE if node.tagName == 'Include' else cls.TYPE_EXCLUDE
-        rule = Rule(type)
-        tree = ast.Expression(
-            body=rule.parseRule(node),
-            lineno=1, col_offset=0
-        )
-        ast.fix_missing_locations(tree)
-        rule.Rule = compile(tree, '<compiled-rule>', 'eval')
-        return rule
+    TYPE_INCLUDE, TYPE_EXCLUDE = 0, 1
 
     @classmethod
     def fromFilename(cls, type, filename):
-        rule = Rule(type)
         tree = ast.Expression(
             body=ast.Compare(
                 left=ast.Str(filename),
@@ -348,99 +335,31 @@ class Rule:
             lineno=1, col_offset=0
         )
         ast.fix_missing_locations(tree)
-        rule.Rule = compile(tree, '<compiled-rule>', 'eval')
+        rule = Rule(type, tree)
         return rule
 
-    def __init__(self, type, rule=None):
-        # Type is Include or Exclude
+    def __init__(self, type, expression):
+        # Type is TYPE_INCLUDE or TYPE_EXCLUDE
         self.Type = type
-        self.Rule = rule
+        # expression is ast.Expression
+        self.expression = expression
+        self.code = compile(self.expression, '<compiled-menu-rule>', 'eval')
 
     def __str__(self):
-        return ast.dump(self.Rule)
+        return ast.dump(self.expression)
 
     def apply(self, menuentries, run):
         for menuentry in menuentries:
             if run == 2 and (menuentry.MatchedInclude is True or
                              menuentry.Allocated is True):
                 continue
-            if eval(self.Rule):
-                if self.Type == Rule.TYPE_INCLUDE:
+            if eval(self.code):
+                if self.Type is Rule.TYPE_INCLUDE:
                     menuentry.Add = True
                     menuentry.MatchedInclude = True
                 else:
                     menuentry.Add = False
         return menuentries
-
-    def parseRule(self, node):
-        rule = self.parseOr(node)
-        return rule if rule else ast.Name('False', ast.Load())
-
-    def parseNode(self, node):
-        tag = node.tagName
-        if tag == 'Or':
-            return self.parseOr(node)
-        elif tag == 'And':
-            return self.parseAnd(node)
-        elif tag == 'Not':
-            return self.parseNot(node)
-        elif tag == 'Category':
-            return self.parseCategory(node)
-        elif tag == 'Filename':
-            return self.parseFilename(node)
-        elif tag == 'All':
-            return self.parseAll(node)
-
-    def parseAnd(self, node):
-        return self.parseBoolOp(node, ast.And())
-
-    def parseOr(self, node):
-        return self.parseBoolOp(node, ast.Or())
-
-    def parseBoolOp(self, node, operator):
-        values = []
-        for c in _iter_children(node):
-            rule = self.parseNode(c)
-            if rule:
-                values.append(rule)
-        num_values = len(values)
-        if num_values > 1:
-            return ast.BoolOp(operator, values)
-        elif num_values == 1:
-            return values[0]
-        return None
-
-    def parseNot(self, node):
-        expr = self.parseOr(node)
-        if expr:
-            return ast.UnaryOp(ast.Not(), expr)
-
-    def parseCategory(self, node):
-        category = _get_node_text(node)
-        return ast.Compare(
-            left=ast.Str(category),
-            ops=[ast.In()],
-            comparators=[ast.Attribute(
-                value=ast.Name(id='menuentry', ctx=ast.Load()),
-                attr='Categories',
-                ctx=ast.Load()
-            )]
-        )
-
-    def parseFilename(self, node):
-        filename = _get_node_text(node)
-        return ast.Compare(
-            left=ast.Str(filename),
-            ops=[ast.Eq()],
-            comparators=[ast.Attribute(
-                value=ast.Name(id='menuentry', ctx=ast.Load()),
-                attr='DesktopFileID',
-                ctx=ast.Load()
-            )]
-        )
-
-    def parseAll(self, node):
-        return ast.Name('True', ast.Load())
 
 
 class MenuEntry:
@@ -674,7 +593,7 @@ def __parse(node, filename, parent=None):
             elif child.tagName == 'NotDeleted':
                 parent.Deleted = False
             elif child.tagName == 'Include' or child.tagName == 'Exclude':
-                parent.Rules.append(Rule.fromNode(child))
+                parent.Rules.append(__parseRule(child))
             elif child.tagName == 'MergeFile':
                 try:
                     if child.getAttribute("type") == "parent":
@@ -951,6 +870,66 @@ def __parseKDELegacyDirs(filename, parent):
             __parseLegacyDir(dir,"kde", filename, parent)
     except IndexError:
         pass
+
+# ---------- <Rule> parsing
+
+def __parseRule(node):
+    type = Rule.TYPE_INCLUDE if node.tagName == 'Include' else Rule.TYPE_EXCLUDE
+    tree = ast.Expression(lineno=1, col_offset=0)
+    expr = __parseBoolOp(node, ast.Or())
+    if expr:
+        tree.body = expr
+    else:
+        tree.body = ast.Name('False', ast.Load())
+    ast.fix_missing_locations(tree)
+    return Rule(type, tree)
+
+def __parseBoolOp(node, operator):
+    values = []
+    for child in _iter_children(node):
+        rule = __parseRuleNode(child)
+        if rule:
+            values.append(rule)
+    num_values = len(values)
+    if num_values > 1:
+        return ast.BoolOp(operator, values)
+    elif num_values == 1:
+        return values[0]
+    return None
+
+def __parseRuleNode(node):
+    tag = node.tagName
+    if tag == 'Or':
+        return __parseBoolOp(node, ast.Or())
+    elif tag == 'And':
+        return __parseBoolOp(node, ast.And())
+    elif tag == 'Not':
+        expr = __parseBoolOp(node, ast.Or())
+        return ast.UnaryOp(ast.Not(), expr) if expr else None
+    elif tag == 'All':
+        return ast.Name('True', ast.Load())
+    elif tag == 'Category':
+        category = _get_node_text(node)
+        return ast.Compare(
+            left=ast.Str(category),
+            ops=[ast.In()],
+            comparators=[ast.Attribute(
+                value=ast.Name(id='menuentry', ctx=ast.Load()),
+                attr='Categories',
+                ctx=ast.Load()
+            )]
+        )
+    elif tag == 'Filename':
+        filename = _get_node_text(node)
+        return ast.Compare(
+            left=ast.Str(filename),
+            ops=[ast.Eq()],
+            comparators=[ast.Attribute(
+                value=ast.Name(id='menuentry', ctx=ast.Load()),
+                attr='DesktopFileID',
+                ctx=ast.Load()
+            )]
+        )
 
 # remove duplicate entries from a list
 def __removeDuplicates(list):

@@ -2,6 +2,7 @@ import xml.dom.minidom
 import unittest
 
 from xdg.Menu import Rule
+from xdg.Menu import __parseRule as parseRule
 
 
 _tests = [
@@ -162,10 +163,10 @@ class RulesTest(unittest.TestCase):
     def test_rule_from_node(self):
         for i, test in enumerate(_tests):
             root = xml.dom.minidom.parseString(test['doc']).childNodes[0]
-            rule = Rule.fromNode(root)
+            rule = parseRule(root)
             for j, data in enumerate(test['data']):
                 menuentry = MockMenuEntry(data[0], data[1])
-                result = eval(rule.Rule)
+                result = eval(rule.code)
                 message = "Error in test %s with result set %s: got %s, expected %s"
                 assert result == data[2], message % (i, j, result, data[2])
 
@@ -175,8 +176,8 @@ class RulesTest(unittest.TestCase):
             ('barfoo.desktop', 'foobar.desktop', False)
         ]
         for i, test in enumerate(tests):
-            rule = Rule.fromFilename('Include', test[0])
+            rule = Rule.fromFilename(Rule.TYPE_INCLUDE, test[0])
             menuentry = MockMenuEntry(test[1], [])
-            result = eval(rule.Rule)
+            result = eval(rule.code)
             message = "Error with result set %s: got %s, expected %s"
             assert result == test[2], message % (i, result, test[2])
