@@ -1,18 +1,16 @@
 """ CLass to edit XDG Menus """
-
+import os
 try:
     import xml.etree.cElementTree as etree
 except ImportError:
     import xml.etree.ElementTree as etree
 
+#FIXME avoid importing all from all modules
 from xdg.Menu import *
 from xdg.BaseDirectory import *
 from xdg.Exceptions import *
 from xdg.DesktopEntry import *
 from xdg.Config import *
-
-import os
-import re
 
 # XML-Cleanups: Move / Exclude
 # FIXME: proper reverte/delete
@@ -58,13 +56,14 @@ class MenuEditor(object):
         try:
             self.tree = etree.parse(self.filename)
         except IOError:
-            self.tree = etree.fromtring("""
+            root = etree.fromtring("""
 <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://standards.freedesktop.org/menu-spec/menu-1.0.dtd">
     <Menu>
         <Name>Applications</Name>
         <MergeFile type="parent">%s</MergeFile>
     </Menu>
 """ % self.menu.Filename)
+            self.tree = etree.ElementTree(root)
         except ParseError:
             raise ParsingError('Not a valid .menu file', self.filename)
 
@@ -336,9 +335,7 @@ class MenuEditor(object):
     def __saveMenu(self):
         if not os.path.isdir(os.path.dirname(self.filename)):
             os.makedirs(os.path.dirname(self.filename))
-        fd = open(self.filename, 'w')
-        fd.write(re.sub("\n[\s]*([^\n<]*)\n[\s]*</", "\\1</", self.tree.toprettyxml().replace('<?xml version="1.0" ?>\n', '')))
-        fd.close()
+        self.tree.write(self.filename, encoding='utf-8')
 
     def __getFileName(self, name, extension):
         postfix = 0
@@ -362,6 +359,9 @@ class MenuEditor(object):
         return filename
 
     def __getXmlMenu(self, path, create=True, element=None):
+        # FIXME: we should also return the menu's parent,
+        # to avoid looking for it later on
+        # @see Element.getiterator()
         if not element:
             element = self.tree
 
@@ -531,6 +531,7 @@ class MenuEditor(object):
                 self.__remove_whilespace_nodes(child)
 
     def __get_parent_node(self, node):
+        # elements in ElementTree doesn't hold a reference to their parent
         for parent, child in self.__iter_parent():
             if child is node:
                 return child
