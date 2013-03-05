@@ -360,7 +360,8 @@ def _cache_database():
             if pattern.startswith('*.'):
                 rest = pattern[2:]
                 if not ('*' in rest or '[' in rest or '?' in rest):
-                    exts[rest] = mtype
+                    if rest not in exts:
+                        exts[rest] = mtype
                     continue
             if '*' in pattern or '[' in pattern or '?' in pattern:
                 globs.append((pattern, mtype))
