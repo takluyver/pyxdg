@@ -20,6 +20,7 @@ information about the format of these files.
 """
 
 import os
+import re
 import stat
 import sys
 import fnmatch
@@ -112,97 +113,90 @@ class MIMEtype:
         return '<%s: %s>' % (self, self._comment or '(comment not loaded)')
 
 class MagicRule:
-    def __init__(self, f):
-        self.next=None
-        self.prev=None
-
+    also = None
+    
+    def __init__(self, start, value, mask, word, range):
+        self.start = start
+        self.value = value
+        self.mask = mask
+        self.word = word
+        self.range = range
+    
+    rule_ending_re = re.compile(br'(?:~(\d+))?(?:\+(\d+))?\n$')
+    
+    @classmethod
+    def from_file(cls, f):
+        """Read a rule from the binary magics file. Returns a 2-tuple of
+        the nesting depth and the MagicRule."""
+        line = f.readline()
         #print line
-        ind=b''
-        while True:
-            c=f.read(1)
-            if c == b'>':
-                break
-            ind+=c
-        if not ind:
-            self.nest=0
-        else:
-            self.nest=int(ind.decode('ascii'))
-
-        start = b''
-        while True:
-            c = f.read(1)
-            if c == b'=':
-                break
-            start += c
-        self.start = int(start.decode('ascii'))
         
-        hb=f.read(1)
-        lb=f.read(1)
-        self.lenvalue = ord(lb)+(ord(hb)<<8)
+        # [indent] '>'
+        nest_depth, line = line.split(b'>', 1)
+        nest_depth = int(nest_depth) if nest_depth else 0
 
-        self.value = f.read(self.lenvalue)
-
-        c = f.read(1)
-        if c == b'&':
-            self.mask = f.read(self.lenvalue)
-            c = f.read(1)
-        else:
-            self.mask=None
-
-        if c == b'~':
-            w = b''
-            while c!=b'+' and c!=b'\n':
-                c=f.read(1)
-                if c==b'+' or c==b'\n':
-                    break
-                w+=c
-            
-            self.word=int(w.decode('ascii'))
-        else:
-            self.word=1
-
-        if c==b'+':
-            r=b''
-            while c!=b'\n':
-                c=f.read(1)
-                if c==b'\n':
-                    break
-                r+=c
-            #print r
-            self.range = int(r.decode('ascii'))
-        else:
-            self.range = 1
-
-        if c != b'\n':
-            raise ValueError('Malformed MIME magic line')
-
-    def getLength(self):
-        return self.start+self.lenvalue+self.range
-
-    def appendRule(self, rule):
-        if self.nest<rule.nest:
-            self.next=rule
-            rule.prev=self
-
-        elif self.prev:
-            self.prev.appendRule(rule)
+        # start-offset '='
+        start, line = line.split(b'=', 1)
+        start = int(start)
         
+        # value length (2 bytes, big endian)
+        if sys.version_info[0] >= 3:
+            lenvalue = int.from_bytes(line[:2], byteorder='big')
+        else:
+            lenvalue = (ord(line[0])<<8)+ord(line[1])
+        line = line[2:]
+        
+        # value
+        #   This can contain newlines, so we may need to read more lines
+        while len(line) <= lenvalue:
+            line += f.readline()
+        value, line = line[:lenvalue], line[lenvalue:]
+
+        # ['&' mask]
+        if line.startswith(b'&'):
+            # This can contain newlines, so we may need to read more lines
+            while len(line) <= lenvalue:
+                line += f.readline()
+            mask, line = line[1:lenvalue+1], line[lenvalue+1:]
+        else:
+            mask = None
+
+        # ['~' word-size] ['+' range-length]
+        ending = cls.rule_ending_re.match(line)
+        if not ending:
+            # Per the spec, this will be caught and ignored, to allow
+            # for future extensions.
+            raise UnknownMagicRuleFormat(repr(line))
+        
+        word, range = ending.groups()
+        word = int(word) if (word is not None) else 1
+        range = int(range) if (range is not None) else 1
+        
+        return nest_depth, cls(start, value, mask, word, range)
+
+    def maxlen(self):
+        l = self.start + len(self.value) + self.range
+        if self.also:
+            return max(l, self.also.maxlen())
+        return l
+
     def match(self, buffer):
         if self.match0(buffer):
-            if self.next:
-                return self.next.match(buffer)
+            if self.also:
+                return self.also.match(buffer)
             return True
 
     def match0(self, buffer):
         l=len(buffer)
+        lenvalue = len(self.value)
         for o in range(self.range):
             s=self.start+o
-            e=s+self.lenvalue
+            e=s+lenvalue
             if l<e:
                 return False
             if self.mask:
                 test=''
-                for i in range(self.lenvalue):
+                for i in range(lenvalue):
                     if PY3:
                         c = buffer[s+i] & self.mask[i]
                     else:
@@ -223,38 +217,74 @@ class MagicRule:
                                   self.word,
                                   self.range)
 
-class MagicType:
-    def __init__(self, mtype):
-        self.mtype=mtype
-        self.top_rules=[]
-        self.last_rule=None
 
-    def getLine(self, f):
-        nrule=MagicRule(f)
-
-        if nrule.nest and self.last_rule:
-            self.last_rule.appendRule(nrule)
-        else:
-            self.top_rules.append(nrule)
-
-        self.last_rule=nrule
-
-        return nrule
-
+class MagicMatchAny(object):
+    """Match any of a set of magic rules.
+    
+    This has a similar interface to MagicRule objects (i.e. its match() and
+    maxlen() methods), to allow for duck typing.
+    """
+    def __init__(self, rules):
+        self.rules = rules
+    
     def match(self, buffer):
-        for rule in self.top_rules:
-            if rule.match(buffer):
-                return self.mtype
-
-    def __repr__(self):
-        return '<MagicType %s>' % self.mtype
+        return any(r.match(buffer) for r in self.rules)
+    
+    def maxlen(self):
+        return max(r.maxlen() for r in self.rules)
+    
+    @classmethod
+    def from_file(cls, f):
+        """Read a set of rules from the binary magic file."""
+        c=f.read(1)
+        f.seek(-1, 1)
+        depths_rules = []
+        while c and c != b'[':
+            try:
+                depths_rules.append(MagicRule.from_file(f))
+            except UnknownMagicRuleFormat:
+                # Ignored to allow for extensions to the rule format.
+                pass
+            c=f.read(1)
+            if c:
+                f.seek(-1, 1)
+        
+        # Build the rule tree
+        tree = []  # (rule, [(subrule,[subsubrule,...]), ...])
+        insert_points = {0:tree}
+        for depth, rule in depths_rules:
+            subrules = []
+            insert_points[depth].append((rule, subrules))
+            insert_points[depth+1] = subrules
+        
+        return cls.from_rule_tree(tree)
+    
+    @classmethod
+    def from_rule_tree(cls, tree):
+        """From a nested list of (rule, subrules) pairs, build a MagicMatchAny
+        instance, recursing down the tree.
+        
+        Where there's only one top-level rule, this is returned directly,
+        to simplify the nested structure.
+        """
+        rules = []
+        for rule, subrules in tree:
+            if subrules:
+                rule.also = cls.from_rule_tree(subrules)
+            rules.append(rule)
+        
+        if len(rules)==1:
+            return rules[0]
+        return cls(rules)        
     
 class MagicDB:
     def __init__(self):
-        self.types={}   # Indexed by priority, each entry is a list of type rules
-        self.maxlen=0
+        self.alltypes = []  # (priority, mimetype, rule)
+        self.bytype   = {}  # mimetype -> (priority, rule)
+        self.maxlen   = 0   # Number of bytes to read from files
 
     def mergeFile(self, fname):
+        """Read a magic binary file, and add its rules to this MagicDB."""
         with open(fname, 'rb') as f:
             line = f.readline()
             if line != b'MIME-Magic\0\n':
@@ -262,55 +292,60 @@ class MagicDB:
 
             while True:
                 shead = f.readline().decode('ascii')
+                print(shead)
                 #print shead
                 if not shead:
                     break
                 if shead[0] != '[' or shead[-2:] != ']\n':
-                    raise ValueError('Malformed section heading')
+                    raise ValueError('Malformed section heading', shead)
                 pri, tname = shead[1:-2].split(':')
                 #print shead[1:-2]
                 pri = int(pri)
                 mtype = lookup(tname)
+                rule = MagicMatchAny.from_file(f)
+                #print rule
+                
+                self.alltypes.append((pri, mtype, rule))
+                self.bytype[mtype] = (pri, rule)
+                self.maxlen = max(self.maxlen, rule.maxlen())
+        
+        self.alltypes.sort(key=lambda x: x[0])
 
-                try:
-                    ents = self.types[pri]
-                except:
-                    ents = []
-                    self.types[pri] = ents
-
-                magictype = MagicType(mtype)
-                #print tname
-
-                #rline=f.readline()
-                c=f.read(1)
-                f.seek(-1, 1)
-                while c and c != b'[':
-                    rule=magictype.getLine(f)
-                    #print rule
-                    if rule and rule.getLength() > self.maxlen:
-                        self.maxlen = rule.getLength()
-
-                    c = f.read(1)
-                    f.seek(-1, 1)
-
-                ents.append(magictype)
-                #self.types[pri]=ents
-                if not c:
-                    break
-
-    def match_data(self, data, max_pri=100, min_pri=0):
-        for priority in sorted(self.types.keys(), reverse=True):
+    def match_data(self, data, max_pri=100, min_pri=0, possible=None):
+        """Do magic sniffing on some bytes.
+        
+        max_pri & min_pri can be used to specify the maximum & minimum priority
+        rules to look for. possible can be a list of mimetypes to check, or None
+        (the default) to check all mimetypes until one matches.
+        """
+        if possible is not None:
+            types = []
+            for mt in possible:
+                pri, rule = self.bytype(mt)
+                types.append((pri, mt, rule))
+            types.sort(key=lambda x: x[0])
+        else:
+            types = self.alltypes
+        
+        for priority, mimetype, rule in types:
             #print priority, max_pri, min_pri
             if priority > max_pri:
                 continue
             if priority < min_pri:
                 break
-            for type in self.types[priority]:
-                m=type.match(data)
-                if m:
-                    return m
+            
+            if rule.match(data):
+                return mimetype
 
-    def match(self, path, max_pri=100, min_pri=0):
+    def match(self, path, max_pri=100, min_pri=0, possible=None):
+        """Read data from the file and do magic sniffing on it.
+        
+        max_pri & min_pri can be used to specify the maximum & minimum priority
+        rules to look for. possible can be a list of mimetypes to check, or None
+        (the default) to check all mimetypes until one matches.
+        
+        Returns the MIMEtype found, or None if the file can't be opened.
+        """
         try:
             with open(path, 'rb') as f:
                 buf = f.read(self.maxlen)
@@ -319,7 +354,7 @@ class MagicDB:
             pass
     
     def __repr__(self):
-        return '<MagicDB %s>' % self.types
+        return '<MagicDB (%d types)>' % len(self.alltypes)
             
 
 # Some well-known types
