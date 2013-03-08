@@ -1,5 +1,5 @@
 """
-Complete implementation of the XDG Icon Spec Version
+Complete implementation of the XDG Icon Spec
 http://standards.freedesktop.org/icon-theme-spec/
 """
 

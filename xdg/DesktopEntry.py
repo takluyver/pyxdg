@@ -1,5 +1,5 @@
 """
-Complete implementation of the XDG Desktop Entry Specification Version
+Complete implementation of the XDG Desktop Entry Specification
 http://standards.freedesktop.org/desktop-entry-spec/
 
 Not supported:
