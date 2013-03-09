@@ -216,6 +216,107 @@ class Menu:
         except AttributeError:
             return ""
 
+    def sort(self):
+        self.Entries = []
+        self.Visible = 0
+
+        for submenu in self.Submenus:
+            submenu.sort()
+
+        _submenus = set()
+        _entries = set()
+
+        for order in self.Layout.order:
+            if order[0] == "Filename":
+                _entries.add(order[1])
+            elif order[0] == "Menuname":
+                _submenus.add(order[1])
+
+        for order in self.Layout.order:
+            if order[0] == "Separator":
+                separator = Separator(self)
+                if len(self.Entries) > 0 and isinstance(self.Entries[-1], Separator):
+                    separator.Show = False
+                self.Entries.append(separator)
+            elif order[0] == "Filename":
+                menuentry = self.getMenuEntry(order[1])
+                if menuentry:
+                    self.Entries.append(menuentry)
+            elif order[0] == "Menuname":
+                submenu = self.getMenu(order[1])
+                if submenu:
+                    if submenu.Layout.inline:
+                        self.merge_inline(submenu)
+                    else:
+                        self.Entries.append(submenu)
+            elif order[0] == "Merge":
+                if order[1] == "files" or order[1] == "all":
+                    self.MenuEntries.sort()
+                    for menuentry in self.MenuEntries:
+                        if menuentry.DesktopFileID not in _entries:
+                            self.Entries.append(menuentry)
+                elif order[1] == "menus" or order[1] == "all":
+                    self.Submenus.sort()
+                    for submenu in self.Submenus:
+                        if submenu.Name not in _submenus:
+                            if submenu.Layout.inline:
+                                self.merge_inline(submenu)
+                            else:
+                                self.Entries.append(submenu)
+
+        # getHidden / NoDisplay / OnlyShowIn / NotOnlyShowIn / Deleted / NoExec
+        for entry in self.Entries:
+            entry.Show = True
+            self.Visible += 1
+            if isinstance(entry, Menu):
+                if entry.Deleted is True:
+                    entry.Show = "Deleted"
+                    self.Visible -= 1
+                elif isinstance(entry.Directory, MenuEntry):
+                    if entry.Directory.DesktopEntry.nodisplay:
+                        entry.Show = "NoDisplay"
+                        self.Visible -= 1
+                    elif entry.Directory.desktopEntry.hidden:
+                        entry.Show = "Hidden"
+                        self.Visible -= 1
+            elif isinstance(entry, MenuEntry):
+                if entry.DesktopEntry.getNoDisplay():
+                    entry.Show = "NoDisplay"
+                    self.Visible -= 1
+                elif entry.DesktopEntry.getHidden():
+                    entry.Show = "Hidden"
+                    self.Visible -= 1
+                elif entry.DesktopEntry.getTryExec() and not entry.DesktopEntry.findTryExec():
+                    entry.Show = "NoExec"
+                    self.Visible -= 1
+                elif xdg.Config.windowmanager:
+                    if (entry.DesktopEntry.OnlyShowIn != [] and (
+                            xdg.Config.windowmanager not in entry.DesktopEntry.OnlyShowIn
+                        )
+                    ) or (
+                        xdg.Config.windowmanager in entry.DesktopEntry.NotShowIn
+                    ):
+                        entry.Show = "NotShowIn"
+                        self.Visible -= 1
+            elif isinstance(entry, Separator):
+                self.Visible -= 1
+
+        # remove separators at the beginning and at the end
+        if len(self.Entries) > 0:
+            if isinstance(self.Entries[0], Separator):
+                self.Entries[0].Show = False
+        if len(self.Entries) > 1:
+            if isinstance(self.Entries[-1], Separator):
+                self.Entries[-1].Show = False
+
+        # show_empty tag
+        for entry in self.Entries[:]:
+            if isinstance(entry, Menu) and not entry.Layout.show_empty and entry.Visible == 0:
+                entry.Show = "Empty"
+                self.Visible -= 1
+                if entry.NotInXml is True:
+                    self.Entries.remove(entry)
+
     """ PRIVATE STUFF """
     def addSubmenu(self, newmenu):
         for submenu in self.Submenus:
@@ -226,6 +327,26 @@ class Menu:
             self.Submenus.append(newmenu)
             newmenu.Parent = self
             newmenu.Depth = self.Depth + 1
+
+    # inline tags
+    def merge_inline(self, submenu):
+        """Appends a submenu's entries to this menu
+        See the <Menuname> section of the spec about the "inline" attribute
+        """
+        if len(submenu.Entries) == 1 and submenu.Layout.inline_alias:
+            menuentry = submenu.Entries[0]
+            menuentry.DesktopEntry.set("Name", submenu.getName(), locale=True)
+            menuentry.DesktopEntry.set("GenericName", submenu.getGenericName(), locale=True)
+            menuentry.DesktopEntry.set("Comment", submenu.getComment(), locale=True)
+            self.Entries.append(menuentry)
+        elif len(submenu.Entries) <= submenu.Layout.inline_limit or submenu.Layout.inline_limit == 0:
+            if submenu.Layout.inline_header:
+                header = Header(submenu.getName(), submenu.getGenericName(), submenu.getComment())
+                self.Entries.append(header)
+            for entry in submenu.Entries:
+                self.Entries.append(entry)
+        else:
+            self.Entries.append(submenu)
 
 
 class Move:
@@ -442,7 +563,7 @@ def _check_file_path(value, filename, type):
     return False
 
 
-def __get_menu_file_path(filename):
+def _get_menu_file_path(filename):
     dirs = list(xdg_config_dirs)
     if xdg.Config.root_mode is True:
         dirs.pop(0)
@@ -459,12 +580,12 @@ def _to_bool(value):
 
 
 # remove duplicate entries from a list
-def _dedupe(list):
-    set = {}
-    list.reverse()
-    list = [set.setdefault(e,e) for e in list if e not in set]
-    list.reverse()
-    return list
+def _dedupe(_list):
+    _set = {}
+    _list.reverse()
+    _list = [_set.setdefault(e, e) for e in _list if e not in _set]
+    _list.reverse()
+    return _list
 
 
 class Parser(object):
@@ -480,11 +601,11 @@ class Parser(object):
         """
         # convert to absolute path
         if filename and not os.path.isabs(filename):
-            filename = __get_menu_file_path(filename)
+            filename = _get_menu_file_path(filename)
         # use default if no filename given
         if not filename:
             candidate = os.environ.get('XDG_MENU_PREFIX', '') + "applications.menu"
-            filename = __get_menu_file_path(candidate)
+            filename = _get_menu_file_path(candidate)
         if not filename:
             raise ParsingError('File not found', "/etc/xdg/menus/%s" % candidate)
         # check if it is a .menu file
@@ -497,33 +618,30 @@ class Parser(object):
             raise ParsingError('Not a valid .menu file', filename)
 
         # parse menufile
-        self.root = None
         self._merged_files = set()
         self._directory_dirs = set()
         self.cache = MenuEntryCache()
 
-        self.parse_menu(tree.getroot(), filename, self.root)
+        self.root = self.parse_menu(tree.getroot(), filename)
+        self.root.tree = tree
+        self.root.filename = filename
+
         self.handle_moves(self.root)
         self.post_parse(self.root)
 
-        self.root.tree = tree
-        self.root.filename = filename
         # generate the menu
         self.generate_not_only_allocated(self.root)
         self.generate_only_allocated(self.root)
 
         # and finally sort
-        self.sort(self.root)
+        self.root.sort()
 
         return self.root
 
-    def parse_menu(self, child, filename, parent=None):
-        m = Menu()
-        self.parse_node(child, filename, m)
-        if parent:
-            parent.addSubmenu(m)
-        else:
-            self.root = m
+    def parse_menu(self, node, filename):
+        menu = Menu()
+        self.parse_node(node, filename, menu)
+        return menu
 
     def parse_node(self, node, filename, parent=None):
         num_children = len(node)
@@ -531,7 +649,8 @@ class Parser(object):
             tag, text = child.tag, child.text
             text = text.strip() if text else None
             if tag == 'Menu':
-                self.parse_menu(child, filename, parent)
+                menu = self.parse_menu(child, filename)
+                parent.addSubmenu(menu)
             elif tag == 'AppDir' and text:
                 self.parse_app_dir(text, filename, parent)
             elif tag == 'DefaultAppDirs':
@@ -564,7 +683,7 @@ class Parser(object):
             elif tag == 'DefaultMergeDirs':
                 self.parse_default_merge_dirs(child, filename, parent)
             elif tag == 'Move':
-                self.parse_move(child, parent)
+                parent.Moves.append(self.parse_move(child))
             elif tag == 'Layout':
                 if num_children > 1:
                     parent.Layout = self.parse_layout(child)
@@ -608,7 +727,7 @@ class Parser(object):
                 ])
         return layout
 
-    def parse_move(self, node, parent):
+    def parse_move(self, node):
         old, new = "", ""
         for child in node:
             tag, text = child.tag, child.text
@@ -617,7 +736,7 @@ class Parser(object):
                 old = text
             elif tag == "New" and text:
                 new = text
-        parent.Moves.append(Move(old, new))
+        return Move(old, new)
 
     # ---------- <Rule> parsing
 
@@ -821,26 +940,6 @@ class Parser(object):
         except IndexError:
             pass
 
-    # inline tags
-    def parse_inline(self, submenu, menu):
-        if submenu.Layout.inline:
-            if len(submenu.Entries) == 1 and submenu.Layout.inline_alias:
-                menuentry = submenu.Entries[0]
-                menuentry.DesktopEntry.set("Name", submenu.getName(), locale=True)
-                menuentry.DesktopEntry.set("GenericName", submenu.getGenericName(), locale=True)
-                menuentry.DesktopEntry.set("Comment", submenu.getComment(), locale=True)
-                menu.Entries.append(menuentry)
-            elif len(submenu.Entries) <= submenu.Layout.inline_limit or submenu.Layout.inline_limit == 0:
-                if submenu.Layout.inline_header:
-                    header = Header(submenu.getName(), submenu.getGenericName(), submenu.getComment())
-                    menu.Entries.append(header)
-                for entry in submenu.Entries:
-                    menu.Entries.append(entry)
-            else:
-                menu.Entries.append(submenu)
-        else:
-            menu.Entries.append(submenu)
-
     def post_parse(self, menu):
         # unallocated / deleted
         if menu.Deleted == "notset":
@@ -931,102 +1030,6 @@ class Parser(object):
                 #   menuentry.Allocated = True
                     menu.MenuEntries.append(menuentry)
 
-    # And sorting ...
-    def sort(self, menu):
-        menu.Entries = []
-        menu.Visible = 0
-
-        for submenu in menu.Submenus:
-            self.sort(submenu)
-
-        tmp_s = []
-        tmp_e = []
-
-        for order in menu.Layout.order:
-            if order[0] == "Filename":
-                tmp_e.append(order[1])
-            elif order[0] == "Menuname":
-                tmp_s.append(order[1])
-
-        for order in menu.Layout.order:
-            if order[0] == "Separator":
-                separator = Separator(menu)
-                if len(menu.Entries) > 0 and isinstance(menu.Entries[-1], Separator):
-                    separator.Show = False
-                menu.Entries.append(separator)
-            elif order[0] == "Filename":
-                menuentry = menu.getMenuEntry(order[1])
-                if menuentry:
-                    menu.Entries.append(menuentry)
-            elif order[0] == "Menuname":
-                submenu = menu.getMenu(order[1])
-                if submenu:
-                    self.parse_inline(submenu, menu)
-            elif order[0] == "Merge":
-                if order[1] == "files" or order[1] == "all":
-                    menu.MenuEntries.sort()
-                    for menuentry in menu.MenuEntries:
-                        if menuentry not in tmp_e:
-                            menu.Entries.append(menuentry)
-                elif order[1] == "menus" or order[1] == "all":
-                    menu.Submenus.sort()
-                    for submenu in menu.Submenus:
-                        if submenu.Name not in tmp_s:
-                            self.parse_inline(submenu, menu)
-
-        # getHidden / NoDisplay / OnlyShowIn / NotOnlyShowIn / Deleted / NoExec
-        for entry in menu.Entries:
-            entry.Show = True
-            menu.Visible += 1
-            if isinstance(entry, Menu):
-                if entry.Deleted is True:
-                    entry.Show = "Deleted"
-                    menu.Visible -= 1
-                elif isinstance(entry.Directory, MenuEntry):
-                    if entry.Directory.DesktopEntry.nodisplay:
-                        entry.Show = "NoDisplay"
-                        menu.Visible -= 1
-                    elif entry.Directory.desktopEntry.hidden:
-                        entry.Show = "Hidden"
-                        menu.Visible -= 1
-            elif isinstance(entry, MenuEntry):
-                if entry.DesktopEntry.getNoDisplay():
-                    entry.Show = "NoDisplay"
-                    menu.Visible -= 1
-                elif entry.DesktopEntry.getHidden():
-                    entry.Show = "Hidden"
-                    menu.Visible -= 1
-                elif entry.DesktopEntry.getTryExec() and not entry.DesktopEntry.findTryExec():
-                    entry.Show = "NoExec"
-                    menu.Visible -= 1
-                elif xdg.Config.windowmanager:
-                    if (entry.DesktopEntry.OnlyShowIn != [] and (
-                            xdg.Config.windowmanager not in entry.DesktopEntry.OnlyShowIn
-                        )
-                    ) or (
-                        xdg.Config.windowmanager in entry.DesktopEntry.NotShowIn
-                    ):
-                        entry.Show = "NotShowIn"
-                        menu.Visible -= 1
-            elif isinstance(entry, Separator):
-                menu.Visible -= 1
-
-        # remove separators at the beginning and at the end
-        if len(menu.Entries) > 0:
-            if isinstance(menu.Entries[0], Separator):
-                menu.Entries[0].Show = False
-        if len(menu.Entries) > 1:
-            if isinstance(menu.Entries[-1], Separator):
-                menu.Entries[-1].Show = False
-
-        # show_empty tag
-        for entry in menu.Entries[:]:
-            if isinstance(entry, Menu) and not entry.Layout.show_empty and entry.Visible == 0:
-                entry.Show = "Empty"
-                menu.Visible -= 1
-                if entry.NotInXml is True:
-                    menu.Entries.remove(entry)
-
     def handle_moves(self, menu):
         for submenu in menu.Submenus:
             self.handle_moves(submenu)
@@ -1064,28 +1067,28 @@ class MenuEntryCache:
         self.cache = {}
 
     def add_menu_entries(self, dirs, prefix="", legacy=False):
-        for dir in dirs:
-            if not dir in self.cacheEntries:
-                self.cacheEntries[dir] = []
-                self.__addFiles(dir, "", prefix, legacy)
+        for dir_ in dirs:
+            if not dir_ in self.cacheEntries:
+                self.cacheEntries[dir_] = []
+                self.__addFiles(dir_, "", prefix, legacy)
 
-    def __addFiles(self, dir, subdir, prefix, legacy):
-        for item in os.listdir(os.path.join(dir, subdir)):
+    def __addFiles(self, dir_, subdir, prefix, legacy):
+        for item in os.listdir(os.path.join(dir_, subdir)):
             if item.endswith(".desktop"):
                 try:
-                    menuentry = MenuEntry(os.path.join(subdir, item), dir, prefix)
+                    menuentry = MenuEntry(os.path.join(subdir, item), dir_, prefix)
                 except ParsingError:
                     continue
 
-                self.cacheEntries[dir].append(menuentry)
+                self.cacheEntries[dir_].append(menuentry)
                 if legacy:
                     self.cacheEntries['legacy'].append(menuentry)
-            elif os.path.isdir(os.path.join(dir, subdir, item)) and not legacy:
-                self.__addFiles(dir, os.path.join(subdir, item), prefix, legacy)
+            elif os.path.isdir(os.path.join(dir_, subdir, item)) and not legacy:
+                self.__addFiles(dir_, os.path.join(subdir, item), prefix, legacy)
 
     def get_menu_entries(self, dirs, legacy=True):
-        list = []
-        ids = []
+        entries = []
+        ids = set()
         # handle legacy items
         appdirs = dirs[:]
         if legacy:
@@ -1096,22 +1099,22 @@ class MenuEntryCache:
             return self.cache[key]
         except KeyError:
             pass
-        for dir in appdirs:
-            for menuentry in self.cacheEntries[dir]:
+        for dir_ in appdirs:
+            for menuentry in self.cacheEntries[dir_]:
                 try:
                     if menuentry.DesktopFileID not in ids:
-                        ids.append(menuentry.DesktopFileID)
-                        list.append(menuentry)
-                    elif menuentry.getType() == "System":
-                    # FIXME: This is only 99% correct, but still...
-                        i = list.index(menuentry)
-                        e = list[i]
-                        if e.getType() == "User":
-                            e.Original = menuentry
+                        ids.add(menuentry.DesktopFileID)
+                        entries.append(menuentry)
+                    elif menuentry.getType() == MenuEntry.TYPE_SYSTEM:
+                        # FIXME: This is only 99% correct, but still...
+                        idx = entries.index(menuentry)
+                        entry = entries[idx]
+                        if entry.getType() == MenuEntry.TYPE_USER:
+                            entry.Original = menuentry
                 except UnicodeDecodeError:
                     continue
-        self.cache[key] = list
-        return list
+        self.cache[key] = entries
+        return entries
 
 
 def parse(filename=None):

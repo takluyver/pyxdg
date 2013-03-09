@@ -80,7 +80,7 @@ class MenuEditor(object):
 
         self.__addEntry(parent, menuentry, after, before)
 
-        self.parser.sort(self.menu)
+        self.menu.sort()
 
         return menuentry
 
@@ -96,7 +96,7 @@ class MenuEditor(object):
 
         self.__addEntry(parent, menu, after, before)
 
-        self.parser.sort(self.menu)
+        self.menu.sort()
 
         return menu
 
@@ -105,7 +105,7 @@ class MenuEditor(object):
 
         self.__addEntry(parent, separator, after, before)
 
-        self.parser.sort(self.menu)
+        self.menu.sort()
 
         return separator
 
@@ -113,7 +113,7 @@ class MenuEditor(object):
         self.__deleteEntry(oldparent, menuentry, after, before)
         self.__addEntry(newparent, menuentry, after, before)
 
-        self.parser.sort(self.menu)
+        self.menu.sort()
 
         return menuentry
 
@@ -125,7 +125,7 @@ class MenuEditor(object):
         if oldparent.getPath(True) != newparent.getPath(True):
             self.__addXmlMove(root_menu, os.path.join(oldparent.getPath(True), menu.Name), os.path.join(newparent.getPath(True), menu.Name))
 
-        self.parser.sort(self.menu)
+        self.menu.sort()
 
         return menu
 
@@ -133,14 +133,14 @@ class MenuEditor(object):
         self.__deleteEntry(parent, separator, after, before)
         self.__addEntry(parent, separator, after, before)
 
-        self.parser.sort(self.menu)
+        self.menu.sort()
 
         return separator
 
     def copyMenuEntry(self, menuentry, oldparent, newparent, after=None, before=None):
         self.__addEntry(newparent, menuentry, after, before)
 
-        self.parser.sort(self.menu)
+        self.menu.sort()
 
         return menuentry
 
@@ -182,7 +182,7 @@ class MenuEditor(object):
         menuentry.updateAttributes()
 
         if len(menuentry.Parents) > 0:
-            self.parser.sort(self.menu)
+            self.menu.sort()
 
         return menuentry
 
@@ -233,7 +233,7 @@ class MenuEditor(object):
         menu.Directory.updateAttributes()
 
         if isinstance(menu.Parent, Menu):
-            self.parser.sort(self.menu)
+            self.menu.sort()
 
         return menu
 
@@ -259,7 +259,7 @@ class MenuEditor(object):
             self.__deleteFile(menuentry.DesktopEntry.filename)
             for parent in menuentry.Parents:
                 self.__deleteEntry(parent, menuentry)
-            self.parser.sort(self.menu)
+            self.menu.sort()
         return menuentry
 
     def revertMenuEntry(self, menuentry):
@@ -272,7 +272,7 @@ class MenuEditor(object):
                 index = parent.MenuEntries.index(menuentry)
                 parent.MenuEntries[index] = menuentry.Original
                 menuentry.Original.Parents.append(parent)
-            self.parser.sort(self.menu)
+            self.menu.sort()
         return menuentry
 
     def deleteMenu(self, menu):
@@ -282,20 +282,20 @@ class MenuEditor(object):
             xml_menu = self.__getXmlMenu(menu.getPath(True, True))
             parent = self.__get_parent_node(xml_menu)
             parent.remove(xml_menu)
-            self.parser.sort(self.menu)
+            self.menu.sort()
         return menu
 
     def revertMenu(self, menu):
         if self.getAction(menu) == "revert":
             self.__deleteFile(menu.Directory.DesktopEntry.filename)
             menu.Directory = menu.Directory.Original
-            self.parser.sort(self.menu)
+            self.menu.sort()
         return menu
 
     def deleteSeparator(self, separator):
         self.__deleteEntry(separator.Parent, separator, after=True)
 
-        self.parser.sort(self.menu)
+        self.menu.sort()
 
         return separator
 
@@ -405,15 +405,16 @@ class MenuEditor(object):
         # remove old filenames
         includes = element.findall('Include')
         excludes = element.findall('Exclude')
-        for node in includes + excludes:
+        rules = includes + excludes
+        for rule in rules:
             #FIXME: this finds only Rules whose FIRST child is a Filename element
-            if node[0].tag == "Filename" and node[0].text == filename:
-                element.remove(node)
+            if rule[0].tag == "Filename" and rule[0].text == filename:
+                element.remove(rule)
             # shouldn't it remove all occurences, like the following:
-            #filename_nodes = node.findall('.//Filename'):
+            #filename_nodes = rule.findall('.//Filename'):
                 #for fn in filename_nodes:
                     #if fn.text == filename:
-                        ##element.remove(node)
+                        ##element.remove(rule)
                         #parent = self.__get_parent_node(fn)
                         #parent.remove(fn)
 
