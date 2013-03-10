@@ -5,11 +5,12 @@ import tempfile, shutil
 
 import resources
 
-class MimeTest(unittest.TestCase):
+class MimeTestBase(unittest.TestCase):
     def check_mimetype(self, mimetype, media, subtype):
         self.assertEqual(mimetype.media, media)
         self.assertEqual(mimetype.subtype, subtype)
-    
+
+class MimeTest(MimeTestBase):
     def test_get_type_by_name(self):
         appzip = Mime.get_type_by_name("foo.zip")
         self.check_mimetype(appzip, 'application', 'zip')
@@ -81,60 +82,86 @@ class MimeTest(unittest.TestCase):
         app_executable = Mime.lookup('application/x-executable')
         self.assertEqual(text_python.inherits_from(), set([text_plain, app_executable]))
 
-class MagicDBTest(unittest.TestCase):
+class MagicDBTest(MimeTestBase):
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.path = os.path.join(self.tmpdir, 'mimemagic')
+        with open(self.path, 'wb') as f:
+            f.write(resources.mime_magic_db)
+        
+        # Read the file
+        self.magic = Mime.MagicDB()
+        self.magic.mergeFile(self.path)
+    
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+    
     def test_parsing(self):
-        tmpdir = tempfile.mkdtemp()
-        try:
-            path = os.path.join(tmpdir, 'mimemagic')
-            with open(path, 'wb') as f:
-                f.write(resources.mime_magic_db)
-            
-            # Read the file
-            magic = Mime.MagicDB()
-            magic.mergeFile(path)
-            
-            self.assertEqual(len(magic.alltypes), 7)
-            
-            prio, png = magic.bytype[Mime.lookup('image', 'png')]
-            self.assertEqual(prio, 50)
-            assert isinstance(png, Mime.MagicRule), type(png)
-            self.assertEqual(png.start, 0)
-            self.assertEqual(png.value, b'\x89PNG')
-            self.assertEqual(png.mask, None)
-            self.assertEqual(png.also, None)
-            
-            prio, jpeg = magic.bytype[Mime.lookup('image', 'jpeg')]
-            assert isinstance(jpeg, Mime.MagicMatchAny), type(jpeg)
-            self.assertEqual(len(jpeg.rules), 2)
-            self.assertEqual(jpeg.rules[0].value, b'\xff\xd8\xff')
-            
-            prio, ora = magic.bytype[Mime.lookup('image', 'openraster')]
-            assert isinstance(ora, Mime.MagicRule), type(ora)
-            self.assertEqual(ora.value, b'PK\x03\x04')
-            ora1 = ora.also
-            assert ora1 is not None
-            self.assertEqual(ora1.start, 30)
-            ora2 = ora1.also
-            assert ora2 is not None
-            self.assertEqual(ora2.start, 38)
-            self.assertEqual(ora2.value, b'image/openraster')
-            
-            prio, svg = magic.bytype[Mime.lookup('image', 'svg+xml')]
-            self.assertEqual(len(svg.rules), 2)
-            self.assertEqual(svg.rules[0].value, b'<!DOCTYPE svg')
-            self.assertEqual(svg.rules[0].range, 257)
-            
-            prio, psd = magic.bytype[Mime.lookup('image', 'vnd.adobe.photoshop')]
-            self.assertEqual(psd.value, b'8BPS  \0\0\0\0')
-            self.assertEqual(psd.mask, b'\xff\xff\xff\xff\0\0\xff\xff\xff\xff')
-            
-            prio, elf = magic.bytype[Mime.lookup('application', 'x-executable')]
-            self.assertEqual(elf.value, b'\x01\x11')
-            self.assertEqual(elf.word, 2)
-            
-            # Test that a newline within the value doesn't break parsing.
-            prio, madeup = magic.bytype[Mime.lookup('application', 'madeup')]
-            self.assertEqual(madeup.value, b'ab\ncd')
-            
-        finally:
-            shutil.rmtree(tmpdir)
+        self.assertEqual(len(self.magic.alltypes), 7)
+        
+        prio, png = self.magic.bytype[Mime.lookup('image', 'png')]
+        self.assertEqual(prio, 50)
+        assert isinstance(png, Mime.MagicRule), type(png)
+        self.assertEqual(png.start, 0)
+        self.assertEqual(png.value, b'\x89PNG')
+        self.assertEqual(png.mask, None)
+        self.assertEqual(png.also, None)
+        
+        prio, jpeg = self.magic.bytype[Mime.lookup('image', 'jpeg')]
+        assert isinstance(jpeg, Mime.MagicMatchAny), type(jpeg)
+        self.assertEqual(len(jpeg.rules), 2)
+        self.assertEqual(jpeg.rules[0].value, b'\xff\xd8\xff')
+        
+        prio, ora = self.magic.bytype[Mime.lookup('image', 'openraster')]
+        assert isinstance(ora, Mime.MagicRule), type(ora)
+        self.assertEqual(ora.value, b'PK\x03\x04')
+        ora1 = ora.also
+        assert ora1 is not None
+        self.assertEqual(ora1.start, 30)
+        ora2 = ora1.also
+        assert ora2 is not None
+        self.assertEqual(ora2.start, 38)
+        self.assertEqual(ora2.value, b'image/openraster')
+        
+        prio, svg = self.magic.bytype[Mime.lookup('image', 'svg+xml')]
+        self.assertEqual(len(svg.rules), 2)
+        self.assertEqual(svg.rules[0].value, b'<!DOCTYPE svg')
+        self.assertEqual(svg.rules[0].range, 257)
+        
+        prio, psd = self.magic.bytype[Mime.lookup('image', 'vnd.adobe.photoshop')]
+        self.assertEqual(psd.value, b'8BPS  \0\0\0\0')
+        self.assertEqual(psd.mask, b'\xff\xff\xff\xff\0\0\xff\xff\xff\xff')
+        
+        prio, elf = self.magic.bytype[Mime.lookup('application', 'x-executable')]
+        self.assertEqual(elf.value, b'\x01\x11')
+        self.assertEqual(elf.word, 2)
+        
+        # Test that a newline within the value doesn't break parsing.
+        prio, madeup = self.magic.bytype[Mime.lookup('application', 'madeup')]
+        self.assertEqual(madeup.value, b'ab\ncd')
+    
+    def test_match_data(self):
+        res = self.magic.match_data(resources.png_data)
+        self.check_mimetype(res, 'image', 'png')
+        
+        # With list of options
+        options = [Mime.lookup('image','png'), Mime.lookup('image', 'jpeg')]
+        res = self.magic.match_data(resources.png_data, possible=options)
+        self.check_mimetype(res, 'image', 'png')
+        
+        # Non matching
+        res = self.magic.match_data(b'oiejgoethetrkjgnwefergoijekngjekg')
+        assert res is None, res
+    
+    def test_match_file(self):
+        png_file = os.path.join(self.tmpdir, 'image')
+        with open(png_file, 'wb') as f:
+            f.write(resources.png_data)
+        
+        res = self.magic.match(png_file)
+        self.check_mimetype(res, 'image', 'png')
+        
+        # With list of options
+        options = [Mime.lookup('image','png'), Mime.lookup('image', 'jpeg')]
+        res = self.magic.match(png_file, possible=options)
+        self.check_mimetype(res, 'image', 'png')

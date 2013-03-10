@@ -316,11 +316,13 @@ class MagicDB:
         max_pri & min_pri can be used to specify the maximum & minimum priority
         rules to look for. possible can be a list of mimetypes to check, or None
         (the default) to check all mimetypes until one matches.
+        
+        Returns the MIMEtype found, or None if no entries match.
         """
         if possible is not None:
             types = []
             for mt in possible:
-                pri, rule = self.bytype(mt)
+                pri, rule = self.bytype[mt]
                 types.append((pri, mt, rule))
             types.sort(key=lambda x: x[0])
         else:
@@ -343,7 +345,8 @@ class MagicDB:
         rules to look for. possible can be a list of mimetypes to check, or None
         (the default) to check all mimetypes until one matches.
         
-        Returns the MIMEtype found, or None if the file can't be opened.
+        Returns the MIMEtype found, or None if the file can't be opened or
+        doesn't match any entries.
         """
         try:
             with open(path, 'rb') as f:
