@@ -165,3 +165,7 @@ class MagicDBTest(MimeTestBase):
         options = [Mime.lookup('image','png'), Mime.lookup('image', 'jpeg')]
         res = self.magic.match(png_file, possible=options)
         self.check_mimetype(res, 'image', 'png')
+        
+        # Nonexistant file
+        path = os.path.join(self.tmpdir, 'nonexistant')
+        self.assertRaises(IOError, self.magic.match, path)

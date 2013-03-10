@@ -345,15 +345,12 @@ class MagicDB:
         rules to look for. possible can be a list of mimetypes to check, or None
         (the default) to check all mimetypes until one matches.
         
-        Returns the MIMEtype found, or None if the file can't be opened or
-        doesn't match any entries.
+        Returns the MIMEtype found, or None if no entries match. Raises IOError
+        if the file can't be opened.
         """
-        try:
-            with open(path, 'rb') as f:
-                buf = f.read(self.maxlen)
-            return self.match_data(buf, max_pri, min_pri)
-        except:
-            pass
+        with open(path, 'rb') as f:
+            buf = f.read(self.maxlen)
+        return self.match_data(buf, max_pri, min_pri)
     
     def __repr__(self):
         return '<MagicDB (%d types)>' % len(self.alltypes)
