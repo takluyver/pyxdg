@@ -69,6 +69,10 @@ class MimeTest(MimeTestBase):
         self.check_mimetype(dot_c, 'text', 'x-csrc')
         dot_C = Mime.get_type_by_name('foo.C')
         self.check_mimetype(dot_C, 'text', 'x-c++src')
+        
+        # But most names should be case insensitive
+        dot_GIF = Mime.get_type_by_name('IMAGE.GIF')
+        self.check_mimetype(dot_GIF, 'image', 'gif')
     
     def test_canonical(self):
         text_xml = Mime.lookup('text/xml')

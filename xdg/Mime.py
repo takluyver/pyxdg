@@ -354,7 +354,79 @@ class MagicDB:
     
     def __repr__(self):
         return '<MagicDB (%d types)>' % len(self.alltypes)
+
+class GlobDB(object):
+    def __init__(self, allglobs):
+        self.exts = defaultdict(list)  # Maps extensions to [(type, weight),...]
+        self.cased_exts = defaultdict(list)
+        self.globs = []                # List of (regex, type, weight) triplets
+        self.literals = {}             # Maps literal names to (type, weight)
+        self.cased_literals = {}
+        
+        for mtype, globs in allglobs.items():
+          for weight, pattern, flags in globs:
+        
+            cased = 'cs' in flags
+
+            if pattern.startswith('*.'):
+                # *.foo -- extension pattern
+                rest = pattern[2:]
+                if not ('*' in rest or '[' in rest or '?' in rest):
+                    if cased:
+                        self.cased_exts[rest].append((mtype, weight))
+                    else:
+                        self.exts[rest.lower()].append((mtype, weight))
+                    continue
             
+            if ('*' in pattern or '[' in pattern or '?' in pattern):
+                # Translate the glob pattern to a regex & compile it
+                re_flags = 0 if cased else re.I
+                pattern = re.compile(fnmatch.translate(pattern), flags=re_flags)
+                self.globs.append((pattern, mtype, weight))
+            else:
+                # No wildcards - literal pattern
+                if cased:
+                    self.cased_literals[pattern] = (mtype, weight)
+                else:
+                    self.literals[pattern.lower()] = (mtype, weight)
+        
+        # Sort globs by weight & length
+        self.globs.sort(key=lambda x: (x[2], len(x[0].pattern)) )
+    
+    def _match_path(self, path):
+        """Yields pairs of (mimetype, glob weight)."""
+        leaf = os.path.basename(path)
+
+        # Literals (no wildcards)
+        if leaf in self.cased_literals:
+            yield self.cased_literals[leaf]
+
+        lleaf = leaf.lower()
+        if lleaf in self.literals:
+            yield self.literals[lleaf]
+
+        # Extensions
+        ext = leaf
+        while 1:
+            p = ext.find('.')
+            if p < 0: break
+            ext = ext[p + 1:]
+            if ext in self.cased_exts:
+                for res in self.cased_exts[ext]:
+                    yield res
+        ext = lleaf
+        while 1:
+            p = ext.find('.')
+            if p < 0: break
+            ext = ext[p+1:]
+            if ext in self.exts:
+                for res in self.exts[ext]:
+                    yield res
+        
+        # Other globs
+        for (regex, mime_type, weight) in self.globs:
+            if regex.match(leaf):
+                yield (mime_type, weight)
 
 # Some well-known types
 text = lookup('text', 'plain')
@@ -370,45 +442,44 @@ app_exe = lookup('application', 'executable')
 _cache_uptodate = False
 
 def _cache_database():
-    global exts, globs, literals, magic, aliases, inheritance, _cache_uptodate
+    global globs, magic, aliases, inheritance, _cache_uptodate
 
     _cache_uptodate = True
 
-    exts = {}       # Maps extensions to types
-    globs = []      # List of (glob, type) pairs
-    literals = {}   # Maps literal names to types
     aliases = {}    # Maps alias Mime types to canonical names
     inheritance = defaultdict(set) # Maps to sets of parent mime types.
-    magic = MagicDB()
-
+    
+    # Load filename patterns (globs)
+    allglobs = defaultdict(list)  # Maps mimetype to [(weight, glob, flags), ...]
     def _import_glob_file(path):
         """Loads name matching information from a MIME directory."""
         with open(path) as f:
           for line in f:
-            if line.startswith('#'): continue
-            line = line[:-1]
-
-            type_name, pattern = line.split(':', 1)
+            if line.startswith('#'): continue   # Comment
+            
+            fields = line[:-1].split(':')
+            weight, type_name, pattern = fields[:3]
             mtype = lookup(type_name)
-
-            if pattern.startswith('*.'):
-                rest = pattern[2:]
-                if not ('*' in rest or '[' in rest or '?' in rest):
-                    if rest not in exts:
-                        exts[rest] = mtype
-                    continue
-            if '*' in pattern or '[' in pattern or '?' in pattern:
-                globs.append((pattern, mtype))
+            if len(fields) > 3:
+                flags = fields[3].split(',')
             else:
-                literals[pattern] = mtype
+                flags = []
+                
+            if pattern == '__NOGLOBS__':
+                # This signals to discard any previous globs
+                allglobs.pop(mtype, None)
+                continue
+            
+            allglobs[mtype].append((weight, pattern, flags))
 
-    for path in BaseDirectory.load_data_paths(os.path.join('mime', 'globs')):
+    for path in BaseDirectory.load_data_paths(os.path.join('mime', 'globs2')):
         _import_glob_file(path)
+    globs = GlobDB(allglobs)
+    
+    # Load magic sniffing data
+    magic = MagicDB()    
     for path in BaseDirectory.load_data_paths(os.path.join('mime', 'magic')):
         magic.mergeFile(path)
-
-    # Sort globs by length
-    globs.sort(key=lambda x: len(x[0]) )
     
     # Load aliases
     for path in BaseDirectory.load_data_paths(os.path.join('mime', 'aliases')):
@@ -431,35 +502,10 @@ def update_cache():
 def get_type_by_name(path):
     """Returns type of file by its name, or None if not known"""
     update_cache()
-
-    leaf = os.path.basename(path)
-    if leaf in literals:
-        return literals[leaf]
-
-    lleaf = leaf.lower()
-    if lleaf in literals:
-        return literals[lleaf]
-
-    ext = leaf
-    while 1:
-        p = ext.find('.')
-        if p < 0: break
-        ext = ext[p + 1:]
-        if ext in exts:
-            return exts[ext]
-    ext = lleaf
-    while 1:
-        p = ext.find('.')
-        if p < 0: break
-        ext = ext[p+1:]
-        if ext in exts:
-            return exts[ext]
-    for (glob, mime_type) in globs:
-        if fnmatch.fnmatch(leaf, glob):
-            return mime_type
-        if fnmatch.fnmatch(lleaf, glob):
-            return mime_type
-    return None
+    try:
+        return next(globs._match_path(path))[0]
+    except StopIteration:
+        return None
 
 def get_type_by_contents(path, max_pri=100, min_pri=0):
     """Returns type of file by its contents, or None if not known"""
@@ -498,6 +544,7 @@ def get_type(path, follow=True, name_pri=100):
         return t or text
 
     if stat.S_ISREG(st.st_mode):
+        # Regular file
         t = get_type_by_contents(path, min_pri=name_pri)
         if not t: t = get_type_by_name(path)
         if not t: t = get_type_by_contents(path, max_pri=name_pri)
