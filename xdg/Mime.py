@@ -209,9 +209,9 @@ class MagicRule:
                 return True
 
     def __repr__(self):
-        return '<MagicRule %d>%d=[%d]%r&%r~%d+%d>' % (self.nest,
+        return '<MagicRule >%d=[%d]%r&%r~%d+%d>' % (
                                   self.start,
-                                  self.lenvalue,
+                                  len(self.value),
                                   self.value,
                                   self.mask,
                                   self.word,
@@ -292,8 +292,7 @@ class MagicDB:
 
             while True:
                 shead = f.readline().decode('ascii')
-                print(shead)
-                #print shead
+                #print(shead)
                 if not shead:
                     break
                 if shead[0] != '[' or shead[-2:] != ']\n':
