@@ -80,3 +80,61 @@ class MimeTest(unittest.TestCase):
         text_plain = Mime.lookup('text/plain')
         app_executable = Mime.lookup('application/x-executable')
         self.assertEqual(text_python.inherits_from(), set([text_plain, app_executable]))
+
+class MagicDBTest(unittest.TestCase):
+    def test_parsing(self):
+        tmpdir = tempfile.mkdtemp()
+        try:
+            path = os.path.join(tmpdir, 'mimemagic')
+            with open(path, 'wb') as f:
+                f.write(resources.mime_magic_db)
+            
+            # Read the file
+            magic = Mime.MagicDB()
+            magic.mergeFile(path)
+            
+            self.assertEqual(len(magic.alltypes), 7)
+            
+            prio, png = magic.bytype[Mime.lookup('image', 'png')]
+            self.assertEqual(prio, 50)
+            assert isinstance(png, Mime.MagicRule), type(png)
+            self.assertEqual(png.start, 0)
+            self.assertEqual(png.value, b'\x89PNG')
+            self.assertEqual(png.mask, None)
+            self.assertEqual(png.also, None)
+            
+            prio, jpeg = magic.bytype[Mime.lookup('image', 'jpeg')]
+            assert isinstance(jpeg, Mime.MagicMatchAny), type(jpeg)
+            self.assertEqual(len(jpeg.rules), 2)
+            self.assertEqual(jpeg.rules[0].value, b'\xff\xd8\xff')
+            
+            prio, ora = magic.bytype[Mime.lookup('image', 'openraster')]
+            assert isinstance(ora, Mime.MagicRule), type(ora)
+            self.assertEqual(ora.value, b'PK\x03\x04')
+            ora1 = ora.also
+            assert ora1 is not None
+            self.assertEqual(ora1.start, 30)
+            ora2 = ora1.also
+            assert ora2 is not None
+            self.assertEqual(ora2.start, 38)
+            self.assertEqual(ora2.value, b'image/openraster')
+            
+            prio, svg = magic.bytype[Mime.lookup('image', 'svg+xml')]
+            self.assertEqual(len(svg.rules), 2)
+            self.assertEqual(svg.rules[0].value, b'<!DOCTYPE svg')
+            self.assertEqual(svg.rules[0].range, 257)
+            
+            prio, psd = magic.bytype[Mime.lookup('image', 'vnd.adobe.photoshop')]
+            self.assertEqual(psd.value, b'8BPS  \0\0\0\0')
+            self.assertEqual(psd.mask, b'\xff\xff\xff\xff\0\0\xff\xff\xff\xff')
+            
+            prio, elf = magic.bytype[Mime.lookup('application', 'x-executable')]
+            self.assertEqual(elf.value, b'\x01\x11')
+            self.assertEqual(elf.word, 2)
+            
+            # Test that a newline within the value doesn't break parsing.
+            prio, madeup = magic.bytype[Mime.lookup('application', 'madeup')]
+            self.assertEqual(madeup.value, b'ab\ncd')
+            
+        finally:
+            shutil.rmtree(tmpdir)

@@ -448,6 +448,28 @@ kde_legacy_menu = """<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
 </Menu>
 """
 
+mime_magic_db = b"""MIME-Magic\0
+[50:image/png]
+>0=\0\x04\x89PNG
+[50:image/jpeg]
+>0=\0\x03\xff\xd8\xff
+>0=\0\x02\xff\xd8
+[50:image/openraster]
+>0=\0\x04PK\x03\x04
+1>30=\0\x08mimetype
+2>38=\0\x10image/openraster
+[80:image/svg+xml]
+>0=\0\x0d<!DOCTYPE svg+257
+>0=\0\x04<svg+257
+[50:image/vnd.adobe.photoshop]
+>0=\0\x0a8BPS  \0\0\0\0&\xff\xff\xff\xff\0\0\xff\xff\xff\xff
+[40:application/x-executable]
+>0=\0\02\x01\x11~2
+[10:application/madeup]
+>0=\0\x05ab
+cd
+"""
+
 png_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x04sBIT\x08\x08\x08\x08|\x08d\x88\x00\x00\x00\rIDAT\x08\x99c\xf8\x7f\x83\xe1?\x00\x07\x88\x02\xd7\xd9\n\xd8\xdc\x00\x00\x00\x00IEND\xaeB`\x82'
 
 icon_data = """[Icon Data]
