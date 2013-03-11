@@ -173,3 +173,41 @@ class MagicDBTest(MimeTestBase):
         # Nonexistant file
         path = os.path.join(self.tmpdir, 'nonexistant')
         self.assertRaises(IOError, self.magic.match, path)
+
+_l = Mime.lookup
+
+class GlobDBTest(MimeTestBase):
+    allglobs = {_l('text/x-makefile'): [(50, 'makefile', [])],
+                _l('application/x-core'): [(50, 'core', ['cs']), (50, 'core', [])],
+                _l('text/x-c++src'): [(50, '*.C', ['cs'])],
+                _l('text/x-csrc'): [(50, '*.c', ['cs'])],
+                _l('text/x-python'): [(50, '*.py', [])],
+                _l('video/x-anim'): [(50, '*.anim[1-9j]', [])],
+                _l('text/x-readme'): [(10, 'readme*', [])],
+               }
+
+    def test_build_globdb(self):
+        globs = Mime.GlobDB(self.allglobs)
+        
+        
+        self.assertEqual(len(globs.cased_literals), 1)
+        assert 'core' in globs.cased_literals, globs.cased_literals
+        
+        literals = globs.literals
+        self.assertEqual(len(literals), 2)
+        assert 'core' in literals, literals
+        assert 'makefile' in literals, literals
+        
+        cexts = globs.cased_exts
+        self.assertEqual(len(cexts), 2)
+        assert 'C' in cexts, cexts
+        assert 'c' in cexts, cexts
+        
+        exts = globs.exts
+        self.assertEqual(len(exts), 1)
+        assert 'py' in exts, exts
+        
+        pats = globs.globs
+        self.assertEqual(len(pats), 2)
+        self.assertEqual(pats[0][1], _l('video', 'x-anim'))
+        self.assertEqual(pats[1][1], _l('text', 'x-readme'))

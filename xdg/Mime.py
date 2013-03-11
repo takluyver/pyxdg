@@ -391,7 +391,7 @@ class GlobDB(object):
                     self.literals[pattern.lower()] = (mtype, weight)
         
         # Sort globs by weight & length
-        self.globs.sort(key=lambda x: (x[2], len(x[0].pattern)) )
+        self.globs.sort(reverse=True, key=lambda x: (x[2], len(x[0].pattern)) )
     
     def _match_path(self, path):
         """Yields pairs of (mimetype, glob weight)."""
@@ -459,6 +459,7 @@ def _cache_database():
             
             fields = line[:-1].split(':')
             weight, type_name, pattern = fields[:3]
+            weight = int(weight)
             mtype = lookup(type_name)
             if len(fields) > 3:
                 flags = fields[3].split(',')
