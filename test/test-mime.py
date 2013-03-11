@@ -142,7 +142,8 @@ class MagicDBTest(MimeTestBase):
         
         # Test that a newline within the value doesn't break parsing.
         prio, madeup = self.magic.bytype[Mime.lookup('application', 'madeup')]
-        self.assertEqual(madeup.value, b'ab\ncd')
+        self.assertEqual(madeup.rules[0].value, b'ab\ncd')
+        self.assertEqual(madeup.rules[1].mask, b'\xff\xff\n\xff\xff')
     
     def test_match_data(self):
         res = self.magic.match_data(resources.png_data)
@@ -156,6 +157,11 @@ class MagicDBTest(MimeTestBase):
         # Non matching
         res = self.magic.match_data(b'oiejgoethetrkjgnwefergoijekngjekg')
         assert res is None, res
+    
+    def test_match_nested(self):
+        data = b'PK\x03\x04' + (b' ' * 26) + b'mimetype' + b'image/openraster'
+        res = self.magic.match_data(data)
+        self.check_mimetype(res, 'image', 'openraster')
     
     def test_match_file(self):
         png_file = os.path.join(self.tmpdir, 'image')
