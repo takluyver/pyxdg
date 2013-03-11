@@ -112,6 +112,9 @@ class MIMEtype:
     def __repr__(self):
         return '<%s: %s>' % (self, self._comment or '(comment not loaded)')
 
+class UnknownMagicRuleFormat(ValueError):
+    pass
+
 class MagicRule:
     also = None
     
@@ -265,7 +268,7 @@ class MagicMatchAny(object):
         instance, recursing down the tree.
         
         Where there's only one top-level rule, this is returned directly,
-        to simplify the nested structure.
+        to simplify the nested structure. Returns None if no rules were read.
         """
         rules = []
         for rule, subrules in tree:
@@ -273,6 +276,8 @@ class MagicMatchAny(object):
                 rule.also = cls.from_rule_tree(subrules)
             rules.append(rule)
         
+        if len(rules)==0:
+            return None
         if len(rules)==1:
             return rules[0]
         return cls(rules)        
@@ -302,6 +307,8 @@ class MagicDB:
                 pri = int(pri)
                 mtype = lookup(tname)
                 rule = MagicMatchAny.from_file(f)
+                if rule is None:
+                    continue
                 #print rule
                 
                 self.alltypes.append((pri, mtype, rule))
