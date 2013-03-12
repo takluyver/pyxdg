@@ -82,6 +82,10 @@ class MimeTest(MimeTestBase):
         text_xml = Mime.lookup('text/xml')
         self.check_mimetype(text_xml, 'text', 'xml')
         self.check_mimetype(text_xml.canonical(), 'application', 'xml')
+        
+        # Already is canonical
+        python = Mime.lookup('text/x-python')
+        self.check_mimetype(python.canonical(), 'text', 'x-python')
     
     def test_inheritance(self):
         text_python = Mime.lookup('text/x-python')
