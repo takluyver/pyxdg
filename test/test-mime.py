@@ -157,6 +157,12 @@ class MagicDBTest(MimeTestBase):
         res = self.magic.match_data(resources.png_data)
         self.check_mimetype(res, 'image', 'png')
         
+        # Denied by min or max priority
+        notpng_max40 = self.magic.match_data(resources.png_data, max_pri=40)
+        assert notpng_max40 is None, notpng_max40
+        notpng_min60 = self.magic.match_data(resources.png_data, min_pri=60)
+        assert notpng_min60 is None, notpng_min60
+        
         # With list of options
         options = [Mime.lookup('image','png'), Mime.lookup('image', 'jpeg')]
         res = self.magic.match_data(resources.png_data, possible=options)
