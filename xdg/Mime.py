@@ -110,7 +110,10 @@ class MIMEtype:
         return self.media + '/' + self.subtype
 
     def __repr__(self):
-        return '<%s: %s>' % (self, self._comment or '(comment not loaded)')
+        return 'MIMEtype(%r, %r)' % (self.media, self.subtype)
+    
+    def __hash__(self):
+        return hash(self.media) ^ hash(self.subtype)
 
 class UnknownMagicRuleFormat(ValueError):
     pass
@@ -212,9 +215,8 @@ class MagicRule:
                 return True
 
     def __repr__(self):
-        return '<MagicRule >%d=[%d]%r&%r~%d+%d>' % (
+        return 'MagicRule(start=%r, value=%r, mask=%r, word=%r, range=%r)' %(
                                   self.start,
-                                  len(self.value),
                                   self.value,
                                   self.mask,
                                   self.word,

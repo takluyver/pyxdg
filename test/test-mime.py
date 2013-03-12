@@ -19,6 +19,10 @@ class MimeTest(MimeTestBase):
         imgpng = Mime.get_type_by_data(resources.png_data)
         self.check_mimetype(imgpng, 'image', 'png')
     
+    def test_mimetype_repr(self):
+        mt = Mime.lookup('application', 'zip')
+        repr(mt)   # Just check that this doesn't throw an error.
+    
     def test_get_type_by_contents(self):
         tmpdir = tempfile.mkdtemp()
         try:
@@ -103,9 +107,13 @@ class MagicDBTest(MimeTestBase):
     def test_parsing(self):
         self.assertEqual(len(self.magic.alltypes), 7)
         
+        # Check repr() doesn't throw an error
+        repr(self.magic)
+        
         prio, png = self.magic.bytype[Mime.lookup('image', 'png')]
         self.assertEqual(prio, 50)
         assert isinstance(png, Mime.MagicRule), type(png)
+        repr(png)    # Check this doesn't throw an error.
         self.assertEqual(png.start, 0)
         self.assertEqual(png.value, b'\x89PNG')
         self.assertEqual(png.mask, None)
