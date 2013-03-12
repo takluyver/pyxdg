@@ -400,6 +400,18 @@ class GlobDB(object):
         # Sort globs by weight & length
         self.globs.sort(reverse=True, key=lambda x: (x[2], len(x[0].pattern)) )
     
+    def first_match(self, path):
+        """Return the first match found for a given path, or None if no match
+        is found."""
+        try:
+            return next(self._match_path(path))[0]
+        except StopIteration:
+            return None
+    
+    def all_matches(self, path):
+        """Return a list of (MIMEtype, glob weight) pairs for the path."""
+        return list(self._match_path(path))
+    
     def _match_path(self, path):
         """Yields pairs of (mimetype, glob weight)."""
         leaf = os.path.basename(path)
@@ -510,10 +522,7 @@ def update_cache():
 def get_type_by_name(path):
     """Returns type of file by its name, or None if not known"""
     update_cache()
-    try:
-        return next(globs._match_path(path))[0]
-    except StopIteration:
-        return None
+    return globs.first_match(path)
 
 def get_type_by_contents(path, max_pri=100, min_pri=0):
     """Returns type of file by its contents, or None if not known"""

@@ -190,11 +190,14 @@ class GlobDBTest(MimeTestBase):
                 _l('text/x-python'): [(50, '*.py', [])],
                 _l('video/x-anim'): [(50, '*.anim[1-9j]', [])],
                 _l('text/x-readme'): [(10, 'readme*', [])],
+                _l('text/x-readme2'): [(20, 'readme2*', [])],
                }
+    
+    def setUp(self):
+        self.globs = Mime.GlobDB(self.allglobs)
 
     def test_build_globdb(self):
-        globs = Mime.GlobDB(self.allglobs)
-        
+        globs = self.globs
         
         self.assertEqual(len(globs.cased_literals), 1)
         assert 'core' in globs.cased_literals, globs.cased_literals
@@ -214,6 +217,35 @@ class GlobDBTest(MimeTestBase):
         assert 'py' in exts, exts
         
         pats = globs.globs
-        self.assertEqual(len(pats), 2)
+        self.assertEqual(len(pats), 3)
         self.assertEqual(pats[0][1], _l('video', 'x-anim'))
-        self.assertEqual(pats[1][1], _l('text', 'x-readme'))
+        self.assertEqual(pats[1][1], _l('text', 'x-readme2'))
+
+    def test_first_match(self):
+        g = self.globs
+        
+        self.check_mimetype(g.first_match('Makefile'), 'text', 'x-makefile')
+        self.check_mimetype(g.first_match('core'), 'application', 'x-core')
+        self.check_mimetype(g.first_match('foo.C'), 'text', 'x-c++src')
+        self.check_mimetype(g.first_match('foo.c'), 'text', 'x-csrc')
+        self.check_mimetype(g.first_match('foo.py'), 'text', 'x-python')
+        self.check_mimetype(g.first_match('foo.Anim4'), 'video', 'x-anim')
+        self.check_mimetype(g.first_match('README.txt'), 'text', 'x-readme')
+        self.check_mimetype(g.first_match('README2.txt'), 'text', 'x-readme2')
+        self.check_mimetype(g.first_match('README'), 'text', 'x-readme')
+        
+        qrte = g.first_match('qrte')
+        assert qrte is None, qrte
+    
+    def test_all_matches(self):
+        g = self.globs
+        
+        self.assertEqual(g.all_matches('qrte'), [])
+        
+        self.assertEqual(g.all_matches('Makefile'), 
+                                    [(_l('text', 'x-makefile'), 50)])
+        
+        self.assertEqual(g.all_matches('readme2.rst'),
+                                [(_l('text', 'x-readme2'), 20),
+                                 (_l('text', 'x-readme'), 10)]
+                                 )
