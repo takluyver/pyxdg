@@ -365,14 +365,48 @@ class MagicDB:
         return '<MagicDB (%d types)>' % len(self.alltypes)
 
 class GlobDB(object):
-    def __init__(self, allglobs):
+    def __init__(self):
+        """Prepare the GlobDB. It can't actually be used until .finalise() is
+        called, but merge_file() can be used to add data before that.
+        """
+        # Maps mimetype to [(weight, glob, flags), ...]
+        self.allglobs = defaultdict(list)
+
+    def merge_file(self, path):
+        """Loads name matching information from a globs2 file."""#
+        allglobs = self.allglobs
+        with open(path) as f:
+            for line in f:
+                if line.startswith('#'): continue   # Comment
+                
+                fields = line[:-1].split(':')
+                weight, type_name, pattern = fields[:3]
+                weight = int(weight)
+                mtype = lookup(type_name)
+                if len(fields) > 3:
+                    flags = fields[3].split(',')
+                else:
+                    flags = []
+                    
+                if pattern == '__NOGLOBS__':
+                    # This signals to discard any previous globs
+                    allglobs.pop(mtype, None)
+                    continue
+                
+                allglobs[mtype].append((weight, pattern, flags))
+    
+    def finalise(self):
+        """Prepare the GlobDB for matching.
+        
+        This should be called after all files have been merged into it.
+        """
         self.exts = defaultdict(list)  # Maps extensions to [(type, weight),...]
         self.cased_exts = defaultdict(list)
         self.globs = []                # List of (regex, type, weight) triplets
         self.literals = {}             # Maps literal names to (type, weight)
         self.cased_literals = {}
         
-        for mtype, globs in allglobs.items():
+        for mtype, globs in self.allglobs.items():
           for weight, pattern, flags in globs:
         
             cased = 'cs' in flags
@@ -471,32 +505,10 @@ def _cache_database():
     inheritance = defaultdict(set) # Maps to sets of parent mime types.
     
     # Load filename patterns (globs)
-    allglobs = defaultdict(list)  # Maps mimetype to [(weight, glob, flags), ...]
-    def _import_glob_file(path):
-        """Loads name matching information from a MIME directory."""
-        with open(path) as f:
-          for line in f:
-            if line.startswith('#'): continue   # Comment
-            
-            fields = line[:-1].split(':')
-            weight, type_name, pattern = fields[:3]
-            weight = int(weight)
-            mtype = lookup(type_name)
-            if len(fields) > 3:
-                flags = fields[3].split(',')
-            else:
-                flags = []
-                
-            if pattern == '__NOGLOBS__':
-                # This signals to discard any previous globs
-                allglobs.pop(mtype, None)
-                continue
-            
-            allglobs[mtype].append((weight, pattern, flags))
-
+    globs = GlobDB()
     for path in BaseDirectory.load_data_paths(os.path.join('mime', 'globs2')):
-        _import_glob_file(path)
-    globs = GlobDB(allglobs)
+        globs.merge_file(path)
+    globs.finalise()
     
     # Load magic sniffing data
     magic = MagicDB()    

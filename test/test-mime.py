@@ -208,7 +208,9 @@ class GlobDBTest(MimeTestBase):
                }
     
     def setUp(self):
-        self.globs = Mime.GlobDB(self.allglobs)
+        self.globs = Mime.GlobDB()
+        self.globs.allglobs = self.allglobs
+        self.globs.finalise()
 
     def test_build_globdb(self):
         globs = self.globs
@@ -263,3 +265,30 @@ class GlobDBTest(MimeTestBase):
                                 [(_l('text', 'x-readme2'), 20),
                                  (_l('text', 'x-readme'), 10)]
                                  )
+
+class GlobsParsingTest(MimeTestBase):
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+    
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+    
+    def test_parsing(self):
+        p1 = os.path.join(self.tmpdir, 'globs2a')
+        with open(p1, 'w') as f:
+            f.write(resources.mime_globs2_a)
+        
+        p2 = os.path.join(self.tmpdir, 'globs2b')
+        with open(p2, 'w') as f:
+            f.write(resources.mime_globs2_b)
+        
+        globs = Mime.GlobDB()
+        globs.merge_file(p1)
+        globs.merge_file(p2)
+        
+        ag = globs.allglobs
+        self.assertEqual(ag[_l('text', 'x-diff')],
+                                [(55, '*.patch', []), (50, '*.diff', [])] )
+        self.assertEqual(ag[_l('text', 'x-c++src')], [(50, '*.C', ['cs'])] )
+        self.assertEqual(ag[_l('text', 'x-readme')], [(20, 'RDME', ['cs'])] )
+        assert _l('text', 'x-python') not in ag, ag

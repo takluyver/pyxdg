@@ -448,6 +448,23 @@ kde_legacy_menu = """<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
 </Menu>
 """
 
+mime_globs2_a = """#globs2 MIME data file
+55:text/x-diff:*.patch
+50:text/x-c++src:*.C:cs
+50:text/x-python:*.py
+10:text/x-readme:readme*
+"""
+
+mime_globs2_b = """#globs2 MIME data file
+# Add to existing MIMEtype
+50:text/x-diff:*.diff
+# Remove one
+50:text/x-python:__NOGLOBS__
+# Replace one
+40:text/x-readme:__NOGLOBS__
+20:text/x-readme:RDME:cs
+"""
+
 mime_magic_db = b"""MIME-Magic\0
 [50:image/png]
 >0=\0\x04\x89PNG
