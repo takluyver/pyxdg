@@ -622,21 +622,21 @@ class Parser(object):
         self._directory_dirs = set()
         self.cache = MenuEntryCache()
 
-        self.root = self.parse_menu(tree.getroot(), filename)
-        self.root.tree = tree
-        self.root.filename = filename
+        menu = self.parse_menu(tree.getroot(), filename)
+        menu.tree = tree
+        menu.filename = filename
 
-        self.handle_moves(self.root)
-        self.post_parse(self.root)
+        self.handle_moves(menu)
+        self.post_parse(menu)
 
         # generate the menu
-        self.generate_not_only_allocated(self.root)
-        self.generate_only_allocated(self.root)
+        self.generate_not_only_allocated(menu)
+        self.generate_only_allocated(menu)
 
         # and finally sort
-        self.root.sort()
+        menu.sort()
 
-        return self.root
+        return menu
 
     def parse_menu(self, node, filename):
         menu = Menu()
