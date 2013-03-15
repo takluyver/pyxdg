@@ -21,12 +21,14 @@ Example::
 
 .. autofunction:: get_type_by_data
 
+.. autofunction:: get_extensions
+
 Installing Mime data
 --------------------
 
 .. autofunction:: install_mime_info
 
-MimeType objects
+MIMEtype objects
 ----------------
 
 .. autofunction:: lookup

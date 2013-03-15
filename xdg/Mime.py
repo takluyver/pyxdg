@@ -593,6 +593,31 @@ def get_type(path, follow=True, name_pri=100):
     elif stat.S_ISSOCK(st.st_mode): return inode_socket
     return inode_door
 
+_mime2ext_cache = None
+_mime2ext_cache_uptodate = False
+
+def get_extensions(mimetype):
+    """Retrieve the set of filename extensions matching a given MIMEtype.
+    
+    Extensions are returned without a leading dot, e.g. 'py'. If no extensions
+    are registered for the MIMEtype, returns an empty set.
+    
+    The extensions are stored in a cache the first time this is called.
+    
+    .. versionadded:: 1.0
+    """
+    global _mime2ext_cache, _mime2ext_cache_uptodate
+    update_cache()
+    if not _mime2ext_cache_uptodate:
+        _mime2ext_cache = defaultdict(set)
+        for ext, mtypes in globs.exts.items():
+            for mtype, prio in mtypes:
+                _mime2ext_cache[mtype].add(ext)
+        _mime2ext_cache_uptodate = True
+    
+    return _mime2ext_cache[mimetype]
+        
+
 def install_mime_info(application, package_file):
     """Copy 'package_file' as ``~/.local/share/mime/packages/<application>.xml.``
     If package_file is None, install ``<app_dir>/<application>.xml``.

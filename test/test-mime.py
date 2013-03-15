@@ -209,6 +209,7 @@ class GlobDBTest(MimeTestBase):
                 _l('video/x-anim'): [(50, '*.anim[1-9j]', [])],
                 _l('text/x-readme'): [(10, 'readme*', [])],
                 _l('text/x-readme2'): [(20, 'readme2*', [])],
+                _l('image/jpeg'): [(50, '*.jpg', []), (50, '*.jpeg', [])],
                }
     
     def setUp(self):
@@ -233,8 +234,10 @@ class GlobDBTest(MimeTestBase):
         assert 'c' in cexts, cexts
         
         exts = globs.exts
-        self.assertEqual(len(exts), 1)
+        self.assertEqual(len(exts), 3)
         assert 'py' in exts, exts
+        assert 'jpeg' in exts, exts
+        assert 'jpg' in exts, exts
         
         pats = globs.globs
         self.assertEqual(len(pats), 3)
@@ -269,6 +272,20 @@ class GlobDBTest(MimeTestBase):
                                 [(_l('text', 'x-readme2'), 20),
                                  (_l('text', 'x-readme'), 10)]
                                  )
+    
+    def test_get_extensions(self):
+        Mime.globs = self.globs
+        Mime._cache_uptodate = True
+        
+        try:
+            get_ext = Mime.get_extensions
+            self.assertEqual(get_ext(_l('text/x-python')), set(['py']))
+            self.assertEqual(get_ext(_l('image/jpeg')), set(['jpg', 'jpeg']))
+            self.assertEqual(get_ext(_l('image/inary')), set())
+        finally:
+            # Ensure that future tests will re-cache the database.
+            Mime._cache_uptodate = False
+
 
 class GlobsParsingTest(MimeTestBase):
     def setUp(self):
