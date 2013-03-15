@@ -369,8 +369,8 @@ class GlobDB(object):
         """Prepare the GlobDB. It can't actually be used until .finalise() is
         called, but merge_file() can be used to add data before that.
         """
-        # Maps mimetype to [(weight, glob, flags), ...]
-        self.allglobs = defaultdict(list)
+        # Maps mimetype to {(weight, glob, flags), ...}
+        self.allglobs = defaultdict(set)
 
     def merge_file(self, path):
         """Loads name matching information from a globs2 file."""#
@@ -386,14 +386,14 @@ class GlobDB(object):
                 if len(fields) > 3:
                     flags = fields[3].split(',')
                 else:
-                    flags = []
+                    flags = ()
                     
                 if pattern == '__NOGLOBS__':
                     # This signals to discard any previous globs
                     allglobs.pop(mtype, None)
                     continue
                 
-                allglobs[mtype].append((weight, pattern, flags))
+                allglobs[mtype].add((weight, pattern, tuple(flags)))
     
     def finalise(self):
         """Prepare the GlobDB for matching.

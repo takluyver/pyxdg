@@ -206,6 +206,7 @@ class GlobDBTest(MimeTestBase):
                 _l('text/x-c++src'): [(50, '*.C', ['cs'])],
                 _l('text/x-csrc'): [(50, '*.c', ['cs'])],
                 _l('text/x-python'): [(50, '*.py', [])],
+                _l('text/x-python'): [(50, '*.py', [])],    # Check not added 2x
                 _l('video/x-anim'): [(50, '*.anim[1-9j]', [])],
                 _l('text/x-readme'): [(10, 'readme*', [])],
                 _l('text/x-readme2'): [(20, 'readme2*', [])],
@@ -236,6 +237,7 @@ class GlobDBTest(MimeTestBase):
         exts = globs.exts
         self.assertEqual(len(exts), 3)
         assert 'py' in exts, exts
+        self.assertEqual(exts['py'], [(_l('text/x-python'), 50)] )
         assert 'jpeg' in exts, exts
         assert 'jpg' in exts, exts
         
@@ -309,7 +311,7 @@ class GlobsParsingTest(MimeTestBase):
         
         ag = globs.allglobs
         self.assertEqual(ag[_l('text', 'x-diff')],
-                                [(55, '*.patch', []), (50, '*.diff', [])] )
-        self.assertEqual(ag[_l('text', 'x-c++src')], [(50, '*.C', ['cs'])] )
-        self.assertEqual(ag[_l('text', 'x-readme')], [(20, 'RDME', ['cs'])] )
+                                set([(55, '*.patch', ()), (50, '*.diff', ())]) )
+        self.assertEqual(ag[_l('text', 'x-c++src')], set([(50, '*.C', ('cs',))]) )
+        self.assertEqual(ag[_l('text', 'x-readme')], set([(20, 'RDME', ('cs',))]) )
         assert _l('text', 'x-python') not in ag, ag
