@@ -5,6 +5,10 @@ import tempfile, shutil
 
 import resources
 
+example_dir = os.path.join(os.path.dirname(__file__), 'example')
+def example_file(filename):
+    return os.path.join(example_dir, filename)
+
 class MimeTestBase(unittest.TestCase):
     def check_mimetype(self, mimetype, media, subtype):
         self.assertEqual(mimetype.media, media)
@@ -35,30 +39,64 @@ class MimeTest(MimeTestBase):
         
         finally:
             shutil.rmtree(tmpdir)
-    
+
     def test_get_type(self):
-        tmpdir = tempfile.mkdtemp()
-        try:
-            # File that doesn't exist - get type by name
-            path = os.path.join(tmpdir, "test.png")
-            imgpng = Mime.get_type(path)
-            self.check_mimetype(imgpng, 'image', 'png')
-            
-            # File that does exist - get type by contents
-            path = os.path.join(tmpdir, "test")
-            with open(path, "wb") as f:
-                f.write(resources.png_data)
-            imgpng = Mime.get_type(path)
-            self.check_mimetype(imgpng, 'image', 'png')
+        # File that doesn't exist - get type by name
+        imgpng = Mime.get_type(example_file("test.png"))
+        self.check_mimetype(imgpng, 'image', 'png')
         
-            # Directory - special case
-            path = os.path.join(tmpdir, "test2")
-            os.mkdir(path)
-            inodedir = Mime.get_type(path)
-            self.check_mimetype(inodedir, 'inode', 'directory')
+        # File that does exist - get type by contents
+        imgpng = Mime.get_type(example_file("png_file"))
+        self.check_mimetype(imgpng, 'image', 'png')
+    
+        # Directory - special case
+        inodedir = Mime.get_type(example_file("subdir"))
+        self.check_mimetype(inodedir, 'inode', 'directory')
         
-        finally:
-            shutil.rmtree(tmpdir)
+        # Mystery files
+        mystery_text = Mime.get_type(example_file('mystery_text'))
+        self.check_mimetype(mystery_text, 'text', 'plain')
+        mystery_exe = Mime.get_type(example_file('mystery_exe'))
+        self.check_mimetype(mystery_exe, 'application', 'executable')
+        
+        # Symlink
+        self.check_mimetype(Mime.get_type(example_file("png_symlink")),
+                                    'image', 'png')
+        self.check_mimetype(Mime.get_type(example_file("png_symlink"), follow=False),
+                                    'inode', 'symlink')
+
+    def test_get_type2(self):
+        # File that doesn't exist - use the name
+        self.check_mimetype(Mime.get_type2(example_file('test.png')), 'image', 'png')
+        
+        # File that does exist - use the contents
+        self.check_mimetype(Mime.get_type2(example_file('png_file')), 'image', 'png')
+        
+        # Does exist - use name before contents
+        self.check_mimetype(Mime.get_type2(example_file('file.png')), 'image', 'png')
+        
+        # Ambiguous file extension
+        self.check_mimetype(Mime.get_type2(example_file('glade.ui')), 'application', 'x-glade')
+        self.check_mimetype(Mime.get_type2(example_file('qtdesigner.ui')), 'application', 'x-designer')
+        
+        # Directory - special filesystem object
+        self.check_mimetype(Mime.get_type2(example_file('subdir')), 'inode', 'directory')
+        
+        # Mystery files:
+        mystery_missing = Mime.get_type2(example_file('mystery_missing'))
+        self.check_mimetype(mystery_missing, 'application', 'octet-stream')
+        mystery_binary = Mime.get_type2(example_file('mystery_binary'))
+        self.check_mimetype(mystery_binary, 'application', 'octet-stream')
+        mystery_text = Mime.get_type2(example_file('mystery_text'))
+        self.check_mimetype(mystery_text, 'text', 'plain')
+        mystery_exe = Mime.get_type2(example_file('mystery_exe'))
+        self.check_mimetype(mystery_exe, 'application', 'executable')
+        
+        # Symlink
+        self.check_mimetype(Mime.get_type2(example_file("png_symlink")),
+                                    'image', 'png')
+        self.check_mimetype(Mime.get_type2(example_file("png_symlink"), follow=False),
+                                    'inode', 'symlink')
     
     def test_lookup(self):
         pdf1 = Mime.lookup("application/pdf")
@@ -93,6 +131,16 @@ class MimeTest(MimeTestBase):
         text_plain = Mime.lookup('text/plain')
         app_executable = Mime.lookup('application/x-executable')
         self.assertEqual(text_python.inherits_from(), set([text_plain, app_executable]))
+    
+    def test_is_text(self):
+        assert Mime._is_text(b'abcdef \n')
+        assert not Mime._is_text(b'abcdef\x08')
+        assert not Mime._is_text(b'abcdef\x0e')
+        assert not Mime._is_text(b'abcdef\x1f')
+        assert not Mime._is_text(b'abcdef\x7f')
+        
+        # Check nonexistant file.
+        assert not Mime.is_text_file('/fwoijorij')
 
 class MagicDBTest(MimeTestBase):
     def setUp(self):

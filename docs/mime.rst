@@ -10,10 +10,10 @@ Finding a file's Mime type
 
 Example::
 
-    >>> Mime.get_type('/path/to/foo.zip')
-    <application/zip: (comment not loaded)>
+    >>> Mime.get_type2('/path/to/foo.zip')
+    MIMEtype('application', 'zip')
 
-.. autofunction:: get_type
+.. autofunction:: get_type2
 
 .. autofunction:: get_type_by_name
 
@@ -21,7 +21,7 @@ Example::
 
 .. autofunction:: get_type_by_data
 
-.. autofunction:: get_extensions
+.. autofunction:: get_type
 
 Installing Mime data
 --------------------
@@ -48,3 +48,10 @@ MIMEtype objects
    
    .. versionadded:: 0.25
       :meth:`MIMEtype.canonical` and :meth:`MIMEtype.inherits_from`.
+
+Miscellaneous
+-------------
+
+.. autofunction:: get_extensions
+
+.. autofunction:: is_text_file

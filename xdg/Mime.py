@@ -359,7 +359,7 @@ class MagicDB:
         """
         with open(path, 'rb') as f:
             buf = f.read(self.maxlen)
-        return self.match_data(buf, max_pri, min_pri)
+        return self.match_data(buf, max_pri, min_pri, possible)
     
     def __repr__(self):
         return '<MagicDB (%d types)>' % len(self.alltypes)
@@ -485,6 +485,7 @@ class GlobDB(object):
 
 # Some well-known types
 text = lookup('text', 'plain')
+octet_stream = lookup('application', 'octet-stream')
 inode_block = lookup('inode', 'blockdevice')
 inode_char = lookup('inode', 'chardevice')
 inode_dir = lookup('inode', 'directory')
@@ -550,15 +551,24 @@ def get_type_by_data(data, max_pri=100, min_pri=0):
 
     return magic.match_data(data, max_pri, min_pri)
 
+def _get_type_by_stat(st_mode):
+    """Match special filesystem objects to Mimetypes."""
+    if stat.S_ISDIR(st_mode): return inode_dir
+    elif stat.S_ISCHR(st_mode): return inode_char
+    elif stat.S_ISBLK(st_mode): return inode_block
+    elif stat.S_ISFIFO(st_mode): return inode_fifo
+    elif stat.S_ISLNK(st_mode): return inode_symlink
+    elif stat.S_ISSOCK(st_mode): return inode_socket
+    return inode_door
+
 def get_type(path, follow=True, name_pri=100):
     """Returns type of file indicated by path.
     
-    path :
-      pathname to check (need not exist)
-    follow :
-      when reading file, follow symbolic links
-    name_pri :
-      Priority to do name matches.  100=override magic
+    This function is *deprecated* - :func:`get_type2` is more accurate.
+    
+    :param path: pathname to check (need not exist)
+    :param follow: when reading file, follow symbolic links
+    :param name_pri: Priority to do name matches. 100=override magic
     
     This tries to use the contents of the file, and falls back to the name. It
     can also handle special filesystem objects like directories and sockets.
@@ -585,13 +595,87 @@ def get_type(path, follow=True, name_pri=100):
             else:
                 return text
         return t
-    elif stat.S_ISDIR(st.st_mode): return inode_dir
-    elif stat.S_ISCHR(st.st_mode): return inode_char
-    elif stat.S_ISBLK(st.st_mode): return inode_block
-    elif stat.S_ISFIFO(st.st_mode): return inode_fifo
-    elif stat.S_ISLNK(st.st_mode): return inode_symlink
-    elif stat.S_ISSOCK(st.st_mode): return inode_socket
-    return inode_door
+    else:
+        return _get_type_by_stat(st.st_mode)
+
+def get_type2(path, follow=True):
+    """Find the MIMEtype of a file using the XDG recommended checking order.
+    
+    This first checks the filename, then uses file contents if the name doesn't
+    give an unambiguous MIMEtype. It can also handle special filesystem objects
+    like directories and sockets.
+    
+    :param path: file path to examine (need not exist)
+    :param follow: whether to follow symlinks
+    
+    :rtype: :class:`MIMEtype`
+    
+    .. versionadded:: 1.0
+    """
+    update_cache()
+    
+    try:
+        st = os.stat(path) if follow else os.lstat(path)
+    except OSError:
+        return get_type_by_name(path) or octet_stream
+    
+    if not stat.S_ISREG(st.st_mode):
+        # Special filesystem objects
+        return _get_type_by_stat(st.st_mode)
+    
+    mtypes = sorted(globs.all_matches(path), key=(lambda x: x[1]), reverse=True)
+    if mtypes:
+        max_weight = mtypes[0][1]
+        i = 1
+        for mt, w in mtypes[1:]:
+            if w < max_weight:
+                break
+            i += 1
+        mtypes = mtypes[:i]
+        if len(mtypes) == 1:
+            return mtypes[0][0]
+    
+        possible = [mt for mt,w in mtypes]
+    else:
+        possible = None   # Try all magic matches
+    
+    try:
+        t = magic.match(path, possible=possible)
+    except IOError:
+        t = None
+    
+    if t:
+        return t
+    elif mtypes:
+        return mtypes[0][0]
+    elif stat.S_IMODE(st.st_mode) & 0o111:
+        return app_exe
+    else:
+        return text if is_text_file(path) else octet_stream
+
+def is_text_file(path):
+    """Guess whether a file contains text or binary data.
+    
+    Heuristic: binary if the first 32 bytes include ASCII control characters.
+    This rule may change in future versions.
+    
+    .. versionadded:: 1.0
+    """
+    try:
+        f = open(path, 'rb')
+    except IOError:
+        return False
+    
+    with f:
+        return _is_text(f.read(32))
+
+if PY3:
+    def _is_text(data):
+        return not any(b <= 0x8 or 0xe <= b < 0x20 or b == 0x7f for b in data)
+else:
+    def _is_text(data):
+        return not any(b <= '\x08' or '\x0e' <= b < '\x20' or b == '\x7f' \
+                            for b in data)
 
 _mime2ext_cache = None
 _mime2ext_cache_uptodate = False
