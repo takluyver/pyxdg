@@ -407,6 +407,7 @@ class GlobDB(object):
         self.cased_literals = {}
         
         for mtype, globs in self.allglobs.items():
+          mtype = mtype.canonical()
           for weight, pattern, flags in globs:
         
             cased = 'cs' in flags
@@ -505,6 +506,13 @@ def _cache_database():
     aliases = {}    # Maps alias Mime types to canonical names
     inheritance = defaultdict(set) # Maps to sets of parent mime types.
     
+    # Load aliases
+    for path in BaseDirectory.load_data_paths(os.path.join('mime', 'aliases')):
+        with open(path, 'r') as f:
+            for line in f:
+                alias, canonical = line.strip().split(None, 1)
+                aliases[alias] = canonical
+    
     # Load filename patterns (globs)
     globs = GlobDB()
     for path in BaseDirectory.load_data_paths(os.path.join('mime', 'globs2')):
@@ -515,13 +523,6 @@ def _cache_database():
     magic = MagicDB()    
     for path in BaseDirectory.load_data_paths(os.path.join('mime', 'magic')):
         magic.mergeFile(path)
-    
-    # Load aliases
-    for path in BaseDirectory.load_data_paths(os.path.join('mime', 'aliases')):
-        with open(path, 'r') as f:
-            for line in f:
-                alias, canonical = line.strip().split(None, 1)
-                aliases[alias] = canonical
     
     # Load subclasses
     for path in BaseDirectory.load_data_paths(os.path.join('mime', 'subclasses')):

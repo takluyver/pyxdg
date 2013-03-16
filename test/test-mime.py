@@ -74,6 +74,7 @@ class MimeTest(MimeTestBase):
         
         # Does exist - use name before contents
         self.check_mimetype(Mime.get_type2(example_file('file.png')), 'image', 'png')
+        self.check_mimetype(Mime.get_type2(example_file('word.doc')), 'application', 'msword')
         
         # Ambiguous file extension
         self.check_mimetype(Mime.get_type2(example_file('glade.ui')), 'application', 'x-glade')
