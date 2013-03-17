@@ -217,7 +217,8 @@ class MagicDBTest(MimeTestBase):
         assert notpng_min60 is None, notpng_min60
         
         # With list of options
-        options = [Mime.lookup('image','png'), Mime.lookup('image', 'jpeg')]
+        options = [Mime.lookup('image', 'nonexistant'), # Missing MIMEtype should be dropped
+                   Mime.lookup('image','png'), Mime.lookup('image', 'jpeg')]
         res = self.magic.match_data(resources.png_data, possible=options)
         self.check_mimetype(res, 'image', 'png')
         
@@ -239,7 +240,8 @@ class MagicDBTest(MimeTestBase):
         self.check_mimetype(res, 'image', 'png')
         
         # With list of options
-        options = [Mime.lookup('image','png'), Mime.lookup('image', 'jpeg')]
+        options = [Mime.lookup('image','png'), Mime.lookup('image', 'jpeg'),
+                   Mime.lookup('image', 'nonexistant')]  # Missing MIMEtype should be dropped
         res = self.magic.match(png_file, possible=options)
         self.check_mimetype(res, 'image', 'png')
         
