@@ -273,10 +273,10 @@ class Menu:
                     entry.Show = "Deleted"
                     self.Visible -= 1
                 elif isinstance(entry.Directory, MenuEntry):
-                    if entry.Directory.DesktopEntry.nodisplay:
+                    if entry.Directory.DesktopEntry.getNoDisplay():
                         entry.Show = "NoDisplay"
                         self.Visible -= 1
-                    elif entry.Directory.desktopEntry.hidden:
+                    elif entry.Directory.DesktopEntry.getHidden():
                         entry.Show = "Hidden"
                         self.Visible -= 1
             elif isinstance(entry, MenuEntry):
