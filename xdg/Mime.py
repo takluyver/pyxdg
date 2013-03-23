@@ -47,25 +47,42 @@ def _get_node_data(node):
     return ''.join([n.nodeValue for n in node.childNodes]).strip()
 
 def lookup(media, subtype = None):
-    """Get the MIMEtype object for this type, creating a new one if needed.
+    """Get the MIMEtype object for the given type.
+    
+    This remains for backwards compatibility; calling MIMEtype now does
+    the same thing.
     
     The name can either be passed as one part ('text/plain'), or as two
     ('text', 'plain').
     """
-    if subtype is None and '/' in media:
-        media, subtype = media.split('/', 1)
-    if (media, subtype) not in types:
-        types[(media, subtype)] = MIMEtype(media, subtype)
-    return types[(media, subtype)]
+    return MIMEtype(media, subtype)
 
-class MIMEtype:
-    """Type holding data about a MIME type"""
-    def __init__(self, media, subtype):
-        "Don't use this constructor directly; use mime.lookup() instead."
-        assert media and '/' not in media
-        assert subtype and '/' not in subtype
-        assert (media, subtype) not in types
+class MIMEtype(object):
+    """Class holding data about a MIME type.
+    
+    Calling the class will return a cached instance, so there is only one 
+    instance for each MIME type. The name can either be passed as one part
+    ('text/plain'), or as two ('text', 'plain').
+    """
+    def __new__(cls, media, subtype=None):
+        if subtype is None and '/' in media:
+            media, subtype = media.split('/', 1)
+        assert '/' not in subtype
+        media = media.lower()
+        subtype = subtype.lower()
+        
+        try:
+            return types[(media, subtype)]
+        except KeyError:
+            mtype = super(MIMEtype, cls).__new__(cls)
+            mtype._init(media, subtype)
+            types[(media, subtype)] = mtype
+            return mtype
 
+    # If this is done in __init__, it is automatically called again each time
+    # the MIMEtype is returned by __new__, which we don't want. So we call it
+    # explicitly only when we construct a new instance.
+    def _init(self, media, subtype):
         self.media = media
         self.subtype = subtype
         self._comment = None

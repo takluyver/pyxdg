@@ -31,10 +31,11 @@ Installing Mime data
 MIMEtype objects
 ----------------
 
-.. autofunction:: lookup
-
 .. autoclass:: MIMEtype
    :members: canonical, inherits_from
+   
+   .. versionchanged:: 1.0
+      The class now takes care of caching; call :func:`lookup` in earlier versions.
    
    .. attribute:: media
    
@@ -48,6 +49,8 @@ MIMEtype objects
    
    .. versionadded:: 0.25
       :meth:`MIMEtype.canonical` and :meth:`MIMEtype.inherits_from`.
+
+.. autofunction:: lookup
 
 Miscellaneous
 -------------

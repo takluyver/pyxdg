@@ -15,6 +15,19 @@ class MimeTestBase(unittest.TestCase):
         self.assertEqual(mimetype.subtype, subtype)
 
 class MimeTest(MimeTestBase):
+    def test_create_mimetype(self):
+        mt1 = Mime.MIMEtype('application', 'pdf')
+        mt2 = Mime.MIMEtype('application', 'pdf')
+        self.assertEqual(id(mt1), id(mt2))  # Check caching
+        
+        amr = Mime.MIMEtype('audio', 'AMR')
+        self.check_mimetype(amr, 'audio', 'amr')  # Check lowercase
+        
+        ogg = Mime.MIMEtype('audio/ogg')
+        self.check_mimetype(ogg, 'audio', 'ogg')  # Check split on /
+        
+        self.assertRaises(Exception, Mime.MIMEtype, 'audio/foo/bar')
+
     def test_get_type_by_name(self):
         appzip = Mime.get_type_by_name("foo.zip")
         self.check_mimetype(appzip, 'application', 'zip')
