@@ -369,11 +369,7 @@ class MagicDB:
         if possible is not None:
             types = []
             for mt in possible:
-                try:
-                    rules = self.bytype[mt]
-                except KeyError:
-                    continue
-                for pri, rule in rules:
+                for pri, rule in self.bytype[mt]:
                     types.append((pri, mt, rule))
             types.sort(key=lambda x: x[0])
         else:

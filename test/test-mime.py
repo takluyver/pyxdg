@@ -93,6 +93,9 @@ class MimeTest(MimeTestBase):
         self.check_mimetype(Mime.get_type2(example_file('glade.ui')), 'application', 'x-glade')
         self.check_mimetype(Mime.get_type2(example_file('qtdesigner.ui')), 'application', 'x-designer')
         
+        # text/x-python has greater weight than text/x-readme
+        self.check_mimetype(Mime.get_type2(example_file('README.py')), 'text', 'x-python')
+        
         # Directory - special filesystem object
         self.check_mimetype(Mime.get_type2(example_file('subdir')), 'inode', 'directory')
         
@@ -117,8 +120,12 @@ class MimeTest(MimeTestBase):
         pdf2 = Mime.lookup("application", "pdf")
         self.assertEqual(pdf1, pdf2)
         self.check_mimetype(pdf1, 'application', 'pdf')
-        
-        pdf1.get_comment()
+    
+    def test_get_comment(self):
+        # Check these don't throw an error. One that is likely to exist:
+        Mime.MIMEtype("application", "pdf").get_comment()
+        # And one that's unlikely to exist:
+        Mime.MIMEtype("application", "ierjg").get_comment()
 
     def test_by_name(self):
         dot_c = Mime.get_type_by_name('foo.c')
