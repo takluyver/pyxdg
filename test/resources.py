@@ -489,6 +489,22 @@ cd
 \xff\xff
 [10:application/imaginary]
 >0=\0\x03abc@unhandled_future_field
+[10:application/toberemoved]
+>0=\0\x03def
+[10:application/tobereplaced]
+>0=\0\x03ghi
+[10:application/tobeaddedto]
+>0=\0\x03mno
+"""
+
+mime_magic_db2 = b"""MIME-Magic\0
+[10:application/toberemoved]
+>0=__NOMAGIC__
+[10:application/tobereplaced]
+>0=__NOMAGIC__
+>1=\0\x03jkl
+[10:application/tobeaddedto]
+>1=\0\x03pqr
 """
 
 png_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x04sBIT\x08\x08\x08\x08|\x08d\x88\x00\x00\x00\rIDAT\x08\x99c\xf8\x7f\x83\xe1?\x00\x07\x88\x02\xd7\xd9\n\xd8\xdc\x00\x00\x00\x00IEND\xaeB`\x82'

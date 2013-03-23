@@ -118,6 +118,10 @@ class MIMEtype:
 class UnknownMagicRuleFormat(ValueError):
     pass
 
+class DiscardMagicRules(Exception):
+    "Raised when __NOMAGIC__ is found, and caught to discard previous rules."
+    pass
+
 class MagicRule:
     also = None
     
@@ -144,6 +148,9 @@ class MagicRule:
         # start-offset '='
         start, line = line.split(b'=', 1)
         start = int(start)
+        
+        if line == b'__NOMAGIC__\n':
+            raise DiscardMagicRules
         
         # value length (2 bytes, big endian)
         if sys.version_info[0] >= 3:
@@ -286,11 +293,9 @@ class MagicMatchAny(object):
     
 class MagicDB:
     def __init__(self):
-        self.alltypes = []  # (priority, mimetype, rule)
-        self.bytype   = {}  # mimetype -> (priority, rule)
-        self.maxlen   = 0   # Number of bytes to read from files
+        self.bytype   = defaultdict(list)  # mimetype -> [(priority, rule), ...] 
 
-    def mergeFile(self, fname):
+    def merge_file(self, fname):
         """Read a magic binary file, and add its rules to this MagicDB."""
         with open(fname, 'rb') as f:
             line = f.readline()
@@ -308,16 +313,32 @@ class MagicDB:
                 #print shead[1:-2]
                 pri = int(pri)
                 mtype = lookup(tname)
-                rule = MagicMatchAny.from_file(f)
+                try:
+                    rule = MagicMatchAny.from_file(f)
+                except DiscardMagicRules:
+                    self.bytype.pop(mtype, None)
+                    rule = MagicMatchAny.from_file(f)
                 if rule is None:
                     continue
                 #print rule
-                
-                self.alltypes.append((pri, mtype, rule))
-                self.bytype[mtype] = (pri, rule)
-                self.maxlen = max(self.maxlen, rule.maxlen())
+
+                self.bytype[mtype].append((pri, rule))
+
+    def finalise(self):
+        """Prepare the MagicDB for matching.
         
-        self.alltypes.sort(key=lambda x: x[0])
+        This should be called after all rules have been merged into it.
+        """
+        maxlen = 0
+        self.alltypes = []  # (priority, mimetype, rule)
+
+        for mtype, rules in self.bytype.items():
+            for pri, rule in rules:
+                self.alltypes.append((pri, mtype, rule))
+                maxlen = max(maxlen, rule.maxlen())
+
+        self.maxlen = maxlen  # Number of bytes to read from files
+        self.alltypes.sort(key=lambda x: x[0], reverse=True)
 
     def match_data(self, data, max_pri=100, min_pri=0, possible=None):
         """Do magic sniffing on some bytes.
@@ -332,10 +353,11 @@ class MagicDB:
             types = []
             for mt in possible:
                 try:
-                    pri, rule = self.bytype[mt]
+                    rules = self.bytype[mt]
                 except KeyError:
                     continue
-                types.append((pri, mt, rule))
+                for pri, rule in rules:
+                    types.append((pri, mt, rule))
             types.sort(key=lambda x: x[0])
         else:
             types = self.alltypes
@@ -525,7 +547,8 @@ def _cache_database():
     # Load magic sniffing data
     magic = MagicDB()    
     for path in BaseDirectory.load_data_paths(os.path.join('mime', 'magic')):
-        magic.mergeFile(path)
+        magic.merge_file(path)
+    magic.finalise()
     
     # Load subclasses
     for path in BaseDirectory.load_data_paths(os.path.join('mime', 'subclasses')):
