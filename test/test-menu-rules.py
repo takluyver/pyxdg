@@ -1,8 +1,7 @@
-import xml.dom.minidom
+import xml.etree.cElementTree as etree
 import unittest
 
-from xdg.Menu import Rule
-from xdg.Menu import __parseRule as parseRule
+from xdg.Menu import Parser, Rule
 
 
 _tests = [
@@ -161,9 +160,10 @@ class RulesTest(unittest.TestCase):
     """Basic rule matching tests"""
 
     def test_rule_from_node(self):
+        parser = Parser(debug=True)
         for i, test in enumerate(_tests):
-            root = xml.dom.minidom.parseString(test['doc']).childNodes[0]
-            rule = parseRule(root)
+            root = etree.fromstring(test['doc'])
+            rule = parser.parse_rule(root)
             for j, data in enumerate(test['data']):
                 menuentry = MockMenuEntry(data[0], data[1])
                 result = eval(rule.code)
