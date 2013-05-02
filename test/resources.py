@@ -448,6 +448,65 @@ kde_legacy_menu = """<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
 </Menu>
 """
 
+mime_globs2_a = """#globs2 MIME data file
+55:text/x-diff:*.patch
+50:text/x-c++src:*.C:cs
+50:text/x-python:*.py
+10:text/x-readme:readme*
+"""
+
+mime_globs2_b = """#globs2 MIME data file
+# Add to existing MIMEtype
+50:text/x-diff:*.diff
+# Remove one
+50:text/x-python:__NOGLOBS__
+# Replace one
+40:text/x-readme:__NOGLOBS__
+20:text/x-readme:RDME:cs
+"""
+
+mime_magic_db = b"""MIME-Magic\0
+[50:image/png]
+>0=\0\x04\x89PNG
+[50:image/jpeg]
+>0=\0\x03\xff\xd8\xff
+>0=\0\x02\xff\xd8
+[50:image/openraster]
+>0=\0\x04PK\x03\x04
+1>30=\0\x08mimetype
+2>38=\0\x10image/openraster
+[80:image/svg+xml]
+>0=\0\x0d<!DOCTYPE svg+257
+>0=\0\x04<svg+257
+[50:image/vnd.adobe.photoshop]
+>0=\0\x0a8BPS  \0\0\0\0&\xff\xff\xff\xff\0\0\xff\xff\xff\xff
+[40:application/x-executable]
+>0=\0\02\x01\x11~2
+[10:application/madeup]
+>0=\0\x05ab
+cd
+>10=\0\x05ab de&\xff\xff
+\xff\xff
+[10:application/imaginary]
+>0=\0\x03abc@unhandled_future_field
+[10:application/toberemoved]
+>0=\0\x03def
+[10:application/tobereplaced]
+>0=\0\x03ghi
+[10:application/tobeaddedto]
+>0=\0\x03mno
+"""
+
+mime_magic_db2 = b"""MIME-Magic\0
+[10:application/toberemoved]
+>0=__NOMAGIC__
+[10:application/tobereplaced]
+>0=__NOMAGIC__
+>1=\0\x03jkl
+[10:application/tobeaddedto]
+>1=\0\x03pqr
+"""
+
 png_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x04sBIT\x08\x08\x08\x08|\x08d\x88\x00\x00\x00\rIDAT\x08\x99c\xf8\x7f\x83\xe1?\x00\x07\x88\x02\xd7\xd9\n\xd8\xdc\x00\x00\x00\x00IEND\xaeB`\x82'
 
 icon_data = """[Icon Data]

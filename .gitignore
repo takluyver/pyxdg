@@ -4,3 +4,5 @@ build/
 _build/
 dist/
 MANIFEST
+.coverage
+cover/
