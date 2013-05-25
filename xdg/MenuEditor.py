@@ -5,12 +5,10 @@ try:
 except ImportError:
     import xml.etree.ElementTree as etree
 
-#FIXME avoid importing all from all modules
-from xdg.Menu import *
-from xdg.BaseDirectory import *
-from xdg.Exceptions import *
-from xdg.DesktopEntry import *
-from xdg.Config import *
+from xdg.Menu import Menu, MenuEntry, Layout, Separator, XMLMenuBuilder
+from xdg.BaseDirectory import xdg_config_dirs, xdg_data_dirs
+from xdg.Exceptions import ParsingError 
+from xdg.Config import setRootMode
 
 # XML-Cleanups: Move / Exclude
 # FIXME: proper reverte/delete
@@ -64,7 +62,7 @@ class MenuEditor(object):
     </Menu>
 """ % self.menu.Filename)
             self.tree = etree.ElementTree(root)
-        except ParseError:
+        except ParsingError:
             raise ParsingError('Not a valid .menu file', self.filename)
 
         #FIXME: is this needed with etree ?
