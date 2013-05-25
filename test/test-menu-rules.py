@@ -1,7 +1,7 @@
 import xml.etree.cElementTree as etree
 import unittest
 
-from xdg.Menu import Parser, Rule
+from xdg.Menu import XMLMenuBuilder, Rule
 
 
 _tests = [
@@ -160,7 +160,7 @@ class RulesTest(unittest.TestCase):
     """Basic rule matching tests"""
 
     def test_rule_from_node(self):
-        parser = Parser(debug=True)
+        parser = XMLMenuBuilder(debug=True)
         for i, test in enumerate(_tests):
             root = etree.fromstring(test['doc'])
             rule = parser.parse_rule(root)

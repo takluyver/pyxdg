@@ -588,7 +588,7 @@ def _dedupe(_list):
     return _list
 
 
-class Parser(object):
+class XMLMenuBuilder(object):
 
     def __init__(self, debug=False):
         self.debug = debug
@@ -1119,6 +1119,6 @@ class MenuEntryCache:
 
 def parse(filename=None):
     """Helper function.
-    Equivalent to calling xdg.Menu.Parser().parse(filename)
+    Equivalent to calling xdg.Menu.XMLMenuBuilder().parse(filename)
     """
-    return Parser().parse(filename)
+    return XMLMenuBuilder().parse(filename)

@@ -29,7 +29,7 @@ class MenuEditor(object):
         self.menu = None
         self.filename = None
         self.tree = None
-        self.parser = Parser()
+        self.parser = XMLMenuBuilder()
         self.parse(menu, filename, root)
 
         # fix for creating two menus with the same name on the fly
