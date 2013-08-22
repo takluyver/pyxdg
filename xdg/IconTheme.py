@@ -9,6 +9,7 @@ import re
 from IniFile import IniFile, is_ascii
 from BaseDirectory import xdg_data_dirs
 from Exceptions import NoThemeError, debug
+import Locale
 
 import Config
 
