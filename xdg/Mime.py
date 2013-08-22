@@ -26,7 +26,7 @@ import sys
 import fnmatch
 
 from xdg import BaseDirectory
-import xdg.Locale
+import Locale
 
 from xml.dom import minidom, XML_NAMESPACE
 from collections import defaultdict
@@ -96,7 +96,7 @@ class MIMEtype(object):
                 continue
             for comment in doc.documentElement.getElementsByTagNameNS(FREE_NS, 'comment'):
                 lang = comment.getAttributeNS(XML_NAMESPACE, 'lang') or 'en'
-                goodness = 1 + (lang in xdg.Locale.langs)
+                goodness = 1 + (lang in Locale.langs)
                 if goodness > self._comment[0]:
                     self._comment = (goodness, _get_node_data(comment))
                 if goodness == 2: return

@@ -10,10 +10,10 @@ Not supported:
 - Does not completly check categories
 """
 
-from xdg.IniFile import IniFile, is_ascii
-import xdg.Locale
-from xdg.Exceptions import ParsingError
-from xdg.util import which
+from IniFile import IniFile, is_ascii
+import Locale
+from Exceptions import ParsingError
+from util import which
 import os.path
 import re
 import warnings
@@ -41,9 +41,9 @@ class DesktopEntry(IniFile):
     def parse(self, file):
         """Parse a desktop entry file.
         
-        This can raise :class:`~xdg.Exceptions.ParsingError`,
-        :class:`~xdg.Exceptions.DuplicateGroupError` or
-        :class:`~xdg.Exceptions.DuplicateKeyError`.
+        This can raise :class:`~Exceptions.ParsingError`,
+        :class:`~Exceptions.DuplicateGroupError` or
+        :class:`~Exceptions.DuplicateKeyError`.
         """
         IniFile.parse(self, file, ["Desktop Entry", "KDE Desktop Entry"])
     
@@ -51,7 +51,7 @@ class DesktopEntry(IniFile):
         """Looks in the PATH for the executable given in the TryExec field.
         
         Returns the full path to the executable if it is found, None if not.
-        Raises :class:`~xdg.Exceptions.NoKeyError` if TryExec is not present.
+        Raises :class:`~Exceptions.NoKeyError` if TryExec is not present.
         """
         tryexec = self.get('TryExec', strict=True)
         return which(tryexec)
@@ -159,7 +159,7 @@ class DesktopEntry(IniFile):
         
         If filename has a .desktop extension, Type is set to Application. If it
         has a .directory extension, Type is Directory. Other extensions will
-        cause :class:`~xdg.Exceptions.ParsingError` to be raised.
+        cause :class:`~Exceptions.ParsingError` to be raised.
         """
         if os.path.splitext(filename)[1] == ".desktop":
             type = "Application"
@@ -234,19 +234,19 @@ class DesktopEntry(IniFile):
         elif key == "Version":
             self.checkValue(key, value)
 
-        elif re.match("^Name"+xdg.Locale.regex+"$", key):
+        elif re.match("^Name"+Locale.regex+"$", key):
             pass # locale string
 
-        elif re.match("^GenericName"+xdg.Locale.regex+"$", key):
+        elif re.match("^GenericName"+Locale.regex+"$", key):
             pass # locale string
 
         elif key == "NoDisplay":
             self.checkValue(key, value, type="boolean")
 
-        elif re.match("^Comment"+xdg.Locale.regex+"$", key):
+        elif re.match("^Comment"+Locale.regex+"$", key):
             pass # locale string
 
-        elif re.match("^Icon"+xdg.Locale.regex+"$", key):
+        elif re.match("^Icon"+Locale.regex+"$", key):
             self.checkValue(key, value)
 
         elif key == "Hidden":
@@ -289,7 +289,7 @@ class DesktopEntry(IniFile):
             self.checkType(key, "Application")
             self.checkCategories(value)
         
-        elif re.match("^Keywords"+xdg.Locale.regex+"$", key):
+        elif re.match("^Keywords"+Locale.regex+"$", key):
             self.checkValue(key, value, type="localestring", list=True)
             self.checkType(key, "Application")
 
@@ -337,7 +337,7 @@ class DesktopEntry(IniFile):
             self.checkType(key, "FSDevice")
             self.warnings.append("Key '%s' is a KDE extension" % key)
 
-        elif re.match("^UnmountIcon"+xdg.Locale.regex+"$", key):
+        elif re.match("^UnmountIcon"+Locale.regex+"$", key):
             self.checkValue(key, value)
             self.checkType(key, "FSDevice")
             self.warnings.append("Key '%s' is a KDE extension" % key)
@@ -347,7 +347,7 @@ class DesktopEntry(IniFile):
             self.checkValue(key, value)
             self.warnings.append("Key '%s' is deprecated" % key)
 
-        elif re.match("^MiniIcon"+xdg.Locale.regex+"$", key):
+        elif re.match("^MiniIcon"+Locale.regex+"$", key):
             self.checkValue(key, value)
             self.warnings.append("Key '%s' is deprecated" % key)
 
@@ -375,7 +375,7 @@ class DesktopEntry(IniFile):
             self.checkValue(key, value)
             self.warnings.append("Key '%s' is deprecated" % key)
 
-        elif re.match("^SwallowTitle"+xdg.Locale.regex+"$", key):
+        elif re.match("^SwallowTitle"+Locale.regex+"$", key):
             self.warnings.append("Key '%s' is deprecated" % key)
 
         elif key == "SwallowExec":
