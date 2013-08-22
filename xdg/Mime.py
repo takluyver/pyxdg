@@ -25,7 +25,7 @@ import stat
 import sys
 import fnmatch
 
-from xdg import BaseDirectory
+import BaseDirectory
 import Locale
 
 from xml.dom import minidom, XML_NAMESPACE
