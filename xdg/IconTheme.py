@@ -6,12 +6,12 @@ http://standards.freedesktop.org/icon-theme-spec/
 import os, time
 import re
 
-from IniFile import IniFile, is_ascii
-from BaseDirectory import xdg_data_dirs
-from Exceptions import NoThemeError, debug
-import Locale
+from .IniFile import IniFile, is_ascii
+from .BaseDirectory import xdg_data_dirs
+from .Exceptions import NoThemeError, debug
+from . import Locale
 
-import Config
+from . import Config
 
 class IconTheme(IniFile):
     "Class to parse and validate IconThemes"

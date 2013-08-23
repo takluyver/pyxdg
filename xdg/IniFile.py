@@ -3,11 +3,11 @@ Base Class for DesktopEntry, IconTheme and IconData
 """
 
 import re, os, stat, io
-from Exceptions import (ParsingError, DuplicateGroupError, NoGroupError,
+from .Exceptions import (ParsingError, DuplicateGroupError, NoGroupError,
                             NoKeyError, DuplicateKeyError, ValidationError,
                             debug)
-import Locale
-from util import u
+from . import Locale
+from .util import u
 
 def is_ascii(s):
     """Return True if a string consists entirely of ASCII characters."""

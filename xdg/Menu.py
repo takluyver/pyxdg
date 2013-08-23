@@ -26,13 +26,13 @@ try:
 except ImportError:
     import xml.etree.ElementTree as etree
 
-from BaseDirectory import xdg_data_dirs, xdg_config_dirs
-from DesktopEntry import DesktopEntry
-from Exceptions import ParsingError, debug
-from util import PY3
+from .BaseDirectory import xdg_data_dirs, xdg_config_dirs
+from .DesktopEntry import DesktopEntry
+from .Exceptions import ParsingError, debug
+from .util import PY3
 
-import Locale
-import Config
+from . import Locale
+from . import Config
 
 
 def _strxfrm(s):

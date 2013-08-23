@@ -10,10 +10,10 @@ Not supported:
 - Does not completly check categories
 """
 
-from IniFile import IniFile, is_ascii
-import Locale
-from Exceptions import ParsingError
-from util import which
+from .IniFile import IniFile, is_ascii
+from . import Locale
+from .Exceptions import ParsingError
+from .util import which
 import os.path
 import re
 import warnings
