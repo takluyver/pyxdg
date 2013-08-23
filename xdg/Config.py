@@ -16,7 +16,7 @@ def setWindowManager(wm):
 def setIconTheme(theme):
     global icon_theme
     icon_theme = theme
-    import IconTheme
+    from . import IconTheme
     IconTheme.themes = []
 
 def setIconSize(size):
@@ -31,7 +31,7 @@ def setLocale(lang):
     import locale
     lang = locale.normalize(lang)
     locale.setlocale(locale.LC_ALL, lang)
-    import Locale
+    from . import Locale
     Locale.update(lang)
 
 def setRootMode(boolean):
