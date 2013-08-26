@@ -41,9 +41,9 @@ class DesktopEntry(IniFile):
     def parse(self, file):
         """Parse a desktop entry file.
         
-        This can raise :class:`~Exceptions.ParsingError`,
-        :class:`~Exceptions.DuplicateGroupError` or
-        :class:`~Exceptions.DuplicateKeyError`.
+        This can raise :class:`~xdg.Exceptions.ParsingError`,
+        :class:`~xdg.Exceptions.DuplicateGroupError` or
+        :class:`~xdg.Exceptions.DuplicateKeyError`.
         """
         IniFile.parse(self, file, ["Desktop Entry", "KDE Desktop Entry"])
     
@@ -51,7 +51,7 @@ class DesktopEntry(IniFile):
         """Looks in the PATH for the executable given in the TryExec field.
         
         Returns the full path to the executable if it is found, None if not.
-        Raises :class:`~Exceptions.NoKeyError` if TryExec is not present.
+        Raises :class:`~xdg.Exceptions.NoKeyError` if TryExec is not present.
         """
         tryexec = self.get('TryExec', strict=True)
         return which(tryexec)
@@ -159,7 +159,7 @@ class DesktopEntry(IniFile):
         
         If filename has a .desktop extension, Type is set to Application. If it
         has a .directory extension, Type is Directory. Other extensions will
-        cause :class:`~Exceptions.ParsingError` to be raised.
+        cause :class:`~xdg.Exceptions.ParsingError` to be raised.
         """
         if os.path.splitext(filename)[1] == ".desktop":
             type = "Application"
