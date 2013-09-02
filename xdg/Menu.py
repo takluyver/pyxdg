@@ -4,7 +4,7 @@ http://standards.freedesktop.org/menu-spec/
 
 Example code:
 
-from Menu import parse, Menu, MenuEntry
+from xdg.Menu import parse, Menu, MenuEntry
 
 def print_menu(menu, tab=0):
   for submenu in menu.Entries:
@@ -1119,6 +1119,6 @@ class MenuEntryCache:
 
 def parse(filename=None):
     """Helper function.
-    Equivalent to calling Menu.XMLMenuBuilder().parse(filename)
+    Equivalent to calling xdg.Menu.XMLMenuBuilder().parse(filename)
     """
     return XMLMenuBuilder().parse(filename)

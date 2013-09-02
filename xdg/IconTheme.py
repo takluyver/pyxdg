@@ -246,9 +246,9 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
     """Get the path to a specified icon.
     
     size :
-      Icon size in pixels. Defaults to ``Config.icon_size``.
+      Icon size in pixels. Defaults to ``xdg.Config.icon_size``.
     theme :
-      Icon theme name. Defaults to ``Config.icon_theme``. If the icon isn't
+      Icon theme name. Defaults to ``xdg.Config.icon_theme``. If the icon isn't
       found in the specified theme, it will be looked up in the basic 'hicolor'
       theme.
     extensions :
