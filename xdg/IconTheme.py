@@ -6,11 +6,12 @@ http://standards.freedesktop.org/icon-theme-spec/
 import os, time
 import re
 
-from xdg.IniFile import IniFile, is_ascii
-from xdg.BaseDirectory import xdg_data_dirs
-from xdg.Exceptions import NoThemeError, debug
+from .IniFile import IniFile, is_ascii
+from .BaseDirectory import xdg_data_dirs
+from .Exceptions import NoThemeError, debug
+from . import Locale
 
-import xdg.Config
+from . import Config
 
 class IconTheme(IniFile):
     "Class to parse and validate IconThemes"
@@ -131,9 +132,9 @@ class IconTheme(IniFile):
     def checkKey(self, key, value, group):
         # standard keys     
         if group == self.defaultGroup:
-            if re.match("^Name"+xdg.Locale.regex+"$", key):
+            if re.match("^Name"+Locale.regex+"$", key):
                 pass
-            elif re.match("^Comment"+xdg.Locale.regex+"$", key):
+            elif re.match("^Comment"+Locale.regex+"$", key):
                 pass
             elif key == "Inherits":
                 self.checkValue(key, value, list=True)
@@ -216,7 +217,7 @@ class IconData(IniFile):
 
     def checkKey(self, key, value, group):
         # standard keys     
-        if re.match("^DisplayName"+xdg.Locale.regex+"$", key):
+        if re.match("^DisplayName"+Locale.regex+"$", key):
             pass
         elif key == "EmbeddedTextRectangle":
             self.checkValue(key, value, type="integer", list=True)
@@ -262,9 +263,9 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
     global themes
 
     if size == None:
-        size = xdg.Config.icon_size
+        size = Config.icon_size
     if theme == None:
-        theme = xdg.Config.icon_theme
+        theme = Config.icon_theme
 
     # if we have an absolute path, just return it
     if os.path.isabs(iconname):
@@ -285,7 +286,7 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
     except KeyError:
         pass
     else:
-        if (time.time() - timestamp) >= xdg.Config.cache_time:
+        if (time.time() - timestamp) >= Config.cache_time:
             del icon_cache[tmp]
         else:
             return icon
@@ -299,7 +300,7 @@ def getIconPath(iconname, size = None, theme = None, extensions = ["png", "svg",
     # cache stuff again (directories looked up in the last 5 seconds?)
     for directory in icondirs:
         if (directory not in dir_cache \
-            or (int(time.time() - dir_cache[directory][1]) >= xdg.Config.cache_time \
+            or (int(time.time() - dir_cache[directory][1]) >= Config.cache_time \
             and dir_cache[directory][2] < os.path.getmtime(directory))) \
             and os.path.isdir(directory):
             dir_cache[directory] = (os.listdir(directory), time.time(), os.path.getmtime(directory))
@@ -365,12 +366,12 @@ def LookupIcon(iconname, size, theme, extensions):
     # look for the cache
     if theme.name not in theme_cache:
         theme_cache[theme.name] = []
-        theme_cache[theme.name].append(time.time() - (xdg.Config.cache_time + 1)) # [0] last time of lookup
+        theme_cache[theme.name].append(time.time() - (Config.cache_time + 1)) # [0] last time of lookup
         theme_cache[theme.name].append(0)               # [1] mtime
         theme_cache[theme.name].append(dict())          # [2] dir: [subdir, [items]]
 
     # cache stuff (directory lookuped up the in the last 5 seconds?)
-    if int(time.time() - theme_cache[theme.name][0]) >= xdg.Config.cache_time:
+    if int(time.time() - theme_cache[theme.name][0]) >= Config.cache_time:
         theme_cache[theme.name][0] = time.time()
         for subdir in theme.getDirectories():
             for directory in icondirs:

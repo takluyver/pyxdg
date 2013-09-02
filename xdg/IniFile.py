@@ -3,11 +3,11 @@ Base Class for DesktopEntry, IconTheme and IconData
 """
 
 import re, os, stat, io
-from xdg.Exceptions import (ParsingError, DuplicateGroupError, NoGroupError,
+from .Exceptions import (ParsingError, DuplicateGroupError, NoGroupError,
                             NoKeyError, DuplicateKeyError, ValidationError,
                             debug)
-import xdg.Locale
-from xdg.util import u
+from . import Locale
+from .util import u
 
 def is_ascii(s):
     """Return True if a string consists entirely of ASCII characters."""
@@ -183,7 +183,7 @@ class IniFile:
         if not group:
             group = self.defaultGroup
 
-        for lang in xdg.Locale.langs:
+        for lang in Locale.langs:
             langkey = "%s[%s]" % (key, lang)
             if langkey in self.content[group]:
                 return langkey
@@ -350,8 +350,8 @@ class IniFile:
         if not group:
             group = self.defaultGroup
 
-        if locale == True and len(xdg.Locale.langs) > 0:
-            key = key + "[" + xdg.Locale.langs[0] + "]"
+        if locale == True and len(Locale.langs) > 0:
+            key = key + "[" + Locale.langs[0] + "]"
 
         try:
             self.content[group][key] = value
@@ -386,7 +386,7 @@ class IniFile:
         try:
             if locales:
                 for name in list(self.content[group]):
-                    if re.match("^" + key + xdg.Locale.regex + "$", name) and name != key:
+                    if re.match("^" + key + Locale.regex + "$", name) and name != key:
                         del self.content[group][name]
             value = self.content[group].pop(key)
             self.tainted = True

@@ -26,13 +26,13 @@ try:
 except ImportError:
     import xml.etree.ElementTree as etree
 
-from xdg.BaseDirectory import xdg_data_dirs, xdg_config_dirs
-from xdg.DesktopEntry import DesktopEntry
-from xdg.Exceptions import ParsingError, debug
-from xdg.util import PY3
+from .BaseDirectory import xdg_data_dirs, xdg_config_dirs
+from .DesktopEntry import DesktopEntry
+from .Exceptions import ParsingError, debug
+from .util import PY3
 
-import xdg.Locale
-import xdg.Config
+from . import Locale
+from . import Config
 
 
 def _strxfrm(s):
@@ -289,12 +289,12 @@ class Menu:
                 elif entry.DesktopEntry.getTryExec() and not entry.DesktopEntry.findTryExec():
                     entry.Show = "NoExec"
                     self.Visible -= 1
-                elif xdg.Config.windowmanager:
+                elif Config.windowmanager:
                     if (entry.DesktopEntry.OnlyShowIn != [] and (
-                            xdg.Config.windowmanager not in entry.DesktopEntry.OnlyShowIn
+                            Config.windowmanager not in entry.DesktopEntry.OnlyShowIn
                         )
                     ) or (
-                        xdg.Config.windowmanager in entry.DesktopEntry.NotShowIn
+                        Config.windowmanager in entry.DesktopEntry.NotShowIn
                     ):
                         entry.Show = "NotShowIn"
                         self.Visible -= 1
@@ -468,7 +468,7 @@ class MenuEntry:
 
     def getType(self):
         """Return the type of MenuEntry, System/User/Both"""
-        if not xdg.Config.root_mode:
+        if not Config.root_mode:
             if self.Original:
                 return self.TYPE_BOTH
             elif xdg_data_dirs[0] in self.DesktopEntry.filename:
@@ -492,7 +492,7 @@ class MenuEntry:
             self.__setFilename()
 
     def __setFilename(self):
-        if not xdg.Config.root_mode:
+        if not Config.root_mode:
             path = xdg_data_dirs[0]
         else:
             path = xdg_data_dirs[1]
@@ -565,7 +565,7 @@ def _check_file_path(value, filename, type):
 
 def _get_menu_file_path(filename):
     dirs = list(xdg_config_dirs)
-    if xdg.Config.root_mode is True:
+    if Config.root_mode is True:
         dirs.pop(0)
     for d in dirs:
         menuname = os.path.join(d, "menus", filename)

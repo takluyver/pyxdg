@@ -5,7 +5,7 @@ http://standards.freedesktop.org/recent-file-spec
 
 import xml.dom.minidom, xml.sax.saxutils
 import os, time, fcntl
-from xdg.Exceptions import ParsingError
+from .Exceptions import ParsingError
 
 class RecentFiles:
     def __init__(self):

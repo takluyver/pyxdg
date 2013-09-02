@@ -5,10 +5,10 @@ try:
 except ImportError:
     import xml.etree.ElementTree as etree
 
-from xdg.Menu import Menu, MenuEntry, Layout, Separator, XMLMenuBuilder
-from xdg.BaseDirectory import xdg_config_dirs, xdg_data_dirs
-from xdg.Exceptions import ParsingError 
-from xdg.Config import setRootMode
+from .Menu import Menu, MenuEntry, Layout, Separator, XMLMenuBuilder
+from .BaseDirectory import xdg_config_dirs, xdg_data_dirs
+from .Exceptions import ParsingError 
+from .Config import setRootMode
 
 # XML-Cleanups: Move / Exclude
 # FIXME: proper reverte/delete
