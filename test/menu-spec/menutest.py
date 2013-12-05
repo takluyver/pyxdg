@@ -28,9 +28,9 @@ def print_directory(directory):
 
 
 def print_entry(entry, menupath):
-    filepath = entry.DesktopEntry.getFileName().encode('utf8')
-    id = entry.DesktopFileID.encode('utf8')
-    menupath = menupath.encode('utf8')
+    filepath = entry.DesktopEntry.getFileName()
+    id = entry.DesktopFileID
+    menupath = menupath
     print('{}/\t{}\t{}'.format(menupath, id, filepath))
 
 
