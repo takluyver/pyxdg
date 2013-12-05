@@ -18,6 +18,7 @@ print_menu(parse())
 """
 
 import os
+import sys
 import locale
 import subprocess
 import ast
@@ -28,7 +29,7 @@ except ImportError:
 
 from xdg.BaseDirectory import xdg_data_dirs, xdg_config_dirs
 from xdg.DesktopEntry import DesktopEntry
-from xdg.Exceptions import ParsingError, debug
+from xdg.Exceptions import ParsingError
 from xdg.util import PY3
 
 import xdg.Locale
@@ -43,6 +44,15 @@ def _strxfrm(s):
     if (not PY3) and isinstance(s, unicode):
         s = s.encode('utf-8')
     return locale.strxfrm(s)
+
+(
+    DELETED,
+    NO_DISPLAY,
+    HIDDEN,
+    EMPTY,
+    NOT_SHOW_IN,
+    NO_EXEC
+) = range(6)
 
 
 class Menu:
@@ -61,20 +71,20 @@ class Menu:
         self.Parent = None
         self.NotInXml = False
 
-        # Can be one of Deleted/NoDisplay/Hidden/Empty/NotShowIn or True
+        # Can be True, False, DELETED, NO_DISPLAY, HIDDEN, EMPTY or NOT_SHOW_IN
         self.Show = True
         self.Visible = 0
 
         # Private stuff, only needed for parsing
         self.AppDirs = []
         self.DefaultLayout = None
-        self.Deleted = "notset"
+        self.Deleted = None
         self.Directories = []
         self.DirectoryDirs = []
         self.Layout = None
         self.MenuEntries = []
         self.Moves = []
-        self.OnlyUnallocated = "notset"
+        self.OnlyUnallocated = None
         self.Rules = []
         self.Submenus = []
 
@@ -91,10 +101,10 @@ class Menu:
         for directory in other.Directories:
             self.Directories.append(directory)
 
-        if other.Deleted != "notset":
+        if other.Deleted is not None:
             self.Deleted = other.Deleted
 
-        if other.OnlyUnallocated != "notset":
+        if other.OnlyUnallocated is not None:
             self.OnlyUnallocated = other.OnlyUnallocated
 
         if other.Layout:
@@ -136,16 +146,16 @@ class Menu:
             return self.Name == str(other)
 
     """ PUBLIC STUFF """
-    def getEntries(self, hidden=False):
+    def getEntries(self, show_hidden=False):
         """Interator for a list of Entries visible to the user."""
         for entry in self.Entries:
-            if hidden:
+            if show_hidden:
                 yield entry
-            elif entry.Show:
+            elif entry.Show is True:
                 yield entry
 
     # FIXME: Add searchEntry/seaqrchMenu function
-    # search for name/comment/genericname/desktopfileide
+    # search for name/comment/genericname/desktopfileid
     # return multiple items
 
     def getMenuEntry(self, desktopfileid, deep=False):
@@ -270,24 +280,24 @@ class Menu:
             self.Visible += 1
             if isinstance(entry, Menu):
                 if entry.Deleted is True:
-                    entry.Show = "Deleted"
+                    entry.Show = DELETED
                     self.Visible -= 1
                 elif isinstance(entry.Directory, MenuEntry):
                     if entry.Directory.DesktopEntry.getNoDisplay():
-                        entry.Show = "NoDisplay"
+                        entry.Show = NO_DISPLAY
                         self.Visible -= 1
                     elif entry.Directory.DesktopEntry.getHidden():
-                        entry.Show = "Hidden"
+                        entry.Show = HIDDEN
                         self.Visible -= 1
             elif isinstance(entry, MenuEntry):
                 if entry.DesktopEntry.getNoDisplay():
-                    entry.Show = "NoDisplay"
+                    entry.Show = NO_DISPLAY
                     self.Visible -= 1
                 elif entry.DesktopEntry.getHidden():
-                    entry.Show = "Hidden"
+                    entry.Show = HIDDEN
                     self.Visible -= 1
                 elif entry.DesktopEntry.getTryExec() and not entry.DesktopEntry.findTryExec():
-                    entry.Show = "NoExec"
+                    entry.Show = NO_EXEC
                     self.Visible -= 1
                 elif xdg.Config.windowmanager:
                     if (entry.DesktopEntry.OnlyShowIn != [] and (
@@ -296,11 +306,10 @@ class Menu:
                     ) or (
                         xdg.Config.windowmanager in entry.DesktopEntry.NotShowIn
                     ):
-                        entry.Show = "NotShowIn"
+                        entry.Show = NOT_SHOW_IN
                         self.Visible -= 1
             elif isinstance(entry, Separator):
                 self.Visible -= 1
-
         # remove separators at the beginning and at the end
         if len(self.Entries) > 0:
             if isinstance(self.Entries[0], Separator):
@@ -312,7 +321,7 @@ class Menu:
         # show_empty tag
         for entry in self.Entries[:]:
             if isinstance(entry, Menu) and not entry.Layout.show_empty and entry.Visible == 0:
-                entry.Show = "Empty"
+                entry.Show = EMPTY
                 self.Visible -= 1
                 if entry.NotInXml is True:
                     self.Entries.remove(entry)
@@ -442,7 +451,7 @@ class MenuEntry:
         self.DesktopEntry = DesktopEntry(os.path.join(dir, filename))
         self.setAttributes(filename, dir, prefix)
 
-        # Can be one of Deleted/Hidden/Empty/NotShowIn/NoExec or True
+        # Can True, False DELETED, HIDDEN, EMPTY, NOT_SHOW_IN or NO_EXEC
         self.Show = True
 
         # Semi-Private
@@ -487,7 +496,7 @@ class MenuEntry:
             self.__setFilename()
 
     def updateAttributes(self):
-        if self.getType() == "System":
+        if self.getType() == TYPE_SYSTEM:
             self.Original = MenuEntry(self.Filename, self.getDir(), self.Prefix)
             self.__setFilename()
 
@@ -854,7 +863,7 @@ class XMLMenuBuilder(object):
     def merge_file(self, filename, child, parent):
         # check for infinite loops
         if filename in self._merged_files:
-            if debug:
+            if self.debug:
                 raise ParsingError('Infinite MergeFile loop detected', filename)
             else:
                 return
@@ -873,10 +882,7 @@ class XMLMenuBuilder(object):
             else:
                 return
         root = tree.getroot()
-        # append file
-        for child in root:
-            self.parse_node(child, filename, parent)
-            break
+        self.parse_node(root, filename, parent)
 
     # ---------- Legacy Dir Stuff
 
@@ -915,8 +921,8 @@ class XMLMenuBuilder(object):
             for menuentry in menuentries:
                 categories = menuentry.Categories
                 if len(categories) == 0:
-                    r = Rule.fromFilename(Rule.TYPE_INCLUDE, menuentry.DesktopFileId)
-                    m.rules.append(r)
+                    r = Rule.fromFilename(Rule.TYPE_INCLUDE, menuentry.DesktopFileID)
+                    m.Rules.append(r)
                 if not dir_ in parent.AppDirs:
                     categories.append("Legacy")
                     menuentry.Categories = categories
@@ -942,9 +948,9 @@ class XMLMenuBuilder(object):
 
     def post_parse(self, menu):
         # unallocated / deleted
-        if menu.Deleted == "notset":
+        if menu.Deleted is None:
             menu.Deleted = False
-        if menu.OnlyUnallocated == "notset":
+        if menu.OnlyUnallocated is None:
             menu.OnlyUnallocated = False
 
         # Layout Tags
@@ -1056,7 +1062,7 @@ class XMLMenuBuilder(object):
                     menus.pop(0)
 
                 newmenu += move_from_menu
-                move_from_menu.parent.Submenus.remove(move_from_menu)
+                move_from_menu.Parent.Submenus.remove(move_from_menu)
 
 
 class MenuEntryCache:
