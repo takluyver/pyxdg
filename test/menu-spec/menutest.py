@@ -4,7 +4,7 @@
 Script to run the xdg menu-spec tests:
 $ git clone git://anongit.freedesktop.org/xdg/xdg-specs
 $ cd xdg-specs/menu/tests
-$ MENUTEST="/path/to/pyxdg/test/menu-spec-test.py" ./menutest
+$ MENUTEST="/path/to/pyxdg/test/menu-spec/menutest.py" ./menutest
 """
 
 from __future__ import print_function

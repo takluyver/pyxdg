@@ -18,7 +18,6 @@ print_menu(parse())
 """
 
 import os
-import sys
 import locale
 import subprocess
 import ast
@@ -1123,8 +1122,8 @@ class MenuEntryCache:
         return entries
 
 
-def parse(filename=None):
+def parse(filename=None, debug=False):
     """Helper function.
     Equivalent to calling xdg.Menu.XMLMenuBuilder().parse(filename)
     """
-    return XMLMenuBuilder().parse(filename)
+    return XMLMenuBuilder(debug).parse(filename)
