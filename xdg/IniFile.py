@@ -178,6 +178,27 @@ class IniFile:
         return result
     # end stuff to access the keys
 
+    # stuff for accessing comments
+    def getGroupComment(self, group):
+        if group in self.content:
+            return self.content[group]['comment']
+
+    def setGroupComment(self, comment, group=None):
+        if not group:
+            group = self.defaultGroup
+        self.content[group]['comment'] = comment
+
+    def getKeyComment(self, key, group=None):
+        if not group:
+            group = self.defaultGroup
+        return self.content[group]['keys'][key]['comment']
+
+    def setKeyComment(self, comment, key, group=None):
+        if not group:
+            group = self.defaultGroup
+        self.content[group]['keys'][key]['comment'] = comment
+    # end stuff for comments
+
     # start subget
     def getList(self, string):
         if re.search(r"(?<!\\)\;", string):
