@@ -423,7 +423,7 @@ class IniFile:
                 'value': u(''),
                 'comment': u('')
             }
-        keys[key]['value'] = u(value)
+        keys[key]['value'] = value
 
         self.tainted = (value == self.get(key, group))
 
