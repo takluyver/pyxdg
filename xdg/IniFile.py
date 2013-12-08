@@ -9,6 +9,7 @@ from xdg.Exceptions import (ParsingError, DuplicateGroupError, NoGroupError,
 import xdg.Locale
 from xdg.util import u
 
+
 def is_ascii(s):
     """Return True if a string consists entirely of ASCII characters."""
     try:
@@ -16,6 +17,7 @@ def is_ascii(s):
         return True
     except UnicodeError:
         return False
+
 
 class IniFile:
     defaultGroup = ''
@@ -35,12 +37,9 @@ class IniFile:
 
     def parse(self, filename, headers=None):
         '''Parse an INI file.
-        
+
         headers -- list of headers the parser will try to select as a default header
         '''
-        # for performance reasons
-        content = self.content
-
         if not os.path.isfile(filename):
             raise ParsingError("File not found", filename)
 
@@ -50,10 +49,20 @@ class IniFile:
             # to decode them, but we silence the errors.
             fd = io.open(filename, 'r', encoding='utf-8', errors='replace')
         except IOError as e:
+            fd.close()
             if debug:
                 raise e
             else:
                 return
+
+        # for performance reasons
+        self.content = {}
+        content = self.content
+        #
+        current_group = None
+        current_comment = []
+        group_index = 0
+        key_index = 0
 
         # parse file
         for line in fd:
@@ -63,27 +72,41 @@ class IniFile:
                 continue
             # comment
             elif line[0] == '#':
-                continue
+                current_comment.append(line[1:].lstrip())
             # new group
             elif line[0] == '[':
-                currentGroup = line.lstrip("[").rstrip("]")
-                if debug and self.hasGroup(currentGroup):
-                    raise DuplicateGroupError(currentGroup, filename)
+                current_group = line.lstrip("[").rstrip("]")
+                if debug and self.hasGroup(current_group):
+                    raise DuplicateGroupError(current_group, filename)
                 else:
-                    content[currentGroup] = {}
+                    content[current_group] = {
+                        'pos': group_index,
+                        'comment': '\n'.join(current_comment),
+                        'keys': {}
+                    }
+                    group_index += 1
+                    key_index = 0
+                    current_comment = []
             # key
             else:
                 try:
                     key, value = line.split("=", 1)
                 except ValueError:
                     raise ParsingError("Invalid line: " + line, filename)
-                
-                key = key.strip() # Spaces before/after '=' should be ignored
+
+                # Spaces before/after '=' should be ignored
+                key = key.rstrip()
                 try:
-                    if debug and self.hasKey(key, currentGroup):
-                        raise DuplicateKeyError(key, currentGroup, filename)
+                    if debug and self.hasKey(key, current_group):
+                        raise DuplicateKeyError(key, current_group, filename)
                     else:
-                        content[currentGroup][key] = value.strip()
+                        content[current_group]['keys'][key] = {
+                            'pos': key_index,
+                            'value': value.lstrip(),
+                            'comment': '\n'.join(current_comment),
+                        }
+                        key_index += 1
+                        current_comment = []
                 except (IndexError, UnboundLocalError):
                     raise ParsingError("Parsing error on key, group missing", filename)
 
@@ -107,22 +130,22 @@ class IniFile:
         if not group:
             group = self.defaultGroup
 
+        value = ''
         # return key (with locale)
-        if (group in self.content) and (key in self.content[group]):
+        if (group in self.content) and (key in self.content[group]['keys']):
+            keys = self.content[group]['keys']
             if locale:
-                value = self.content[group][self.__addLocale(key, group)]
+                value = keys[self.__addLocale(key, group)]['value']
             else:
-                value = self.content[group][key]
+                value = keys[key]['value']
         else:
             if strict or debug:
                 if group not in self.content:
                     raise NoGroupError(group, self.filename)
                 elif key not in self.content[group]:
                     raise NoKeyError(key, group, self.filename)
-            else:
-                value = ""
 
-        if list == True:
+        if list:
             values = self.getList(value)
             result = []
         else:
@@ -147,7 +170,7 @@ class IniFile:
                 x, y = value.split(",")
                 value = int(x), int(y)
 
-            if list == True:
+            if list:
                 result.append(value)
             else:
                 result = value
@@ -185,7 +208,7 @@ class IniFile:
 
         for lang in xdg.Locale.langs:
             langkey = "%s[%s]" % (key, lang)
-            if langkey in self.content[group]:
+            if langkey in self.content[group]['keys']:
                 return langkey
 
         return key
@@ -194,7 +217,7 @@ class IniFile:
     def validate(self, report="All"):
         """Validate the contents, raising :class:`~xdg.Exceptions.ValidationError`
         if there is anything amiss.
-        
+
         report can be 'All' / 'Warnings' / 'Errors'
         """
 
@@ -208,12 +231,13 @@ class IniFile:
         self.checkExtras()
 
         # check all keys
-        for group in self.content:
+        for group in self.groups():
             self.checkGroup(group)
-            for key in self.content[group]:
-                self.checkKey(key, self.content[group][key], group)
+            for key in self.keys(group):
+                value = self.content[group]['keys'][key]['value']
+                self.checkKey(key, value, group)
                 # check if value is empty
-                if self.content[group][key] == "":
+                if value == "":
                     self.warnings.append("Value of Key '%s' is empty" % key)
 
         # raise Warnings / Errors
@@ -240,7 +264,7 @@ class IniFile:
 
     # check random stuff
     def checkValue(self, key, value, type="string", list=False):
-        if list == True:
+        if list:
             values = self.getList(value)
         else:
             values = [value]
@@ -326,16 +350,11 @@ class IniFile:
                 fp.write(u("#!/usr/bin/env xdg-open\n"))
 
             if self.defaultGroup:
-                fp.write(u("[%s]\n") % self.defaultGroup)
-                for (key, value) in self.content[self.defaultGroup].items():
-                    fp.write(u("%s=%s\n") % (key, value))
-                fp.write(u("\n"))
-            for (name, group) in self.content.items():
-                if name != self.defaultGroup:
-                    fp.write(u("[%s]\n") % name)
-                    for (key, value) in group.items():
-                        fp.write(u("%s=%s\n") % (key, value))
-                    fp.write(u("\n"))
+                self._write_group(fp, self.defaultGroup)
+            for name in self.groups():
+                if name == self.defaultGroup:
+                    continue
+                self._write_group(fp, name)
 
         # Add executable bits to the file to show that it's trusted.
         if trusted:
@@ -345,27 +364,58 @@ class IniFile:
 
         self.tainted = False
 
+    def _write_group(self, fp, group_name):
+        group_data = self.content[group_name]
+        comment = group_data.get('comment', '')
+        if comment:
+            self._write_comment(fp, comment)
+        fp.write(u('[%s]\n') % group_name)
+        for key in self.keys(group_name):
+            self._write_key(fp, key, group_name)
+        fp.write(u('\n'))
+
+    def _write_key(self, fp, key, group_name):
+        data = self.content[group_name]['keys'][key]
+        comment, value = data['comment'], data['value']
+        if comment:
+            self._write_comment(fp, comment)
+        fp.write(u('%s=%s\n') % (key, value))
+
+    def _write_comment(self, fp, comment):
+        for line in comment.strip().split('\n'):
+            fp.write(u('# %s\n') % line.strip())
+
     def set(self, key, value, group=None, locale=False):
         # set default group
         if not group:
             group = self.defaultGroup
+        if group not in self.content:
+            raise NoGroupError(group, self.filename)
 
-        if locale == True and len(xdg.Locale.langs) > 0:
+        if locale and len(xdg.Locale.langs) > 0:
             key = key + "[" + xdg.Locale.langs[0] + "]"
 
-        try:
-            self.content[group][key] = value
-        except KeyError:
-            raise NoGroupError(group, self.filename)
-            
+        keys = self.content[group]['keys']
+        if key not in keys:
+            keys[key] = {
+                'pos': len(keys),
+                'value': u(''),
+                'comment': u('')
+            }
+        keys[key]['value'] = u(value)
+
         self.tainted = (value == self.get(key, group))
 
-    def addGroup(self, group):
+    def addGroup(self, group, comment=''):
         if self.hasGroup(group):
             if debug:
                 raise DuplicateGroupError(group, self.filename)
         else:
-            self.content[group] = {}
+            self.content[group] = {
+                'pos': len(self.content),
+                'comment': comment,
+                'keys': {}
+            }
             self.tainted = True
 
     def removeGroup(self, group):
@@ -385,10 +435,10 @@ class IniFile:
 
         try:
             if locales:
-                for name in list(self.content[group]):
+                for name in list(self.content[group]['keys']):
                     if re.match("^" + key + xdg.Locale.regex + "$", name) and name != key:
-                        del self.content[group][name]
-            value = self.content[group].pop(key)
+                        del self.content[group]['keys'][name]
+            value = self.content[group]['keys'].pop(key)
             self.tainted = True
             return value
         except KeyError as e:
@@ -402,7 +452,15 @@ class IniFile:
 
     # misc
     def groups(self):
-        return self.content.keys()
+        for name, data in sorted(self.content.items(), key=lambda g: g[1]['pos']):
+            yield name
+
+    def keys(self, group=None):
+        if not group:
+            group = self.defaultGroup
+        keys = self.content[group]['keys']
+        for key, data in sorted(keys.items(), key=lambda k: k[1]['pos']):
+            yield key
 
     def hasGroup(self, group):
         return group in self.content
@@ -412,7 +470,7 @@ class IniFile:
         if not group:
             group = self.defaultGroup
 
-        return key in self.content[group]
+        return key in self.content[group]['keys']
 
     def getFileName(self):
         return self.filename

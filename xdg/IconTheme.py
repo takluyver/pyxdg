@@ -89,19 +89,19 @@ class IconTheme(IniFile):
         # Check required keys
         # Name
         try:
-            self.name = self.content[self.defaultGroup]["Name"]
+            self.name = self.content[self.defaultGroup]['keys']["Name"]['value']
         except KeyError:
             self.errors.append("Key 'Name' is missing")
 
         # Comment
         try:
-            self.comment = self.content[self.defaultGroup]["Comment"]
+            self.comment = self.content[self.defaultGroup]['keys']["Comment"]['value']
         except KeyError:
             self.errors.append("Key 'Comment' is missing")
 
         # Directories
         try:
-            self.directories = self.content[self.defaultGroup]["Directories"]
+            self.directories = self.content[self.defaultGroup]['keys']["Directories"]['value']
         except KeyError:
             self.errors.append("Key 'Directories' is missing")
 
@@ -109,20 +109,20 @@ class IconTheme(IniFile):
         # check if group header is valid
         if group == self.defaultGroup:
             try:
-                self.name = self.content[group]["Name"]
+                self.name = self.content[group]['keys']["Name"]['value']
             except KeyError:
                 self.errors.append("Key 'Name' in Group '%s' is missing" % group)
             try:
-                self.name = self.content[group]["Comment"]
+                self.name = self.content[group]['keys']["Comment"]['value']
             except KeyError:
                 self.errors.append("Key 'Comment' in Group '%s' is missing" % group)
         elif group in self.getDirectories():
             try:
-                self.type = self.content[group]["Type"]
+                self.type = self.content[group]['keys']["Type"]['value']
             except KeyError:
                 self.type = "Threshold"
             try:
-                self.name = self.content[group]["Size"]
+                self.name = self.content[group]['keys']["Size"]['value']
             except KeyError:
                 self.errors.append("Key 'Size' in Group '%s' is missing" % group)
         elif not (re.match("^\[X-", group) and is_ascii(group)):

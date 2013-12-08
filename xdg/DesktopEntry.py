@@ -18,6 +18,7 @@ import os.path
 import re
 import warnings
 
+
 class DesktopEntry(IniFile):
     "Class to parse and validate Desktop Entries"
 
@@ -25,7 +26,7 @@ class DesktopEntry(IniFile):
 
     def __init__(self, filename=None):
         """Create a new DesktopEntry.
-        
+
         If filename exists, it will be parsed as a desktop entry file. If not,
         or if filename is None, a blank DesktopEntry is created.
         """
@@ -40,16 +41,16 @@ class DesktopEntry(IniFile):
 
     def parse(self, file):
         """Parse a desktop entry file.
-        
+
         This can raise :class:`~xdg.Exceptions.ParsingError`,
         :class:`~xdg.Exceptions.DuplicateGroupError` or
         :class:`~xdg.Exceptions.DuplicateKeyError`.
         """
         IniFile.parse(self, file, ["Desktop Entry", "KDE Desktop Entry"])
-    
+
     def findTryExec(self):
         """Looks in the PATH for the executable given in the TryExec field.
-        
+
         Returns the full path to the executable if it is found, None if not.
         Raises :class:`~xdg.Exceptions.NoKeyError` if TryExec is not present.
         """
@@ -145,7 +146,7 @@ class DesktopEntry(IniFile):
         return self.get('SwallowTitle', locale=True)
     def getSwallowExec(self):
         return self.get('SwallowExec')
-    def getSortOrder(self): 
+    def getSortOrder(self):
         return self.get('SortOrder', list=True)
     def getFilePattern(self):
         return self.get('FilePattern', type="regex")
@@ -156,7 +157,7 @@ class DesktopEntry(IniFile):
     # desktop entry edit stuff
     def new(self, filename):
         """Make this instance into a new, blank desktop entry.
-        
+
         If filename has a .desktop extension, Type is set to Application. If it
         has a .directory extension, Type is Directory. Other extensions will
         cause :class:`~xdg.Exceptions.ParsingError` to be raised.
@@ -188,13 +189,13 @@ class DesktopEntry(IniFile):
 
         # Type
         try:
-            self.type = self.content[self.defaultGroup]["Type"]
+            self.type = self.get('Type')
         except KeyError:
             self.errors.append("Key 'Type' is missing")
 
         # Name
         try:
-            self.name = self.content[self.defaultGroup]["Name"]
+            self.name = self.get('Name')
         except KeyError:
             self.errors.append("Key 'Name' is missing")
 
@@ -206,11 +207,11 @@ class DesktopEntry(IniFile):
             self.errors.append("Invalid Group name: %s" % group)
         else:
             #OnlyShowIn and NotShowIn
-            if ("OnlyShowIn" in self.content[group]) and ("NotShowIn" in self.content[group]):
+            if self.hasKey("OnlyShowIn", group) and self.hasKey("NotShowIn", group):
                 self.errors.append("Group may either have OnlyShowIn or NotShowIn, but not both")
 
     def checkKey(self, key, value, group):
-        # standard keys     
+        # standard keys
         if key == "Type":
             if value == "ServiceType" or value == "Service" or value == "FSDevice":
                 self.warnings.append("Type=%s is a KDE extension" % key)
@@ -225,10 +226,10 @@ class DesktopEntry(IniFile):
                 self.warnings.append("Files with Type=Directory should have the extension .directory")
 
             if value == "Application":
-                if "Exec" not in self.content[group]:
+                if not self.hasKey("Exec", group):
                     self.warnings.append("Type=Application needs 'Exec' key")
             if value == "Link":
-                if "URL" not in self.content[group]:
+                if not self.hasKey("URL", group):
                     self.warnings.append("Type=Link needs 'URL' key")
 
         elif key == "Version":
@@ -275,7 +276,7 @@ class DesktopEntry(IniFile):
         elif key == "Terminal":
             self.checkValue(key, value, type="boolean")
             self.checkType(key, "Application")
-        
+
         elif key == "Actions":
             self.checkValue(key, value, list=True)
             self.checkType(key, "Application")
@@ -288,7 +289,7 @@ class DesktopEntry(IniFile):
             self.checkValue(key, value)
             self.checkType(key, "Application")
             self.checkCategories(value)
-        
+
         elif re.match("^Keywords"+xdg.Locale.regex+"$", key):
             self.checkValue(key, value, type="localestring", list=True)
             self.checkType(key, "Application")
@@ -418,11 +419,11 @@ class DesktopEntry(IniFile):
 
         additional = ['Building', 'Debugger', 'IDE', 'GUIDesigner', 'Profiling', 'RevisionControl', 'Translation', 'Calendar', 'ContactManagement', 'Database', 'Dictionary', 'Chart', 'Email', 'Finance', 'FlowChart', 'PDA', 'ProjectManagement', 'Presentation', 'Spreadsheet', 'WordProcessor', '2DGraphics', 'VectorGraphics', 'RasterGraphics', '3DGraphics', 'Scanning', 'OCR', 'Photography', 'Publishing', 'Viewer', 'TextTools', 'DesktopSettings', 'HardwareSettings', 'Printing', 'PackageManager', 'Dialup', 'InstantMessaging', 'Chat', 'IRCClient', 'Feed', 'FileTransfer', 'HamRadio', 'News', 'P2P', 'RemoteAccess', 'Telephony', 'TelephonyTools', 'VideoConference', 'WebBrowser', 'WebDevelopment', 'Midi', 'Mixer', 'Sequencer', 'Tuner', 'TV', 'AudioVideoEditing', 'Player', 'Recorder', 'DiscBurning', 'ActionGame', 'AdventureGame', 'ArcadeGame', 'BoardGame', 'BlocksGame', 'CardGame', 'KidsGame', 'LogicGame', 'RolePlaying', 'Shooter', 'Simulation', 'SportsGame', 'StrategyGame', 'Art', 'Construction', 'Music', 'Languages', 'ArtificialIntelligence', 'Astronomy', 'Biology', 'Chemistry', 'ComputerScience', 'DataVisualization', 'Economy', 'Electricity', 'Geography', 'Geology', 'Geoscience', 'History', 'Humanities', 'ImageProcessing', 'Literature', 'Maps', 'Math', 'NumericalAnalysis', 'MedicalSoftware', 'Physics', 'Robotics', 'Spirituality', 'Sports', 'ParallelComputing', 'Amusement', 'Archiving', 'Compression', 'Electronics', 'Emulator', 'Engineering', 'FileTools', 'FileManager', 'TerminalEmulator', 'Filesystem', 'Monitor', 'Security', 'Accessibility', 'Calculator', 'Clock', 'TextEditor', 'Documentation', 'Adult', 'Core', 'KDE', 'GNOME', 'XFCE', 'GTK', 'Qt', 'Motif', 'Java', 'ConsoleOnly']
         allcategories = additional + main
-        
+
         for item in values:
             if item not in allcategories and not item.startswith("X-"):
                 self.errors.append("'%s' is not a registered Category" % item);
-    
+
     def checkCategorie(self, value):
         """Deprecated alias for checkCategories - only exists for backwards
         compatibility.
@@ -431,3 +432,7 @@ class DesktopEntry(IniFile):
                                                             DeprecationWarning)
         return self.checkCategories(value)
 
+
+if __name__ == "__main__":
+    f = DesktopEntry('/home/ju1ius/tmp/gedit.desktop')
+    f.validate()
