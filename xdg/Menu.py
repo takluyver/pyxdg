@@ -44,14 +44,13 @@ def _strxfrm(s):
         s = s.encode('utf-8')
     return locale.strxfrm(s)
 
-(
-    DELETED,
-    NO_DISPLAY,
-    HIDDEN,
-    EMPTY,
-    NOT_SHOW_IN,
-    NO_EXEC
-) = range(6)
+
+DELETED = "Deleted"
+NO_DISPLAY = "NoDisplay"
+HIDDEN = "Hidden"
+EMPTY = "Empty"
+NOT_SHOW_IN = "NotShowIn"
+NO_EXEC = "NoExec"
 
 
 class Menu:
@@ -495,7 +494,7 @@ class MenuEntry:
             self.__setFilename()
 
     def updateAttributes(self):
-        if self.getType() == TYPE_SYSTEM:
+        if self.getType() == self.TYPE_SYSTEM:
             self.Original = MenuEntry(self.Filename, self.getDir(), self.Prefix)
             self.__setFilename()
 
