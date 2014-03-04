@@ -431,8 +431,3 @@ class DesktopEntry(IniFile):
         warnings.warn("checkCategorie is deprecated, use checkCategories",
                                                             DeprecationWarning)
         return self.checkCategories(value)
-
-
-if __name__ == "__main__":
-    f = DesktopEntry('/home/ju1ius/tmp/gedit.desktop')
-    f.validate()

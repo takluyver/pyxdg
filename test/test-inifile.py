@@ -1,9 +1,14 @@
 #!/usr/bin/python
 # coding: utf-8
+
+import os
+import ast
+
 from xdg import IniFile
 from xdg.util import u
 
 import unittest
+
 
 class IniFileTest(unittest.TestCase):
     def test_check_string(self):
@@ -12,23 +17,23 @@ class IniFileTest(unittest.TestCase):
         self.assertEqual(i.checkString('abc'), 0)
         self.assertEqual(i.checkString(u('abcö')), 1)
         self.assertEqual(i.checkString('abcö'), 1)
-    
+
     def test_modify(self):
         i = IniFile.IniFile()
         i.addGroup('foo')
         i.set('bar', u('wallöby'), group='foo')
         self.assertEqual(i.get('bar', group='foo'), u('wallöby'))
-        
+
         self.assertEqual(list(i.groups()), ['foo'])
-        
+
         i.removeKey('bar', group='foo')
         i.removeGroup('foo')
-    
+
     def test_value_types(self):
         i = IniFile.IniFile()
         i.addGroup('foo')
         i.defaultGroup = 'foo'
-        
+
         # Numeric
         i.errors = []
         i.set('num', '12.3')
@@ -37,7 +42,7 @@ class IniFileTest(unittest.TestCase):
         i.checkValue('num', '12.a', type='numeric')
         self.assertEqual(len(i.errors), 1)
         self.assertEqual(i.get('num', type='numeric'), 12.3)
-        
+
         # Regex
         i.errors = []
         i.set('re', '[1-9]+')
@@ -47,7 +52,7 @@ class IniFileTest(unittest.TestCase):
         self.assertEqual(len(i.errors), 1)
         r = i.get('re', type='regex')
         assert r.match('123')
-        
+
         # Point
         i.errors = []
         i.set('pt', '3,12')
@@ -55,8 +60,8 @@ class IniFileTest(unittest.TestCase):
         self.assertEqual(i.errors, [])
         i.checkValue('pt', '3,12,5', type='point')
         self.assertEqual(len(i.errors), 1)
-        x,y = i.get('pt', type='point')
-        
+        x, y = i.get('pt', type='point')
+
         # Boolean
         i.errors = []
         i.warnings = []
@@ -70,7 +75,7 @@ class IniFileTest(unittest.TestCase):
         self.assertEqual(len(i.errors), 1)
         boo = i.get('boo', type='boolean')
         assert boo is True, boo
-        
+
         # Integer
         i.errors = []
         i.set('int', '44')
@@ -79,3 +84,16 @@ class IniFileTest(unittest.TestCase):
         i.checkValue('int', 'A4', type='integer')
         self.assertEqual(len(i.errors), 1)
         self.assertEqual(i.get('int', type='integer'), 44)
+
+    def test_lists(self):
+        i = IniFile.IniFile()
+        i.parse(
+            '{}/test-inifile-lists.desktop'.format(os.path.dirname(__file__)),
+            headers=['Test 1']
+        )
+        for test in sorted(i.groups()):
+            desc = i.get('Description', group=test)
+            data = i.get('Input', group=test, list=True)
+            expected = ast.literal_eval(i.get('Result', group=test))
+            self.assertEqual(data, expected,
+                             msg="Failed {}: {}".format(test, desc))

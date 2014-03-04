@@ -1,0 +1,46 @@
+
+# Lists tests
+[Test 1]
+Description=Normal list
+Input=a;b;c;
+Result=['a', 'b', 'c']
+[Test 2]
+Description=No trailing separator
+Input=a;b;c
+Result=['a', 'b', 'c']
+[Test 3]
+Description=Accepts empty values
+Input=;;;
+Result=['', '', '']
+
+# Lists delimiter escaping tests
+# Result contains a python string representation of the input
+[Test 4]
+Description=Simple delimiter escaping
+Input=a;b\;c;
+Result=['a', 'b;c']
+[Test 5]
+Description=Double delimiter escaping
+Input=a;b\\;c;
+# real value: ['a', 'b\', 'c']
+Result=['a', 'b\\', 'c']
+[Test 6]
+Description=Triple delimiter escaping
+Input=a;b\\\;c;
+# real value: ['a', 'b\;c']
+Result=['a', 'b\\;c']
+[Test 7]
+Description=Quadruple delimiter escaping
+Input=a;b\\\\;c;
+# real value: ['a', 'b\\', 'c']
+Result=['a', 'b\\\\', 'c']
+[Test 8]
+Description=Quintuple delimiter escaping
+Input=a;b\\\\\;c;
+# real value: ['a', 'b\\;c']
+Result=['a', 'b\\\\;c']
+[Test 9]
+Description=Sextuple delimiter escaping
+Input=a;b\\\\\\;c;
+# real value: ['a', 'b\\\', 'c']
+Result=['a', 'b\\\\\\', 'c']

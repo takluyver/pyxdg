@@ -403,7 +403,7 @@ class IniFile:
         fp.write(u('%s=%s\n') % (key, value))
 
     def _write_comment(self, fp, comment):
-        for line in comment.strip().split('\n'):
+        for line in comment.strip().splitlines():
             fp.write(u('# %s\n') % line.strip())
 
     def set(self, key, value, group=None, locale=False):
