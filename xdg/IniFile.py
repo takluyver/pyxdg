@@ -2,7 +2,10 @@
 Base Class for DesktopEntry, IconTheme and IconData
 """
 
-import re, os, stat, io
+import re
+import os
+import stat
+import io
 from collections import OrderedDict
 
 from xdg.Exceptions import (ParsingError, DuplicateGroupError, NoGroupError,
@@ -40,15 +43,16 @@ class IniFile:
     def parse(self, filename, headers=None):
         '''Parse an INI file.
 
-        headers -- list of headers the parser will try to select as a default header
+        headers -- list of headers the parser will try to select
+        as a default header
         '''
         if not os.path.isfile(filename):
             raise ParsingError("File not found", filename)
 
         try:
             # The content should be UTF-8, but legacy files can have other
-            # encodings, including mixed encodings in one file. We don't attempt
-            # to decode them, but we silence the errors.
+            # encodings, including mixed encodings in one file.
+            # We don't attempt to decode them, but we silence the errors.
             fd = io.open(filename, 'r', encoding='utf-8', errors='replace')
         except IOError as e:
             fd.close()
@@ -103,7 +107,8 @@ class IniFile:
                         }
                         current_comment = []
                 except (IndexError, UnboundLocalError):
-                    raise ParsingError("Parsing error on key, group missing", filename)
+                    raise ParsingError("Parsing error on key, group missing",
+                                       filename)
 
         fd.close()
 
@@ -117,10 +122,12 @@ class IniFile:
                     self.defaultGroup = header
                     break
             else:
-                raise ParsingError("[%s]-Header missing" % headers[0], filename)
+                raise ParsingError("[%s]-Header missing" % headers[0],
+                                   filename)
 
     # start stuff to access the keys
-    def get(self, key, group=None, locale=False, type="string", list=False, strict=False):
+    def get(self, key, group=None, locale=False, type="string",
+            list=False, strict=False):
         # set default group
         if not group:
             group = self.defaultGroup
@@ -231,8 +238,9 @@ class IniFile:
 
     # start validation stuff
     def validate(self, report="All"):
-        """Validate the contents, raising :class:`~xdg.Exceptions.ValidationError`
-        if there is anything amiss.
+        """Validate the IniFile's contents.
+        If there is anything amiss,
+        raise :class:`~xdg.Exceptions.ValidationError`
 
         report can be 'All' / 'Warnings' / 'Errors'
         """
@@ -353,8 +361,9 @@ class IniFile:
         else:
             filename = self.filename
 
-        if os.path.dirname(filename) and not os.path.isdir(os.path.dirname(filename)):
-            os.makedirs(os.path.dirname(filename))
+        dirname = os.path.dirname(filename)
+        if dirname and not os.path.isdir(dirname):
+            os.makedirs(dirname)
 
         with io.open(filename, 'w', encoding='utf-8') as fp:
 
@@ -449,8 +458,9 @@ class IniFile:
 
         try:
             if locales:
+                pattern = "^" + key + xdg.Locale.regex + "$"
                 for name in list(self.content[group]['keys']):
-                    if re.match("^" + key + xdg.Locale.regex + "$", name) and name != key:
+                    if re.match(pattern, name) and name != key:
                         del self.content[group]['keys'][name]
             value = self.content[group]['keys'].pop(key)
             self.tainted = True
@@ -482,7 +492,6 @@ class IniFile:
         # set default group
         if not group:
             group = self.defaultGroup
-
         return key in self.content[group]['keys']
 
     def getFileName(self):
