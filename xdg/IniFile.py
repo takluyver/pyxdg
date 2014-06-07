@@ -6,7 +6,10 @@ import re
 import os
 import stat
 import io
-from collections import OrderedDict
+try:
+    from collections import OrderedDict
+except ImportError:
+    OrderedDict = dict
 
 from xdg.Exceptions import (ParsingError, DuplicateGroupError, NoGroupError,
                             NoKeyError, DuplicateKeyError, ValidationError,
