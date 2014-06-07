@@ -3,6 +3,8 @@ Base Class for DesktopEntry, IconTheme and IconData
 """
 
 import re, os, stat, io
+from collections import OrderedDict
+
 from xdg.Exceptions import (ParsingError, DuplicateGroupError, NoGroupError,
                             NoKeyError, DuplicateKeyError, ValidationError,
                             debug)
@@ -56,13 +58,11 @@ class IniFile:
                 return
 
         # for performance reasons
-        self.content = {}
+        self.content = OrderedDict()
         content = self.content
         #
         current_group = None
         current_comment = []
-        group_index = 0
-        key_index = 0
 
         # parse file
         for line in fd:
@@ -80,12 +80,9 @@ class IniFile:
                     raise DuplicateGroupError(current_group, filename)
                 else:
                     content[current_group] = {
-                        'pos': group_index,
                         'comment': '\n'.join(current_comment),
-                        'keys': {}
+                        'keys': OrderedDict()
                     }
-                    group_index += 1
-                    key_index = 0
                     current_comment = []
             # key
             else:
@@ -101,11 +98,9 @@ class IniFile:
                         raise DuplicateKeyError(key, current_group, filename)
                     else:
                         content[current_group]['keys'][key] = {
-                            'pos': key_index,
                             'value': value.lstrip(),
                             'comment': '\n'.join(current_comment),
                         }
-                        key_index += 1
                         current_comment = []
                 except (IndexError, UnboundLocalError):
                     raise ParsingError("Parsing error on key, group missing", filename)
@@ -372,7 +367,7 @@ class IniFile:
 
             if self.defaultGroup:
                 self._write_group(fp, self.defaultGroup)
-            for name in self.groups():
+            for name in self.content:
                 if name == self.defaultGroup:
                     continue
                 self._write_group(fp, name)
@@ -391,7 +386,7 @@ class IniFile:
         if comment:
             self._write_comment(fp, comment)
         fp.write(u('[%s]\n') % group_name)
-        for key in self.keys(group_name):
+        for key in self.content[group_name]['keys']:
             self._write_key(fp, key, group_name)
         fp.write(u('\n'))
 
@@ -419,7 +414,6 @@ class IniFile:
         keys = self.content[group]['keys']
         if key not in keys:
             keys[key] = {
-                'pos': len(keys),
                 'value': u(''),
                 'comment': u('')
             }
@@ -433,9 +427,8 @@ class IniFile:
                 raise DuplicateGroupError(group, self.filename)
         else:
             self.content[group] = {
-                'pos': len(self.content),
                 'comment': comment,
-                'keys': {}
+                'keys': OrderedDict()
             }
             self.tainted = True
 
@@ -473,14 +466,13 @@ class IniFile:
 
     # misc
     def groups(self):
-        for name, data in sorted(self.content.items(), key=lambda g: g[1]['pos']):
+        for name in self.content:
             yield name
 
     def keys(self, group=None):
         if not group:
             group = self.defaultGroup
-        keys = self.content[group]['keys']
-        for key, data in sorted(keys.items(), key=lambda k: k[1]['pos']):
+        for key in self.content[group]['keys']:
             yield key
 
     def hasGroup(self, group):
