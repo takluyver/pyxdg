@@ -37,7 +37,7 @@ class DesktopEntryTest(unittest.TestCase):
             contents = f.read()
         
         assert "[Hallo]" in contents, contents
-        assert re.search("key\s*=\s*value", contents), contents
+        assert re.search(r"key\s*=\s*value", contents), contents
         
         # This is missing the Name key, and has an unknown Hallo group, so it
         # shouldn't validate.

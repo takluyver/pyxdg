@@ -201,7 +201,7 @@ class DesktopEntry(IniFile):
     def checkGroup(self, group):
         # check if group header is valid
         if not (group == self.defaultGroup \
-        or re.match("^Desktop Action [a-zA-Z0-9\-]+$", group) \
+        or re.match("^Desktop Action [a-zA-Z0-9-]+$", group) \
         or (re.match("^X-", group) and is_ascii(group))):
             self.errors.append("Invalid Group name: %s" % group)
         else:

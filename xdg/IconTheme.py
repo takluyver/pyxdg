@@ -125,7 +125,7 @@ class IconTheme(IniFile):
                 self.name = self.content[group]["Size"]
             except KeyError:
                 self.errors.append("Key 'Size' in Group '%s' is missing" % group)
-        elif not (re.match("^\[X-", group) and is_ascii(group)):
+        elif not (re.match(r"^\[X-", group) and is_ascii(group)):
             self.errors.append("Invalid Group name: %s" % group)
 
     def checkKey(self, key, value, group):
@@ -211,7 +211,7 @@ class IconData(IniFile):
     def checkGroup(self, group):
         # check if group header is valid
         if not (group == self.defaultGroup \
-        or (re.match("^\[X-", group) and is_ascii(group))):
+        or (re.match(r"^\[X-", group) and is_ascii(group))):
             self.errors.append("Invalid Group name: %s" % group.encode("ascii", "replace"))
 
     def checkKey(self, key, value, group):
