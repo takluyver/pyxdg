@@ -86,6 +86,9 @@ class MIMEtype(object):
         self.media = media
         self.subtype = subtype
         self._comment = None
+        self._icon = None
+        self._generic_icon = None
+        self._isloaded = False
 
     def _load(self):
         "Loads comment for current language. Use get_comment() instead."
@@ -94,6 +97,12 @@ class MIMEtype(object):
             doc = minidom.parse(path)
             if doc is None:
                 continue
+            generic_icon_tag = doc.getElementsByTagName('generic-icon')
+            if generic_icon_tag:
+                self._generic_icon = generic_icon_tag[0].getAttribute('name')
+            icon_tag = doc.documentElement.getElementsByTagName('icon')
+            if icon_tag:
+                self._icon = icon_tag[0].getAttribute('name')
             for comment in doc.documentElement.getElementsByTagNameNS(FREE_NS, 'comment'):
                 lang = comment.getAttributeNS(XML_NAMESPACE, 'lang') or 'en'
                 goodness = 1 + (lang in xdg.Locale.langs)
@@ -105,10 +114,22 @@ class MIMEtype(object):
     def get_comment(self):
         """Returns comment for current language, loading it if needed."""
         # Should we ever reload?
-        if self._comment is None:
+        if not self._isloaded:
             self._comment = (0, str(self))
             self._load()
         return self._comment[1]
+    
+    def get_icon(self):
+        """Returns icon name, loading it if needed."""
+        if not self._isloaded:
+            self._load()
+        return self._icon
+    
+    def get_generic_icon(self):
+        """Returns generic-icon name, loading it if needed."""
+        if not self._isloaded:
+            self._load()
+        return self._generic_icon
     
     def canonical(self):
         """Returns the canonical MimeType object if this is an alias."""
