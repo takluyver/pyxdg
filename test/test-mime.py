@@ -90,7 +90,10 @@ class MimeTest(MimeTestBase):
         self.check_mimetype(Mime.get_type2(example_file('word.doc')), 'application', 'msword')
         
         # Ambiguous file extension
-        self.check_mimetype(Mime.get_type2(example_file('glade.ui')), 'application', 'x-gtk-builder')
+        glade_mime = Mime.get_type2(example_file('glade.ui'))
+        self.assertEqual(glade_mime.media, 'application')
+        # Grumble, this is still ambiguous on some systems
+        self.assertIn(glade_mime.subtype, {'x-gtk-builder', 'x-glade'})
         self.check_mimetype(Mime.get_type2(example_file('qtdesigner.ui')), 'application', 'x-designer')
         
         # text/x-python has greater weight than text/x-readme
