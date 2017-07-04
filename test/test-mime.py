@@ -55,8 +55,8 @@ class MimeTest(MimeTestBase):
 
     def test_get_type(self):
         # File that doesn't exist - get type by name
-        imgpng = Mime.get_type(example_file("test.png"))
-        self.check_mimetype(imgpng, 'image', 'png')
+        imgpng = Mime.get_type(example_file("test.gif"))
+        self.check_mimetype(imgpng, 'image', 'gif')
         
         # File that does exist - get type by contents
         imgpng = Mime.get_type(example_file("png_file"))
@@ -80,7 +80,7 @@ class MimeTest(MimeTestBase):
 
     def test_get_type2(self):
         # File that doesn't exist - use the name
-        self.check_mimetype(Mime.get_type2(example_file('test.png')), 'image', 'png')
+        self.check_mimetype(Mime.get_type2(example_file('test.gif')), 'image', 'gif')
         
         # File that does exist - use the contents
         self.check_mimetype(Mime.get_type2(example_file('png_file')), 'image', 'png')
