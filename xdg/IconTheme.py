@@ -37,6 +37,8 @@ class IconTheme(IniFile):
         return self.get('Inherits', list=True)
     def getDirectories(self):
         return self.get('Directories', list=True)
+    def getScaledDirectories(self):
+        return self.get('ScaledDirectories', list=True)
     def getHidden(self):
         return self.get('Hidden', type="boolean")
     def getExample(self):
@@ -142,6 +144,8 @@ class IconTheme(IniFile):
             elif key == "Inherits":
                 self.checkValue(key, value, list=True)
             elif key == "Directories":
+                self.checkValue(key, value, list=True)
+            elif key == "ScaledDirectories":
                 self.checkValue(key, value, list=True)
             elif key == "Hidden":
                 self.checkValue(key, value, type="boolean")
