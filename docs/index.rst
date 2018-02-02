@@ -1,5 +1,5 @@
-Welcome to PyXDG's documentation!
-=================================
+PyXDG |version|
+===============
 
 PyXDG is a Python library supporting various freedesktop standards.
 
