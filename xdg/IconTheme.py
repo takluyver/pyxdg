@@ -72,6 +72,10 @@ class IconTheme(IniFile):
         else:
             return 2
 
+    def getScale(self, directory):
+        value = self.get('Scale', type="integer", group=directory)
+        return value or 1
+
     # validation stuff
     def checkExtras(self):
         # header
@@ -168,6 +172,8 @@ class IconTheme(IniFile):
                 self.checkValue(key, value, type="integer")
                 if self.type != "Threshold":
                     self.errors.append("Key 'Threshold' give, but Type is %s" % self.type)
+            elif key == "Scale":
+                self.checkValue(key, value, type="integer")
             elif re.match("^X-[a-zA-Z0-9-]+", key):
                 pass
             else:
