@@ -722,11 +722,12 @@ class XMLMenuBuilder(object):
             inline_header=_to_bool(node.attrib.get("inline_header", True)),
             inline_alias=_to_bool(node.attrib.get("inline_alias", False))
         )
+        order = []
         for child in node:
             tag, text = child.tag, child.text
             text = text.strip() if text else None
             if tag == "Menuname" and text:
-                layout.order.append([
+                order.append([
                     "Menuname",
                     text,
                     _to_bool(child.attrib.get("show_empty", False)),
@@ -736,14 +737,15 @@ class XMLMenuBuilder(object):
                     _to_bool(child.attrib.get("inline_alias", False))
                 ])
             elif tag == "Separator":
-                layout.order.append(['Separator'])
+                order.append(['Separator'])
             elif tag == "Filename" and text:
-                layout.order.append(["Filename", text])
+                order.append(["Filename", text])
             elif tag == "Merge":
-                layout.order.append([
+                order.append([
                     "Merge",
                     child.attrib.get("type", "all")
                 ])
+        layout.order = order
         return layout
 
     def parse_move(self, node):

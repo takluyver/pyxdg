@@ -450,6 +450,46 @@ kde_legacy_menu = """<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
 </Menu>
 """
 
+layout_menu = """<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+ "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+<Menu>
+
+  <Name>Layout</Name>
+  <DefaultLayout show_empty="true">
+    <Merge type="menus"/>
+    <Merge type="files"/>
+    <Separator/>
+    <Menuname>More</Menuname>
+  </DefaultLayout>
+
+  <Menu>
+    <Name>More</Name>
+  </Menu>
+
+  <Menu>
+    <Name>Games</Name>
+    <Layout>
+      <Menuname>Steam</Menuname>
+      <Separator/>
+      <Merge type="menus"/>
+    </Layout>
+    <Menu>
+      <Name>Action</Name>
+    </Menu>
+    <Menu>
+      <Name>Steam</Name>
+    </Menu>
+    <Menu>
+      <Name>Arcade</Name>
+    </Menu>
+  </Menu>
+
+  <Menu>
+    <Name>Accessories</Name>
+  </Menu>
+</Menu>
+"""
+
 mime_globs2_a = """#globs2 MIME data file
 55:text/x-diff:*.patch
 50:text/x-c++src:*.C:cs
