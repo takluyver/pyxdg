@@ -298,11 +298,11 @@ class Menu:
                     entry.Show = NO_EXEC
                     self.Visible -= 1
                 elif xdg.Config.windowmanager:
-                    if (entry.DesktopEntry.OnlyShowIn != [] and (
-                            xdg.Config.windowmanager not in entry.DesktopEntry.OnlyShowIn
+                    if (entry.DesktopEntry.getOnlyShowIn() != [] and (
+                            xdg.Config.windowmanager not in entry.DesktopEntry.getOnlyShowIn()
                         )
                     ) or (
-                        xdg.Config.windowmanager in entry.DesktopEntry.NotShowIn
+                        xdg.Config.windowmanager in entry.DesktopEntry.getNotShowIn()
                     ):
                         entry.Show = NOT_SHOW_IN
                         self.Visible -= 1
@@ -994,8 +994,8 @@ class XMLMenuBuilder(object):
                     menuentry = MenuEntry(directory, dir)
                     if not menu.Directory:
                         menu.Directory = menuentry
-                    elif menuentry.Type == MenuEntry.TYPE_SYSTEM:
-                        if menu.Directory.Type == MenuEntry.TYPE_USER:
+                    elif menuentry.getType() == MenuEntry.TYPE_SYSTEM:
+                        if menu.Directory.getType() == MenuEntry.TYPE_USER:
                             menu.Directory.Original = menuentry
             if menu.Directory:
                 break
