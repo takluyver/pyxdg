@@ -21,6 +21,7 @@ import os
 import locale
 import subprocess
 import ast
+import sys
 try:
     import xml.etree.cElementTree as etree
 except ImportError:
@@ -33,6 +34,17 @@ from xdg.util import PY3
 
 import xdg.Locale
 import xdg.Config
+
+
+def _ast_const(name):
+    if sys.version_info >= (3, 4):
+        name = ast.literal_eval(name)
+        if sys.version_info >= (3, 8):
+            return ast.Constant(name)
+        else:
+            return ast.NameConstant(name)
+    else:
+        return ast.Name(id=name, ctx=ast.Load())
 
 
 def _strxfrm(s):
@@ -754,7 +766,7 @@ class XMLMenuBuilder(object):
         if expr:
             tree.body = expr
         else:
-            tree.body = ast.Name('False', ast.Load())
+            tree.body = _ast_const('False')
         ast.fix_missing_locations(tree)
         return Rule(type, tree)
 
@@ -781,7 +793,7 @@ class XMLMenuBuilder(object):
             expr = self.parse_bool_op(node, ast.Or())
             return ast.UnaryOp(ast.Not(), expr) if expr else None
         elif tag == 'All':
-            return ast.Name('True', ast.Load())
+            return _ast_const('True')
         elif tag == 'Category':
             category = node.text
             return ast.Compare(
