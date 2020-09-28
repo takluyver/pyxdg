@@ -5,6 +5,10 @@ import unittest
 
 import resources
 
+example_dir = os.path.join(os.path.dirname(__file__), 'example')
+def example_file(filename):
+    return os.path.join(example_dir, filename)
+
 class IconThemeTest(unittest.TestCase):
     def test_find_icon_exists(self):
         print("Finding an icon that probably exists:")
@@ -16,7 +20,7 @@ class IconThemeTest(unittest.TestCase):
     
     def test_validate_icon_theme(self):
         theme = IconTheme()
-        theme.parse("/usr/share/icons/hicolor/index.theme")
+        theme.parse(example_file("index.theme"))
         theme.validate()
 
 class IconDataTest(unittest.TestCase):
