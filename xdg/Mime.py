@@ -385,6 +385,10 @@ class MagicDB:
             if rule.match(data):
                 return mimetype
 
+    def match_fileobject(self, fileobject, max_pri=100, min_pri=0, possible=None):
+        buf = fileobject.read(self.maxlen)
+        return self.match_data(buf, max_pri, min_pri, possible)
+
     def match(self, path, max_pri=100, min_pri=0, possible=None):
         """Read data from the file and do magic sniffing on it.
         
@@ -396,8 +400,7 @@ class MagicDB:
         if the file can't be opened.
         """
         with open(path, 'rb') as f:
-            buf = f.read(self.maxlen)
-        return self.match_data(buf, max_pri, min_pri, possible)
+            return self.match_fileobject(f, max_pri, min_pri, possible)
     
     def __repr__(self):
         return '<MagicDB (%d types)>' % len(self.alltypes)
@@ -692,6 +695,61 @@ def get_type2(path, follow=True):
         return app_exe
     else:
         return text if is_text_file(path) else octet_stream
+
+def get_type_by_filename_and_data(
+        filename, data = None
+):
+    """Find the MIMEtype of a file using the XDG recommended checking order,
+    with data an filename separated.
+
+    This method is very similar to get_type2 but it doesn't use a path as
+    parameter but both filename and a fileobject data.
+
+    This first checks the filename, then uses file contents if the name doesn't
+    give an unambiguous MIMEtype. It can also handle special filesystem objects
+    like directories and sockets.
+
+    :param filename: filename to examine
+    :param data: fileobject to check (no required)
+
+    :rtype: :class:`MIMEtype`
+    """
+    update_cache()
+
+    mtypes = sorted(globs.all_matches(filename), key=(lambda x: x[1]), reverse=True)
+    if mtypes:
+        max_weight = mtypes[0][1]
+        i = 1
+        for mt, w in mtypes[1:]:
+            if w < max_weight:
+                break
+            i += 1
+        mtypes = mtypes[:i]
+        if len(mtypes) == 1:
+            return mtypes[0][0]
+
+        possible = [mt for mt, w in mtypes]
+    else:
+        possible = None  # Try all magic matches
+
+    if data:
+        try:
+            data.seek(os.SEEK_SET)
+            t = magic.match_fileobject(data, possible=possible)
+        except IOError:
+            t = None
+    else:
+        t = None
+
+    if t:
+        return t
+    elif mtypes:
+        return mtypes[0][0]
+    elif data:
+        data.seek(os.SEEK_SET)
+        if _is_text(data.read(32)):
+            return text
+    return octet_stream
 
 def is_text_file(path):
     """Guess whether a file contains text or binary data.
