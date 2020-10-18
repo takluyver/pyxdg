@@ -4,6 +4,8 @@ written out to temporary files for the relevant tests.
 """
 from __future__ import unicode_literals
 
+import sys
+
 # With additions from firefox.desktop, to test locale & unicode support
 gedit_desktop = """[Desktop Entry]
 Name=gedit
@@ -75,10 +77,10 @@ Type=Application
 python_desktop = """[Desktop Entry]
 Name=Python
 Comment=Dynamic programming language
-Exec=python
-TryExec=python
+Exec=%s
+TryExec=%s
 Type=Application
-"""
+""" % (sys.executable, sys.executable)
 
 recently_used = """<?xml version="1.0"?>
 <RecentFiles>
