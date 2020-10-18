@@ -117,7 +117,41 @@ class MimeTest(MimeTestBase):
                                     'image', 'png')
         self.check_mimetype(Mime.get_type2(example_file("png_symlink"), follow=False),
                                     'inode', 'symlink')
-    
+
+    def test_get_type_by_filename_and_data(self):
+        # File that doesn't exist - use the name
+        self.check_mimetype(Mime.get_type_by_filename_and_data('test.gif'), 'image', 'gif')
+
+        # File that does exist - use the contents
+        with open(example_file('png_file'), 'rb') as png_data:
+            self.check_mimetype(Mime.get_type_by_filename_and_data('png_file', png_data), 'image', 'png')
+
+        # Does exist - use name before contents
+        with open(example_file('file.png'), 'rb') as png_data:
+            self.check_mimetype(Mime.get_type_by_filename_and_data('file.png', png_data), 'image', 'png')
+        with open(example_file('word.doc'), 'rb') as word_data:
+            self.check_mimetype(Mime.get_type_by_filename_and_data('word.doc', word_data), 'application', 'msword')
+
+        # Ambiguous file extension
+        with open(example_file('glade.ui'), 'rb') as glade_data:
+            glade_mime = Mime.get_type_by_filename_and_data('glade.ui', glade_data)
+        self.assertEqual(glade_mime.media, 'application')
+        # Grumble, this is still ambiguous on some systems
+        self.assertIn(glade_mime.subtype, {'x-gtk-builder', 'x-glade'})
+        with open(example_file('qtdesigner.ui'), 'rb') as qtdesigner_data:
+            self.check_mimetype(Mime.get_type_by_filename_and_data('qtdesigner.ui', qtdesigner_data), 'application', 'x-designer')
+
+        # text/x-python has greater weight than text/x-readme
+        with open(example_file('README.py'), 'rb') as python_data:
+            self.check_mimetype(Mime.get_type_by_filename_and_data('README.py', png_data), 'text', 'x-python')
+
+        # Mystery files:
+        self.check_mimetype(Mime.get_type_by_filename_and_data('mystery_missing'), 'application', 'octet-stream')
+        with open(example_file('mystery_binary'), 'rb') as mystery_data:
+            self.check_mimetype(Mime.get_type_by_filename_and_data('mystery_binary', mystery_data), 'application', 'octet-stream')
+        with open(example_file('mystery_text'), 'rb') as mystery_data:
+            self.check_mimetype(Mime.get_type_by_filename_and_data('mystery_text', mystery_data), 'text', 'plain')
+
     def test_lookup(self):
         pdf1 = Mime.lookup("application/pdf")
         pdf2 = Mime.lookup("application", "pdf")
