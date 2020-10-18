@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from distutils.core import setup
+from setuptools import setup
 
 setup( name = "pyxdg",
        version = "0.26",
@@ -10,11 +10,10 @@ setup( name = "pyxdg",
        url = "http://freedesktop.org/wiki/Software/pyxdg",
        packages = ['xdg'],
        classifiers = [
-                "License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)",
-                "Programming Language :: Python :: 2.6",
-                "Programming Language :: Python :: 2.7",
-                "Programming Language :: Python :: 3",
-                "Topic :: Desktop Environment",
-                ],
-     )
+            "License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)",
+            "Programming Language :: Python :: 2.7",
+            "Programming Language :: Python :: 3",
+            "Topic :: Desktop Environment",
+       ],
+)
 

@@ -2,6 +2,7 @@
 __pycache__
 build/
 _build/
+*.egg-info/
 dist/
 MANIFEST
 .coverage
