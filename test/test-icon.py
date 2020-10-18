@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 from xdg.IconTheme import IconTheme, getIconPath, getIconData
 import tempfile, shutil, os
 import unittest

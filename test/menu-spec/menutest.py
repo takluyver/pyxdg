@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python3
 # coding=utf8
 """
 Script to run the xdg menu-spec tests:

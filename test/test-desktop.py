@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # coding: utf-8
 from xdg.DesktopEntry import DesktopEntry
 from xdg.Exceptions import ValidationError, ParsingError, NoKeyError

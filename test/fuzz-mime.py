@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Run this manually to test xdg.Mime.get_type2 against all files in a directory.
 
 Syntax: ./fuzz-mime.py /dir/to/test/
