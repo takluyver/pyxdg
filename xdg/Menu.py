@@ -1006,8 +1006,8 @@ class XMLMenuBuilder(object):
                     menuentry = MenuEntry(directory, dir)
                     if not menu.Directory:
                         menu.Directory = menuentry
-                    elif menuentry.Type == MenuEntry.TYPE_SYSTEM:
-                        if menu.Directory.Type == MenuEntry.TYPE_USER:
+                    elif menuentry.getType() == MenuEntry.TYPE_SYSTEM:
+                        if menu.Directory.getType() == MenuEntry.TYPE_USER:
                             menu.Directory.Original = menuentry
             if menu.Directory:
                 break
