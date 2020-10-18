@@ -310,11 +310,11 @@ class Menu:
                     entry.Show = NO_EXEC
                     self.Visible -= 1
                 elif xdg.Config.windowmanager:
-                    if (entry.DesktopEntry.OnlyShowIn != [] and (
-                            xdg.Config.windowmanager not in entry.DesktopEntry.OnlyShowIn
+                    if (entry.DesktopEntry.getOnlyShowIn() != [] and (
+                            xdg.Config.windowmanager not in entry.DesktopEntry.getOnlyShowIn()
                         )
                     ) or (
-                        xdg.Config.windowmanager in entry.DesktopEntry.NotShowIn
+                        xdg.Config.windowmanager in entry.DesktopEntry.getNotShowIn()
                     ):
                         entry.Show = NOT_SHOW_IN
                         self.Visible -= 1
