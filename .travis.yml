@@ -11,8 +11,3 @@ python:
 install: pip install .
 
 script:  nosetests
-
-addons:
-  apt:
-    packages:
-    - hicolor-icon-theme  # A test tries to parse the theme file
