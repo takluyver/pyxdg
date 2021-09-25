@@ -4,8 +4,17 @@ http://standards.freedesktop.org/recent-file-spec
 """
 
 import xml.dom.minidom, xml.sax.saxutils
-import os, time, fcntl
+import os, time
 from xdg.Exceptions import ParsingError
+if os.name == 'nt':
+    from portalocker import lock as file_lock
+    from portalocker import unlock as file_unlock
+    from portalocker import LOCK_EX
+else:
+    from fcntl import lock as file_lock
+    from fcntl import LOCK_EX, LOCK_UN
+    def file_unlock(file):
+        file_lock(file, LOCK_UN)
 
 class RecentFiles:
     def __init__(self):
@@ -72,7 +81,7 @@ class RecentFiles:
             filename = self.filename
 
         with open(filename, "w") as f:
-            fcntl.lockf(f, fcntl.LOCK_EX)
+            file_lock(f, LOCK_EX)
             f.write('<?xml version="1.0"?>\n')
             f.write("<RecentFiles>\n")
 
@@ -91,7 +100,7 @@ class RecentFiles:
                 f.write("  </RecentItem>\n")
 
             f.write("</RecentFiles>\n")
-            fcntl.lockf(f, fcntl.LOCK_UN)
+            file_unlock(f)
 
     def getFiles(self, mimetypes=None, groups=None, limit=0):
         """Get a list of recently used files.

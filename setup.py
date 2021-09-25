@@ -15,5 +15,8 @@ setup( name = "pyxdg",
             "Programming Language :: Python :: 3",
             "Topic :: Desktop Environment",
        ],
+       install_requires=[
+           "portalocker ; platform_system=='Windows'",
+       ],
 )
 
