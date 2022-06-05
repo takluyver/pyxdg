@@ -51,6 +51,15 @@ Cache directory
 
    $XDG_CACHE_HOME or the default, ``~/.cache``
 
+State directory
+---------------
+
+.. autofunction:: save_state_path
+
+.. data:: xdg_state_home
+
+   $XDG_STATE_HOME or the default, ``~/.local/state``
+
 Runtime directory
 -----------------
 
