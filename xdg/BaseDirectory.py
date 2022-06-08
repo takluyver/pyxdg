@@ -57,8 +57,7 @@ def save_config_path(*resource):
     resource = os.path.join(*resource)
     assert not resource.startswith('/')
     path = os.path.join(xdg_config_home, resource)
-    if not os.path.isdir(path):
-        os.makedirs(path, 0o700)
+    os.makedirs(path, 0o700, exist_ok=True)
     return path
 
 def save_data_path(*resource):
@@ -69,8 +68,7 @@ def save_data_path(*resource):
     resource = os.path.join(*resource)
     assert not resource.startswith('/')
     path = os.path.join(xdg_data_home, resource)
-    if not os.path.isdir(path):
-        os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
     return path
 
 def save_cache_path(*resource):
@@ -80,8 +78,7 @@ def save_cache_path(*resource):
     resource = os.path.join(*resource)
     assert not resource.startswith('/')
     path = os.path.join(xdg_cache_home, resource)
-    if not os.path.isdir(path):
-        os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
     return path
 
 def save_state_path(*resource):
