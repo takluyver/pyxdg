@@ -1,3 +1,8 @@
+Version 0.29 (June 2022)
+
+    * Drop support for Python 2 (only Python 3.2 and greater are supported)
+    * BaseDirectory: Suppress error caused by a race condition when directories already exist.
+
 Version 0.28 (June 2022)
 
     * BaseDirectory: Add support for $XDG_STATE_DIR

@@ -49,51 +49,44 @@ xdg_state_home = os.environ.get('XDG_STATE_HOME') or \
 xdg_data_dirs = [x for x in xdg_data_dirs if x]
 xdg_config_dirs = [x for x in xdg_config_dirs if x]
 
+
+def _ensure_path(base, resource):
+    resource = os.path.join(*resource)
+    assert not resource.startswith('/')
+    path = os.path.join(base, resource)
+    os.makedirs(path, 0o700, exist_ok=True)
+    return path
+
+
 def save_config_path(*resource):
     """Ensure ``$XDG_CONFIG_HOME/<resource>/`` exists, and return its path.
     'resource' should normally be the name of your application. Use this
     when saving configuration settings.
     """
-    resource = os.path.join(*resource)
-    assert not resource.startswith('/')
-    path = os.path.join(xdg_config_home, resource)
-    if not os.path.isdir(path):
-        os.makedirs(path, 0o700)
-    return path
+    return _ensure_path(xdg_config_home, resource)
+
 
 def save_data_path(*resource):
     """Ensure ``$XDG_DATA_HOME/<resource>/`` exists, and return its path.
     'resource' should normally be the name of your application or a shared
     resource. Use this when saving or updating application data.
     """
-    resource = os.path.join(*resource)
-    assert not resource.startswith('/')
-    path = os.path.join(xdg_data_home, resource)
-    if not os.path.isdir(path):
-        os.makedirs(path)
-    return path
+    return _ensure_path(xdg_data_home, resource)
+
 
 def save_cache_path(*resource):
     """Ensure ``$XDG_CACHE_HOME/<resource>/`` exists, and return its path.
     'resource' should normally be the name of your application or a shared
     resource."""
-    resource = os.path.join(*resource)
-    assert not resource.startswith('/')
-    path = os.path.join(xdg_cache_home, resource)
-    if not os.path.isdir(path):
-        os.makedirs(path)
-    return path
+    return _ensure_path(xdg_cache_home, resource)
+
 
 def save_state_path(*resource):
     """Ensure ``$XDG_STATE_HOME/<resource>/`` exists, and return its path.
     'resource' should normally be the name of your application or a shared
     resource."""
-    resource = os.path.join(*resource)
-    assert not resource.startswith('/')
-    path = os.path.join(xdg_state_home, resource)
-    if not os.path.isdir(path):
-        os.makedirs(path)
-    return path
+    return _ensure_path(xdg_state_home, resource)
+
 
 def load_config_paths(*resource):
     """Returns an iterator which gives each directory named 'resource' in the
@@ -105,12 +98,14 @@ def load_config_paths(*resource):
         path = os.path.join(config_dir, resource)
         if os.path.exists(path): yield path
 
+
 def load_first_config(*resource):
     """Returns the first result from load_config_paths, or None if there is nothing
     to load."""
     for x in load_config_paths(*resource):
         return x
     return None
+
 
 def load_data_paths(*resource):
     """Returns an iterator which gives each directory named 'resource' in the
@@ -120,6 +115,7 @@ def load_data_paths(*resource):
     for data_dir in xdg_data_dirs:
         path = os.path.join(data_dir, resource)
         if os.path.exists(path): yield path
+
 
 def get_runtime_dir(strict=True):
     """Returns the value of $XDG_RUNTIME_DIR, a directory path.
