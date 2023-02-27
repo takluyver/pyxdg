@@ -11,7 +11,6 @@ setup( name = "pyxdg",
        packages = ['xdg'],
        classifiers = [
             "License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)",
-            "Programming Language :: Python :: 2.7",
             "Programming Language :: Python :: 3",
             "Topic :: Desktop Environment",
        ],
