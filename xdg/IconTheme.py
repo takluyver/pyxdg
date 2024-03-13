@@ -443,3 +443,4 @@ def DirectorySizeDistance(subdir, iconsize, theme):
         elif iconsize > Size + Threshold:
             return iconsize - MaxSize
         return 0
+    return 2**31
